@@ -1,6 +1,6 @@
 Include %syPrompt
 
-Class CDUI.Demo.Test
+Class CDUI.Demo.Test Extends Ens.Util.IOLogger
 {
 
 ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef Results) As %Status
@@ -63,25 +63,42 @@ ClassMethod NewLocation()
 
 ClassMethod NewPatient()
 {
-	set PAPERName = "test aa" //ID: 11480
-	set PAPERName2 = "paperson testaa"
-	set CTSEXDesc = "Female"
-	set PAPERDob = "15/2/2000"
-	set request = ##class(CDUI.Demo.Request.NewPatient).%New()
-	set request.PAPERName = PAPERName
-	set request.PAPERName2 = PAPERName2
-	set request.CTSEXDesc = CTSEXDesc
-	set request.PAPERDob = PAPERDob
+	set promptResult = ##class(%Prompt).GetString("Input the number of patient to be generated : ",.numOfPatient)
 
-	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
-	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-	if $$$ISOK(sc)
-	{
-		set json = {}.%FromJSON(response.StringValue)
-		zwrite response
-		write !,"Created ID "_json.ID
+	set failedCount = 0
+	// generate patient records and insert them to TrakCare via API.
+	for cnt = 1:1:numOfPatient {	
+	
+		// Set up patient creation request
+		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
+		set request.PAPERName = ##class(CDUI.Demo.Utils.PUtils).FullName()
+		set request.PAPERName2 = ##class(CDUI.Demo.Utils.PUtils).FullName()
+		set request.CTSEXDesc =  ##class(CDUI.Demo.Utils.PUtils).Gender()
+		set request.PAPERDob = ##class(CDUI.Demo.Utils.PUtils).CustomDate()
+
+		write !!
+		zwrite request
+
+		try 
+		{
+			set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+			set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+			if $$$ISOK(sc)
+			{
+				set json = {}.%FromJSON(response.StringValue)
+				zwrite response
+				write !,"Created ID "_json.ID
+			} else {
+				$$$ThrowOnError(sc)
+			}
+		} 
+		catch ex 
+		{
+			do LOG^%ETN
+			set failedCount = failedCount + 1
+		} 
 	}
-	quit sc
+	$$$LOGINFO("Success count: "_(numOfPatient-failedCount)_", Failure count: "_failedCount)
 }
 
 }
