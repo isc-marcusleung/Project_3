@@ -6,15 +6,14 @@ ClassMethod FullName() As %String
     Quit ..FirstName()_" "_..LastName()
 }
 
-ClassMethod Gender() As %String
+ClassMethod ListElement(list As %List) As %String
 {
-    set genders = $listbuild("Female", "Indeterminate", "Male", "Other", "Unknown")
-    Quit $list(genders, ..Integer(1,5))
+    Quit $list(list, ..Integer(1, $listlength(list)))
 }
 
-ClassMethod CustomDate(dformat As %Integer = 4, yearopt As %Integer = 4) As %String
+ClassMethod CustomDate(min As %Date, max As %Integer, dformat As %Integer = 4, yearopt As %Integer = 4) As %String
 {
-    Quit $zdate(..Date(),dformat,,yearopt)
+    Quit $zdate(..Date(min,max),dformat,,yearopt)
 }
 
 }

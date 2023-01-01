@@ -1,3 +1,5 @@
+Import (CDUI.Demo.Utils, CDUI.Demo.Common)
+
 Include %syPrompt
 
 Class CDUI.Demo.Test Extends Ens.Util.IOLogger
@@ -61,20 +63,18 @@ ClassMethod NewLocation()
 	quit sc
 }
 
-ClassMethod NewPatient()
+ClassMethod NewPatient(numOfPatient As %Integer = 1)
 {
-	set promptResult = ##class(%Prompt).GetString("Input the number of patient to be generated : ",.numOfPatient)
-
 	set failedCount = 0
 	// generate patient records and insert them to TrakCare via API.
 	for cnt = 1:1:numOfPatient {	
-	
 		// Set up patient creation request
 		set request = ##class(CDUI.Demo.Request.NewPatient).%New()
-		set request.PAPERName = ##class(CDUI.Demo.Utils.PUtils).FullName()
-		set request.PAPERName2 = ##class(CDUI.Demo.Utils.PUtils).FullName()
-		set request.CTSEXDesc =  ##class(CDUI.Demo.Utils.PUtils).Gender()
-		set request.PAPERDob = ##class(CDUI.Demo.Utils.PUtils).CustomDate()
+		set request.PAPERName = ##class(PUtils).FullName()
+		set request.PAPERName2 = ##class(PUtils).FullName()
+		set request.CTSEXDesc = ##class(PUtils).ListElement($listfromstring(##class(Constants).#genders,","))
+		// min date is 1/1/1900, max date is current date
+		set request.PAPERDob = ##class(PUtils).CustomDate($zdateH("1/1/1900"),$piece($horolog, ",", 1)) 
 
 		write !!
 		zwrite request
@@ -89,12 +89,12 @@ ClassMethod NewPatient()
 				zwrite response
 				write !,"Created ID "_json.ID
 			} else {
-				$$$ThrowOnError(sc)
+				 Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 			}
 		} 
 		catch ex 
-		{
-			do LOG^%ETN
+		{	
+			$$$LOGERROR("Failed to create a patient. "_ex.DisplayString())
 			set failedCount = failedCount + 1
 		} 
 	}
