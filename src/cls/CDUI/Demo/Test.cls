@@ -73,8 +73,10 @@ ClassMethod NewPatient(numOfPatient As %Integer = 1)
 		set request.PAPERName = ##class(PUtils).FullName()
 		set request.PAPERName2 = ##class(PUtils).FullName()
 		set request.CTSEXDesc = ##class(PUtils).ListElement($listfromstring(##class(Constants).#genders,","))
-		// min date is 1/1/1900, max date is current date
-		set request.PAPERDob = ##class(PUtils).CustomDate($zdateH("1/1/1900"),$piece($horolog, ",", 1)) 
+		// min date = current date - maxAge, max date is current date
+		set currentDateInt = $piece($horolog, ",", 1)
+		set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
+		set request.PAPERDob = ##class(PUtils).CustomDate(minDateInt, currentDateInt) 
 
 		write !!
 		zwrite request
