@@ -9,6 +9,8 @@ Property CTSEXDesc As %String;
 
 Property PAPERDob As %String;
 
+Property INSTDesc As %String;
+
 Method SerialisedGet() As %RawString
 {
 	do ..%JSONExportToString(.json)
@@ -30,6 +32,9 @@ Storage Default
 </Value>
 <Value name="4">
 <Value>PAPERDob</Value>
+</Value>
+<Value name="5">
+<Value>INSTDesc</Value>
 </Value>
 </Data>
 <DefaultData>PatientDefaultData</DefaultData>

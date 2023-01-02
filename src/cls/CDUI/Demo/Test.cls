@@ -5,7 +5,11 @@ Include %syPrompt
 Class CDUI.Demo.Test Extends Ens.Util.IOLogger
 {
 
-Property arcAuxilInsurTypeList As %List;
+// Default page size for record retrieval.
+
+Parameter DefaultPageSize = 200;
+
+Property ARCAuxilInsurTypeObjList As %ListOfObjects [ Private ];
 
 ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef Results) As %Status
 {
@@ -68,6 +72,10 @@ ClassMethod NewLocation()
 ClassMethod NewPatient(numOfPatient As %Integer = 1)
 {
 	set failedCount = 0
+
+	//TODO init ARCAuxilInsurTypeObjList when it is null
+	
+
 	// generate patient records and insert them to TrakCare via API.
 	for cnt = 1:1:numOfPatient {	
 		// Set up patient creation request
@@ -80,8 +88,14 @@ ClassMethod NewPatient(numOfPatient As %Integer = 1)
 		set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
 		set request.PAPERDob = ##class(PUtils).CustomDate(minDateInt, currentDateInt) 
 		
-		//TODO INSTDesc
+		//TODO save the isurTypeObjList to global for resue
+		set sc = ..GetARCAuxilInsurType(..#DefaultPageSize,,.insurTypeObjList)
+		set insurType = insurTypeObjList.GetAt(##class(PUtils).Random(insurTypeObjList.Count()))
+		set request.INSTDesc = insurType.AUXITInsTypeDR
 
+		//TODO add PAPMIMedicare
+
+		
 		write !!
 		zwrite request
 
