@@ -24,7 +24,7 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
-<rule name="NewPatient">
+<rule name="Patient">
 <constraint name="source" value="CDUI.Demo.Service.Adaptorless"></constraint>
 <constraint name="msgClass" value="CDUI.Demo.Request.NewPatient"></constraint>
 <when condition="1">
@@ -37,6 +37,14 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <constraint name="msgClass" value="CDUI.Demo.Request.ARCAuxilInsurType"></constraint>
 <when condition="1">
 <send transform="" target="CDUI.Demo.Operation.REST.ARCAuxilInsurType"></send>
+<return></return>
+</when>
+</rule>
+<rule name="Episode">
+<constraint name="source" value="CDUI.Demo.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.Demo.Request.NewEpisode"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.Demo.Operation.REST.Episode"></send>
 <return></return>
 </when>
 </rule>

@@ -19,8 +19,8 @@ Method SerialisedGet() As %RawString
 
 Storage Default
 {
-<Data name="PatientDefaultData">
-<Subscript>"Patient"</Subscript>
+<Data name="NewPatientDefaultData">
+<Subscript>"NewPatient"</Subscript>
 <Value name="1">
 <Value>PAPERName</Value>
 </Value>
@@ -37,7 +37,7 @@ Storage Default
 <Value>INSTDesc</Value>
 </Value>
 </Data>
-<DefaultData>PatientDefaultData</DefaultData>
+<DefaultData>NewPatientDefaultData</DefaultData>
 <Type>%Storage.Persistent</Type>
 }
 
