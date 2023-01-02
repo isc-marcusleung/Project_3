@@ -5,6 +5,8 @@ Include %syPrompt
 Class CDUI.Demo.Test Extends Ens.Util.IOLogger
 {
 
+Property arcAuxilInsurTypeList As %List;
+
 ClassMethod List(StartsWith As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef Results) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.Location).%New()
@@ -77,6 +79,8 @@ ClassMethod NewPatient(numOfPatient As %Integer = 1)
 		set currentDateInt = $piece($horolog, ",", 1)
 		set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
 		set request.PAPERDob = ##class(PUtils).CustomDate(minDateInt, currentDateInt) 
+		
+		//TODO INSTDesc
 
 		write !!
 		zwrite request
@@ -101,6 +105,48 @@ ClassMethod NewPatient(numOfPatient As %Integer = 1)
 		} 
 	}
 	$$$LOGINFO("Success count: "_(numOfPatient-failedCount)_", Failure count: "_failedCount)
+}
+
+ClassMethod GetARCAuxilInsurType(PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef resultList) As %Status
+{
+	set request = ##class(CDUI.Demo.Request.ARCAuxilInsurType).%New()
+
+	if Page'=""
+	{
+		set request.page = Page
+	}
+	if PageSize'=""
+	{
+		set request.count = PageSize
+	}
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+	set resultList = ##class(%ListOfObjects).%New()
+	if $$$ISOK(sc)
+	{
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		set idx = 1
+		while iterator.%GetNext(.key,.value)
+		{	
+			set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
+			#; set Results($increment(Results)) = $listbuild(value)
+			do resultList.Insert(insurType)
+			
+		}
+	
+	}
+	quit sc
+}
+
+ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %Integer = "")
+{
+	set sc = ..GetARCAuxilInsurType(PageSize,Page,.results)
+	set i = ""
+	set size = results.Count()
+		for cnt=1:1:size{
+			zw results.GetAt(cnt)
+		}
 }
 
 }
