@@ -88,18 +88,19 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1) As %List
 		{
 			// Set up patient creation request
 			set request = ##class(CDUI.Demo.Request.NewPatient).%New()
-			set request.PAPERName = ##class(PUtils).FullName()
-			set request.PAPERName2 = ##class(PUtils).FullName()
-			set request.CTSEXDesc = ##class(PUtils).ListElement($listfromstring(##class(Constants).#genders,","))
+			set request.PAPERName = ##class(PUtil).FullName()
+			set request.PAPERName2 = ##class(PUtil).FullName()
+			set request.CTSEXDesc = ##class(PUtil).ListElement($listfromstring(##class(Constants).#genders,","))
 			// min date = current date - maxAge, max date is current date
 			set currentDateInt = $piece($horolog, ",", 1)
 			set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
-			set request.PAPERDob = ##class(PUtils).CustomDate(minDateInt, currentDateInt) 
+			set request.PAPERDob = ##class(PUtil).CustomDate(minDateInt, currentDateInt) 
 			
 			//TODO save the isurTypeObjList to global for resue
-		
-			set insurType = insurTypeObjList.GetAt(##class(PUtils).Random(insurTypeObjList.Count() + 1))
-			set request.INSTDesc = insurType.AUXITInsTypeDR
+			if (insurTypeObjList.Count() > 0){
+				set insurType = insurTypeObjList.GetAt(##class(PUtil).Random(insurTypeObjList.Count()) + 1)
+				set request.INSTDesc = insurType.AUXITInsTypeDR
+			}
 
 			//TODO add PAPMIMedicare
 
@@ -114,11 +115,11 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1) As %List
 			set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 			if $$$ISOK(sc)
 			{
-				//TODO check error in json 	
-				//JSON Body : {"ERROR":"E^Private Health Fund does not have a valid entry^INSTDesc"}
 				set json = {}.%FromJSON(response.StringValue)
+				if (json.ERROR '= ""){
+					Throw ##class(%Exception.General).%New("Error: " _json.ERROR) //TODO to see which exception should be used.
+				}
 				set $list(patientIdList, * + 1) = json.ID
-				zwrite response
 				write !,"Created ID "_json.ID
 			} else {
 				 Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
@@ -206,11 +207,14 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 			set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
 			set request.PatientID = $list(patientIdList,2)
 			set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
-			set request.PAADMAdmDate = ##class(PUtils).Date($zdateh(minAdmDate), $piece($horolog, ",", 1))
-			set request.PAADMAdmTime = $piece($piece(##class(PUtils).TimeStamp()," ",2),":",1,2)
-			set location = locationObjList.GetAt(##class(PUtils).Random(locationObjList.Count() + 1))
-			set request.CTLOCDesc = location.CTLOCDesc
-			
+			set request.PAADMAdmDate = ##class(PUtil).Date($zdateh(minAdmDate), $piece($horolog, ",", 1))
+			set request.PAADMAdmTime = $piece($piece(##class(PUtil).TimeStamp()," ",2),":",1,2)
+
+			if (locationObjList.Count() > 0){
+				set location = locationObjList.GetAt(##class(PUtil).Random(locationObjList.Count()) + 1)
+				set request.CTLOCDesc = location.CTLOCDesc
+			}
+
 			write !!
 			zw location
 
@@ -220,9 +224,11 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 			set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 			set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 			if $$$ISOK(sc)
-			{	//TODO check error in json 	
-				//JSON Body : {"ERROR":"E^ Speciality does not have a valid entry^CTLOCDesc"}
+			{	
 				set json = {}.%FromJSON(response.StringValue)
+				if (json.ERROR '= ""){
+					Throw ##class(%Exception.General).%New("Error: " _json.ERROR) //TODO to see which exception should be used.
+				}
 				set $list(episodeIdList, * + 1) = json.ID
 				zwrite response
 				write !,"Created ID "_json.ID
@@ -238,6 +244,11 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 	}
 	$$$LOGINFO("[NewEpisode] Success count: "_(NumOfEpisode-failedCount)_", Failure count: "_failedCount)
 	return episodeIdList
+}
+
+ClassMethod test()
+{
+	w ##class(PUtil).Random(1) + 1
 }
 
 // ClassMethod ListLocations()

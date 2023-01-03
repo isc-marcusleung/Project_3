@@ -1,3 +1,5 @@
+Import CDUI.Demo.Utils
+
 Class CDUI.Demo.vo.ARCAuxilInsurType Extends %RegisteredObject
 {
 
@@ -17,9 +19,9 @@ ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.ARCAuxilIn
 {
     set obj = ..%New()
     set obj.AUXITRowId = dynamicObj.AUXITRowId
-    set obj.AUXITCode = dynamicObj.AUXITCode
-    set obj.AUXITDesc = dynamicObj.AUXITDesc
-    set obj.AUXITInsTypeDR = dynamicObj.AUXITInsTypeDR
+    set obj.AUXITCode = dynamicObj.AUXITCodes
+    set obj.AUXITDesc = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.AUXITDesc)
+    set obj.AUXITInsTypeDR = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.AUXITInsTypeDR)
     set obj.AUXITDateFrom = dynamicObj.AUXITDateFrom
     set obj.AUXITDateTo = dynamicObj.AUXITDateTo
     return obj

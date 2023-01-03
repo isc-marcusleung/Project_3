@@ -1,4 +1,4 @@
-Class CDUI.Demo.Utils.PUtils Extends %PopulateUtils
+Class CDUI.Demo.Utils.PUtil Extends %PopulateUtils
 {
 
 ClassMethod FullName() As %String

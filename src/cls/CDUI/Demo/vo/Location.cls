@@ -1,3 +1,5 @@
+Import CDUI.Demo.Utils
+
 Class CDUI.Demo.vo.Location Extends %RegisteredObject
 {
 
@@ -17,11 +19,12 @@ ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.Location
 {
     set obj = ..%New()
     set obj.CTLOCCode = dynamicObj.CTLOCCode
-    set obj.CTLOCDesc = dynamicObj.CTLOCDesc
+    set obj.CTLOCDesc = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.CTLOCDesc)
     set obj.CTLOCType = dynamicObj.CTLOCType
-    set obj.HOSPDesc = dynamicObj.HOSPDesc
+    set obj.HOSPDesc = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.HOSPDesc)
     set obj.CTLOCDateActiveFrom = dynamicObj.CTLOCDateActiveFrom
     set obj.CTLOCDateActiveTo = dynamicObj.CTLOCDateActiveTo
+
     return obj
 }
 
