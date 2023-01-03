@@ -207,7 +207,7 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 			set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
 			set request.PatientID = $list(patientIdList,2)
 			set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
-			set request.PAADMAdmDate = ##class(PUtil).Date($zdateh(minAdmDate), $piece($horolog, ",", 1))
+			set request.PAADMAdmDate = ##class(PUtil).CustomDate($zdateh(minAdmDate), $piece($horolog, ",", 1))
 			set request.PAADMAdmTime = ##class(PUtil).Time(2)
 
 
