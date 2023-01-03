@@ -16,4 +16,9 @@ ClassMethod CustomDate(min As %Date, max As %Integer, dformat As %Integer = 4, y
     Quit $zdate(..Date(min,max),dformat,,yearopt)
 }
 
+ClassMethod Time(format As %Integer)
+{
+   Quit $ztime(..Random(86399), format)
+}
+
 }

@@ -208,7 +208,8 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 			set request.PatientID = $list(patientIdList,2)
 			set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
 			set request.PAADMAdmDate = ##class(PUtil).Date($zdateh(minAdmDate), $piece($horolog, ",", 1))
-			set request.PAADMAdmTime = $piece($piece(##class(PUtil).TimeStamp()," ",2),":",1,2)
+			set request.PAADMAdmTime = ##class(PUtil).Time(2)
+
 
 			if (locationObjList.Count() > 0){
 				set location = locationObjList.GetAt(##class(PUtil).Random(locationObjList.Count()) + 1)
@@ -244,11 +245,6 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 	}
 	$$$LOGINFO("[NewEpisode] Success count: "_(NumOfEpisode-failedCount)_", Failure count: "_failedCount)
 	return episodeIdList
-}
-
-ClassMethod test()
-{
-	w ##class(PUtil).Random(1) + 1
 }
 
 // ClassMethod ListLocations()
