@@ -9,7 +9,13 @@ Property CTSEXDesc As %String;
 
 Property PAPERDob As %String;
 
+// payor
+
 Property INSTDesc As %String;
+
+// insurance plan
+
+Property AUXITDesc As %String;
 
 Method SerialisedGet() As %RawString
 {
@@ -35,6 +41,9 @@ Storage Default
 </Value>
 <Value name="5">
 <Value>INSTDesc</Value>
+</Value>
+<Value name="6">
+<Value>AUXITDesc</Value>
 </Value>
 </Data>
 <DefaultData>NewPatientDefaultData</DefaultData>
