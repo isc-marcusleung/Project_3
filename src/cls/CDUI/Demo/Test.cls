@@ -9,7 +9,7 @@ Class CDUI.Demo.Test Extends Ens.Util.IOLogger
 
 Parameter DefaultPageSize = 500;
 
-Parameter MaxNumOfRetry = 5;
+Parameter MaxNumOfRetry = 8;
 
 ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", LocationTypeID As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
@@ -71,10 +71,8 @@ ClassMethod NewLocation()
 
 // Return patient ID list
 
-ClassMethod NewPatient(NumOfPatient As %Integer = 1) As %List
+ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 {
-	set patientIdList = $listbuild()
-
 	$$$LOGINFO("[NewPatient] Retrive the insurance list.")
 	set sc = ..GetARCAuxilInsurType(1, ..#DefaultPageSize,,.insurTypeObjList)
 	if $$$ISERR(sc)
@@ -126,12 +124,12 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1) As %List
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){
 						set $list(patientIdList, * + 1) = json.ID
-						$$$LOGINFO("[NewPatient] Created ID "_json.ID)
+						//$$$LOGINFO("[NewPatient] Created ID "_json.ID)
 						set isDone = 1
 					} else {
 						$$$LOGERROR("[NewPatient] Failed to create a patient. "_json.ERROR)
 						// if it matches, remove the invalid insurance record from the list
-						set isMatch = $MATCH("E^Private Health Fund does not have a valid entry^INSTDesc", ".*does not have a valid entry\^(INSTDesc|AUXITDesc).*")
+						set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^(INSTDesc|AUXITDesc).*")
 						if isMatch {
 							do insurTypeObjList.RemoveAt(randInsurTypeIndex)
 						}
@@ -147,9 +145,9 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1) As %List
 			set trialCnt = trialCnt + 1
 		}
 	}
-	set resultSize = $listlength(patientIdList) - 1
+	set resultSize = $listlength(patientIdList)
+	$$$LOGINFO("patientIdList: "_$LISTTOSTRING(patientIdList))
 	$$$LOGINFO("[NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
-	quit patientIdList
 }
 
 ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
@@ -198,13 +196,12 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 		}
 }
 
-ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
+ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 {
 	set failedCount = 0
 	set locationTypeId = "E" // TODO make it constant / enum
 	set admType = "I,E"
 	set minAdmDate = "1/1/1990"
-	set episodeIdList = $listbuild()
 
 	$$$LOGINFO("[NewEpisode] Retrive the location list.")
 	set sc = ..GetLocation(,1,locationTypeId,..#DefaultPageSize,, .locationObjList)
@@ -214,58 +211,68 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 	}
 
+	//create patient, the number of episode is equal to the number of patient
+	do ..NewPatient(NumOfEpisode, .patientIdList)
 	// generate patient records and insert them to TrakCare via API.
 	for cnt = 1:1:NumOfEpisode 
 	{	
-		try 
-		{
-			//create patient
-			set patientIdList = ..NewPatient()
-			if ($listlength(patientIdList) '= 2){
-				Throw ##class(%Exception.General).%New("Failed to get patient Id.") //TODO to see which exception should be used.
-			}
-			
-			//Set up episode request
-			set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
-			set request.PatientID = $list(patientIdList,2)
-			set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
-			set request.PAADMAdmDate = ##class(PUtil).CustomDate($zdateh(minAdmDate), $piece($horolog, ",", 1))
-			set request.PAADMAdmTime = ##class(PUtil).Time(2)
-
-
-			if (locationObjList.Count() > 0){
-				set location = locationObjList.GetAt(##class(PUtil).Random(locationObjList.Count()) + 1)
-				set request.CTLOCDesc = location.CTLOCDesc
-			}
-
-			#; write !!
-			#; zw location
-
-			write !!
-			zwrite request
-
-			set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
-			set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-			if $$$ISOK(sc)
-			{	
-				set json = {}.%FromJSON(response.StringValue)
-				if (json.ERROR = ""){ //No error message
-					set $list(episodeIdList, * + 1) = json.ID
-					#; zwrite response
-					$$$LOGINFO("[NewEpisode] Created ID "_json.ID)
-				} else {
-				 Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+		set trialCnt = 1
+		set isDone = 0
+		while ((..#MaxNumOfRetry >= trialCnt) && ('isDone)){
+			try 
+			{
+				$$$LOGINFO("[NewEpisode] Trial: "_trialCnt)
+				//Set up episode request
+				set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
+				set request.PatientID = $list(patientIdList,cnt)
+				set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
+				set request.PAADMAdmDate = ##class(PUtil).CustomDate($zdateh(minAdmDate), $piece($horolog, ",", 1))
+				set request.PAADMAdmTime = ##class(PUtil).Time(2)
+				if (locationObjList.Count() > 0){
+					set randLocationIndex = ##class(PUtil).Random(locationObjList.Count()) + 1
+					set location = locationObjList.GetAt(randLocationIndex)
+					set request.CTLOCDesc = location.CTLOCDesc
 				}
+
+				#; write !!
+				#; zw location
+
+				#; write !!
+				#; zwrite request
+				$$$LOGINFO("[NewEpisode] Request: "_request.SerialisedGet())
+				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+				if $$$ISOK(sc)
+				{	
+					set json = {}.%FromJSON(response.StringValue)
+					if (json.ERROR = ""){ //No error message
+						set $list(episodeIdList, * + 1) = json.ID
+						#; zwrite response
+						//$$$LOGINFO("[NewEpisode] Created ID "_json.ID)
+						set isDone = 1
+					} else 
+					{
+						$$$LOGERROR("[NewEpisode] Failed to create an episode. "_json.ERROR)
+						// if it matches, remove the invalid insurance record from the list
+						set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^CTLOCDesc.*")
+						if isMatch {
+							do locationObjList.RemoveAt(randLocationIndex)
+						}
+					}
+				} else {
+						$$$LOGERROR("[NewEpisode] Failed to create an episode. "_$System.Status.DisplayError(sc))
+				}
+			} catch ex 
+			{	
+					$$$LOGERROR("[NewEpisode] Failed to create an episode. "_ex.DisplayString())
 			} 
+			set trialCnt = trialCnt + 1
 		}
-		catch ex 
-		{	
-			$$$LOGERROR("[NewEpisode] Failed to create an Episode. "_ex.DisplayString())
-			set failedCount = failedCount + 1
-		} 
 	}
-	$$$LOGINFO("[NewEpisode] Success count: "_(NumOfEpisode-failedCount)_", Failure count: "_failedCount)
-	return episodeIdList
+	set resultSize = $listlength(episodeIdList)
+	$$$LOGINFO("episodeIdList: "_$LISTTOSTRING(episodeIdList))
+	$$$LOGINFO("[NewEpisode] Success count: "_resultSize_", Failure count: "_(NumOfEpisode - resultSize))
+	quit
 }
 
 // ClassMethod ListLocations()
@@ -312,6 +319,6 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1) As %List
 
 // }
 
-// }
+// 
 
 }
