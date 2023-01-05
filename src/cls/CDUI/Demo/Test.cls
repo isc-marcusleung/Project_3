@@ -199,6 +199,7 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 				if $$$ISOK(sc)
 				{
+					$$$LOGINFO("[NewPatient] Response body: "_response.StringValue)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){
 						set $list(patientIdList, * + 1) = json.ID
@@ -278,7 +279,7 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 				set request.PatientID = $list(patientIdList,randPatientIdListIndex)
 				set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
 				set request.PAADMAdmDate = ##class(PUtil).CustomDate($zdateh(minAdmDate), $piece($horolog, ",", 1))
-				set request.PAADMAdmTime = ##class(PUtil).Time(2)
+				set request.PAADMAdmTime = ##class(PUtil).Time(,,2)
 				if (locationObjList.Count() > 0){
 					set randLocationIndex = ##class(PUtil).Random(locationObjList.Count()) + 1
 					set location = locationObjList.GetAt(randLocationIndex)
@@ -288,8 +289,10 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 				$$$LOGINFO("[NewEpisode] Request: "_request.SerialisedGet())
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
 				if $$$ISOK(sc)
 				{	
+					$$$LOGINFO("[NewEpisode] Response body: "_response.StringValue)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){ //No error message
 						//For the return
@@ -367,24 +370,32 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 
 				//ARCItmMast (ARCIMEffDate) > Order (OEORISttDat,OEORISttTim)
 				//Episode (PAADMAdmDate,PAADMAdmTime) > Order (OEORISttDat, OEORISttTim)
-				// add 1 day to the minDate
 				set arcimEffDate = arcItmMastVo.ARCIMEffDate
 				set paadmAdmDate = $zdateh(episodeVo.PAADMAdmDate,4)
 				set minDate = paadmAdmDate
-		
+				set isAdmDateAsMinDate = 1
+
 				//Get the larger date as a min date for the generation of the date (OEORISttDat) in Order 
 				if arcimEffDate > paadmAdmDate {
 					set minDate = arcimEffDate
+					set isAdmDateAsMinDate = 0
 				}
-
+				$$$LOGINFO("[NewOrder] arcimEffDate: "_$zdate(arcimEffDate, 4)_", PAADMAdmDate: "_episodeVo.PAADMAdmDate_", minDate for order: "_$zdate(minDate, 4))
+		
 				set request.OEORISttDat = ##class(PUtil).CustomDate(minDate, $piece($horolog, ",", 1))
-				set request.OEORISttTim = ##class(PUtil).Time(2)
+
+				if isAdmDateAsMinDate {
+					set request.OEORISttTim = ##class(PUtil).Time(episodeVo.PAADMAdmTime,,2)
+				} else {
+					set request.OEORISttTim = ##class(PUtil).Time(,,2)
+				}
 
 				$$$LOGINFO("[NewOrder] Request: "_request.SerialisedGet())
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 				if $$$ISOK(sc)
 				{	
+					$$$LOGINFO("[NewEpisode] Response body: "_response.StringValue)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){ //No error message
 						set $list(orderIdList, * + 1) = json.ID
