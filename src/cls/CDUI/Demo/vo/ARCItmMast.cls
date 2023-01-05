@@ -26,7 +26,7 @@ ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.ARCItmMast
     set obj.ARCBGDesc = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.ARCBGDesc)
     set obj.ARCSGDesc = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.ARCSGDesc)
     set obj.ARCIMItemCatDR = ##class(CommonUtil).decodeXMLEscapedChar(dynamicObj.ARCIMItemCatDR)
-    set obj.ARCIMEffDate = dynamicObj.ARCIMEffDate
+    set obj.ARCIMEffDate = $piece(dynamicObj.ARCIMEffDate,"Z")
 
     return obj
 }

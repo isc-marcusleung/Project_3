@@ -242,12 +242,13 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 		}
 }
 
-ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
+ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 {
 	set failedCount = 0
 	set locationTypeId = "E" // TODO make it constant / enum
 	set admType = "I,E"
 	set minAdmDate = "1/1/1990"
+	set episodeVoObjList = ##class(%ListOfObjects).%New()
 
 	$$$LOGINFO("[NewEpisode] Retrive the location list.")
 	set sc = ..GetLocation(,1,locationTypeId,..#DefaultPageSize,, .locationObjList)
@@ -291,6 +292,9 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 				{	
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){ //No error message
+						//For the return
+						do episodeVoObjList.Insert(##class(CDUI.Demo.vo.Episode).newInstance(request,json.ID)) 
+						//For the printout
 						set $list(episodeIdList, * + 1) = json.ID
 						//remove the used patient id from the patientIdList
 						set patientIdList = $List(patientIdList,1,randPatientIdListIndex-1)_$list(patientIdList,randPatientIdListIndex+1,$LISTLENGTH(patientIdList))
@@ -322,6 +326,94 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 	set resultSize = $listlength(episodeIdList)
 	$$$LOGINFO("episodeIdList: "_$LISTTOSTRING(episodeIdList))
 	$$$LOGINFO("[NewEpisode] Success count: "_resultSize_", Failure count: "_(NumOfEpisode - resultSize))
+}
+
+ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
+{
+	set failedCount = 0
+	
+	$$$LOGINFO("[NewOrder] Retrive the ARCItmMast list.")
+	set sc = ..GetARCItmMast(1,,..#DefaultPageSize, .arcItmMastObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[NewOrder] Failed to get ARCItmMast.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
+
+	//create patient, the number of episode is equal to the number of patient
+	do ..NewEpisode(NumOfOrder, .episodeVoObjList)
+	
+	set trialCnt = 1
+	set numOfLoop = NumOfOrder
+	while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0))
+	{
+		$$$LOGINFO("[NewOrder] Trial: "_trialCnt_", Number of order to be created: "_numOfLoop)
+		set numOfFailed = 0
+		
+		for cnt = 1:1:numOfLoop 
+		{	
+			try 
+			{				
+				//Set up Order request
+				set request = ##class(CDUI.Demo.Request.NewOrder).%New()
+				set randEpisodeVoListIndex = ($$$PRand(episodeVoObjList.Count()) + 1)
+				set randArcItmMastObjListIndex = ($$$PRand(arcItmMastObjList.Count()) + 1)
+
+				set episodeVo = episodeVoObjList.GetAt(randEpisodeVoListIndex)
+				set arcItmMastVo = arcItmMastObjList.GetAt(randArcItmMastObjListIndex)
+
+				set request.Item = arcItmMastVo.ID
+				set request.EpisodeID = episodeVo.ID
+
+				//ARCItmMast (ARCIMEffDate) > Order (OEORISttDat,OEORISttTim)
+				//Episode (PAADMAdmDate,PAADMAdmTime) > Order (OEORISttDat, OEORISttTim)
+				// add 1 day to the minDate
+				set arcimEffDate = arcItmMastVo.ARCIMEffDate
+				set paadmAdmDate = $zdateh(episodeVo.PAADMAdmDate,4)
+				set minDate = paadmAdmDate
+		
+				//Get the larger date as a min date for the generation of the date (OEORISttDat) in Order 
+				if arcimEffDate > paadmAdmDate {
+					set minDate = arcimEffDate
+				}
+
+				set request.OEORISttDat = ##class(PUtil).CustomDate(minDate, $piece($horolog, ",", 1))
+				set request.OEORISttTim = ##class(PUtil).Time(2)
+
+				$$$LOGINFO("[NewOrder] Request: "_request.SerialisedGet())
+				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+				if $$$ISOK(sc)
+				{	
+					set json = {}.%FromJSON(response.StringValue)
+					if (json.ERROR = ""){ //No error message
+						set $list(orderIdList, * + 1) = json.ID
+						//remove the episodeVo and arcItmMastVo from lists
+						do episodeVoObjList.RemoveAt(randEpisodeVoListIndex)
+						do arcItmMastObjList.RemoveAt(randArcItmMastObjListIndex)
+					} else 
+					{
+						$$$LOGERROR("[NewOrder] Failed to create an order. Error(Json): "_json.ERROR)
+						set numOfFailed = numOfFailed + 1
+					}
+				} else {
+						$$$LOGERROR("[NewOrder] Failed to create an order. Error(SC): "_$System.Status.DisplayError(sc))
+						set numOfFailed = numOfFailed + 1
+				}
+			} catch ex 
+			{	
+					$$$LOGERROR("[NewOrder] Failed to create an order. Error(Ex): "_ex.DisplayString())
+					set numOfFailed = numOfFailed + 1
+			} 
+		}
+		$$$LOGINFO("[NewOrder] Number of failure: "_numOfFailed)
+		set numOfLoop = numOfFailed
+		set trialCnt = trialCnt + 1
+	}
+		
+	set resultSize = $listlength(orderIdList)
+	$$$LOGINFO("orderIdList: "_$LISTTOSTRING(orderIdList))
+	$$$LOGINFO("[NewOrder] Success count: "_resultSize_", Failure count: "_(NumOfOrder - resultSize))
 }
 
 // ClassMethod ListLocations()
