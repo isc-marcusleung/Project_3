@@ -165,14 +165,15 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 
 	$$$LOGINFO("[NewPatient] Create new patients.")
 	// generate patient records and insert them to TrakCare via API.
-	for cnt = 1:1:NumOfPatient 
-	{	
-		set trialCnt = 1
-		set isDone = 0
-		while ((..#MaxNumOfRetry >= trialCnt) && ('isDone)){
+	set trialCnt = 1
+	set numOfLoop = NumOfPatient
+	while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0)){
+		$$$LOGINFO("[NewPatient] Trial: "_trialCnt_", Number of patient to be created: "_numOfLoop)
+		set numOfFailed = 0
+		for cnt = 1:1:numOfLoop 
+		{	
 			try 
 			{
-				$$$LOGINFO("[NewPatient] Trial: "_trialCnt)
 				// Set up patient creation request
 				set request = ##class(CDUI.Demo.Request.NewPatient).%New()
 				set request.PAPERName = ##class(PUtil).FullName()
@@ -190,13 +191,8 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 					set request.INSTDesc = insurType.AUXITInsTypeDR
 					set request.AUXITDesc = insurType.AUXITDesc
 				}
-
 				//TODO add PAPMIMedicare
-				#; write !!
-				#; zwrite insurType
 
-				#; write !!
-				#; zwrite request
 				$$$LOGINFO("[NewPatient] Request body: "_request.SerialisedGet())
 				// trigger business service
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
@@ -206,8 +202,6 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){
 						set $list(patientIdList, * + 1) = json.ID
-						//$$$LOGINFO("[NewPatient] Created ID "_json.ID)
-						set isDone = 1
 					} else {
 						$$$LOGERROR("[NewPatient] Failed to create a patient. Error(JSON): "_json.ERROR)
 						// if it matches, remove the invalid insurance record from the list
@@ -215,18 +209,24 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 						if isMatch {
 							do insurTypeObjList.RemoveAt(randInsurTypeIndex)
 						}
+						set numOfFailed = numOfFailed + 1
 					}
 				} else {
 					$$$LOGERROR("[NewPatient] Failed to create a patient. Error(SC): "_$System.Status.DisplayError(sc))
+					set numOfFailed = numOfFailed + 1
 				}
 			} 
 			catch ex 
 			{	
 				$$$LOGERROR("[NewPatient] Failed to create a patient. Error(Ex): "_ex.DisplayString())
+				set numOfFailed = numOfFailed + 1
 			} 
-			set trialCnt = trialCnt + 1
 		}
+		$$$LOGINFO("[NewPatient] Number of failure: "_numOfFailed)
+		set numOfLoop = numOfFailed
+		set trialCnt = trialCnt + 1
 	}
+	
 	set resultSize = $listlength(patientIdList)
 	$$$LOGINFO("patientIdList: "_$LISTTOSTRING(patientIdList))
 	$$$LOGINFO("[NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
@@ -259,15 +259,18 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 
 	//create patient, the number of episode is equal to the number of patient
 	do ..NewPatient(NumOfEpisode, .patientIdList)
-	// generate patient records and insert them to TrakCare via API.
-	for cnt = 1:1:NumOfEpisode 
-	{	
-		set trialCnt = 1
-		set isDone = 0
-		while ((..#MaxNumOfRetry >= trialCnt) && ('isDone)){
+	
+	set trialCnt = 1
+	set numOfLoop = NumOfEpisode
+	while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0))
+	{
+		$$$LOGINFO("[NewEpisode] Trial: "_trialCnt_", Number of episode to be created: "_numOfLoop)
+		set numOfFailed = 0
+		
+		for cnt = 1:1:numOfLoop 
+		{	
 			try 
 			{
-				$$$LOGINFO("[NewEpisode] Trial: "_trialCnt)
 				//Set up episode request
 				set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
 				set request.PatientID = $list(patientIdList,cnt)
@@ -280,11 +283,6 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 					set request.CTLOCDesc = location.CTLOCDesc
 				}
 
-				#; write !!
-				#; zw location
-
-				#; write !!
-				#; zwrite request
 				$$$LOGINFO("[NewEpisode] Request: "_request.SerialisedGet())
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
@@ -293,9 +291,6 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){ //No error message
 						set $list(episodeIdList, * + 1) = json.ID
-						#; zwrite response
-						//$$$LOGINFO("[NewEpisode] Created ID "_json.ID)
-						set isDone = 1
 					} else 
 					{
 						$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(Json): "_json.ERROR)
@@ -304,21 +299,26 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 						if isMatch {
 							do locationObjList.RemoveAt(randLocationIndex)
 						}
+						set numOfFailed = numOfFailed + 1
 					}
 				} else {
 						$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(SC): "_$System.Status.DisplayError(sc))
+						set numOfFailed = numOfFailed + 1
 				}
 			} catch ex 
 			{	
 					$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(Ex): "_ex.DisplayString())
+					set numOfFailed = numOfFailed + 1
 			} 
-			set trialCnt = trialCnt + 1
 		}
+		$$$LOGINFO("[NewEpisode] Number of failure: "_numOfFailed)
+		set numOfLoop = numOfFailed
+		set trialCnt = trialCnt + 1
 	}
+		
 	set resultSize = $listlength(episodeIdList)
 	$$$LOGINFO("episodeIdList: "_$LISTTOSTRING(episodeIdList))
 	$$$LOGINFO("[NewEpisode] Success count: "_resultSize_", Failure count: "_(NumOfEpisode - resultSize))
-	quit
 }
 
 // ClassMethod ListLocations()
