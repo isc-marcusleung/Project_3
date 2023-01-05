@@ -11,6 +11,42 @@ Parameter DefaultPageSize = 500;
 
 Parameter MaxNumOfRetry = 8;
 
+ClassMethod getARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
+{
+	$$$LOGINFO("[getARCItmMast] Start retrieving ARCItmMast...")
+	set request = ##class(CDUI.Demo.Request.ARCItmMast).%New()
+	if Page'=""
+	{
+		set request.page = Page
+	}
+	if PageSize'=""
+	{
+		set request.count = PageSize
+	}
+	if Active = 1 {
+		set request.Active = "Y"
+	} elseif Active = 0 {
+		set request.Active = "N"
+	}
+	$$$LOGINFO("[getARCItmMast] Request body: "_request.SerialisedGet())
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+	set ResultObjList = ##class(%ListOfObjects).%New()
+
+	if $$$ISOK(sc)
+	{
+		//$$$LOGINFO("[getARCItmMast] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set insurType = ##class("CDUI.Demo.vo.ARCItmMast").newInstance(value)
+			do ResultObjList.Insert(insurType)
+		}
+	}
+	quit sc
+}
+
 ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", LocationTypeID As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.Location).%New()
@@ -29,16 +65,20 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 	{
 		set request.count = PageSize
 	}
-	if Active {
+	if Active = 1 {
 		set request.Active = "Y"
+	} elseif Active = 0 {
+		set request.Active = "N"
 	}
 
+	$$$LOGINFO("[GetLocation] Request body: "_request.SerialisedGet())
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 	set ResultObjList = ##class(%ListOfObjects).%New()
-	set currentDate = $piece($horolog,",",1)
+
 	if $$$ISOK(sc)
 	{	
+		//$$$LOGINFO("[GetLocation] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
@@ -53,6 +93,46 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 	quit sc
 }
 
+ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
+{
+	set request = ##class(CDUI.Demo.Request.ARCAuxilInsurType).%New()
+	if Page'=""
+	{
+		set request.page = Page
+	}
+	if PageSize'=""
+	{
+		set request.count = PageSize
+	}
+	if Active = 1 {
+		set request.Active = "Y"
+	} elseif Active = 0 {
+		set request.Active = "N"
+	}
+
+	$$$LOGINFO("[GetARCAuxilInsurType] Request body: "_request.SerialisedGet())
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+	set ResultObjList = ##class(%ListOfObjects).%New()
+
+	if $$$ISOK(sc)
+	{
+		//$$$LOGINFO("[GetARCAuxilInsurType] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
+			do ResultObjList.Insert(insurType)
+			#; if ((value.AUXITDateFrom <= currentDate) && ((value.AUXITDateTo = "") || (value.AUXITDateTo >= currentDate))){
+			#; 	set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
+			#; 	#; set Results($increment(Results)) = $listbuild(value)
+			#; 	do ResultObjList.Insert(insurType)
+			#; }
+		}
+	}
+	quit sc
+}
 ClassMethod NewLocation()
 {
 	set CTLOCCode = "Z"_##class(%PopulateUtils).String(5)
@@ -115,7 +195,7 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 
 				#; write !!
 				#; zwrite request
-				$$$LOGINFO("[NewPatient] request: "_request.SerialisedGet())
+				$$$LOGINFO("[NewPatient] Request body: "_request.SerialisedGet())
 				// trigger business service
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
@@ -150,41 +230,7 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 	$$$LOGINFO("[NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
 }
 
-ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
-{
-	set request = ##class(CDUI.Demo.Request.ARCAuxilInsurType).%New()
-	if Page'=""
-	{
-		set request.page = Page
-	}
-	if PageSize'=""
-	{
-		set request.count = PageSize
-	}
-	if Active {
-		set request.Active = "Y"
-	}
 
-	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
-	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-	set ResultObjList = ##class(%ListOfObjects).%New()
-	set currentDate = $piece($horolog,",",1)
-
-	if $$$ISOK(sc)
-	{
-		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			if ((value.AUXITDateFrom <= currentDate) && ((value.AUXITDateTo = "") || (value.AUXITDateTo >= currentDate))){
-				set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
-				#; set Results($increment(Results)) = $listbuild(value)
-				do ResultObjList.Insert(insurType)
-			}
-		}
-	}
-	quit sc
-}
 
 ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %Integer = "")
 {
