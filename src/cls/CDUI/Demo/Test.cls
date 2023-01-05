@@ -11,9 +11,9 @@ Parameter DefaultPageSize = 500;
 
 Parameter MaxNumOfRetry = 8;
 
-ClassMethod getARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
+ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
-	$$$LOGINFO("[getARCItmMast] Start retrieving ARCItmMast...")
+	$$$LOGINFO("[GetARCItmMast] Start retrieving ARCItmMast...")
 	set request = ##class(CDUI.Demo.Request.ARCItmMast).%New()
 	if Page'=""
 	{
@@ -28,14 +28,14 @@ ClassMethod getARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 	} elseif Active = 0 {
 		set request.Active = "N"
 	}
-	$$$LOGINFO("[getARCItmMast] Request body: "_request.SerialisedGet())
+	$$$LOGINFO("[GetARCItmMast] Request body: "_request.SerialisedGet())
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 	set ResultObjList = ##class(%ListOfObjects).%New()
 
 	if $$$ISOK(sc)
 	{
-		//$$$LOGINFO("[getARCItmMast] Response body: "_response.StringValue)
+		//$$$LOGINFO("[GetARCItmMast] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
@@ -49,6 +49,7 @@ ClassMethod getARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 
 ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", LocationTypeID As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
+	$$$LOGINFO("[GetLocation] Start retrieving Location...")
 	set request = ##class(CDUI.Demo.Request.Location).%New()
 	
 	if StartsWith '= "" {
@@ -133,6 +134,7 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 	}
 	quit sc
 }
+
 ClassMethod NewLocation()
 {
 	set CTLOCCode = "Z"_##class(%PopulateUtils).String(5)
@@ -207,7 +209,7 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 						//$$$LOGINFO("[NewPatient] Created ID "_json.ID)
 						set isDone = 1
 					} else {
-						$$$LOGERROR("[NewPatient] Failed to create a patient. "_json.ERROR)
+						$$$LOGERROR("[NewPatient] Failed to create a patient. Error(JSON): "_json.ERROR)
 						// if it matches, remove the invalid insurance record from the list
 						set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^(INSTDesc|AUXITDesc).*")
 						if isMatch {
@@ -215,12 +217,12 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 						}
 					}
 				} else {
-					$$$LOGERROR("[NewPatient] Failed to create a patient. "_$System.Status.DisplayError(sc))
+					$$$LOGERROR("[NewPatient] Failed to create a patient. Error(SC): "_$System.Status.DisplayError(sc))
 				}
 			} 
 			catch ex 
 			{	
-				$$$LOGERROR("[NewPatient] Failed to create a patient. "_ex.DisplayString())
+				$$$LOGERROR("[NewPatient] Failed to create a patient. Error(Ex): "_ex.DisplayString())
 			} 
 			set trialCnt = trialCnt + 1
 		}
@@ -229,8 +231,6 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 	$$$LOGINFO("patientIdList: "_$LISTTOSTRING(patientIdList))
 	$$$LOGINFO("[NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
 }
-
-
 
 ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %Integer = "")
 {
@@ -298,7 +298,7 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 						set isDone = 1
 					} else 
 					{
-						$$$LOGERROR("[NewEpisode] Failed to create an episode. "_json.ERROR)
+						$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(Json): "_json.ERROR)
 						// if it matches, remove the invalid insurance record from the list
 						set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^CTLOCDesc.*")
 						if isMatch {
@@ -306,11 +306,11 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 						}
 					}
 				} else {
-						$$$LOGERROR("[NewEpisode] Failed to create an episode. "_$System.Status.DisplayError(sc))
+						$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(SC): "_$System.Status.DisplayError(sc))
 				}
 			} catch ex 
 			{	
-					$$$LOGERROR("[NewEpisode] Failed to create an episode. "_ex.DisplayString())
+					$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(Ex): "_ex.DisplayString())
 			} 
 			set trialCnt = trialCnt + 1
 		}
