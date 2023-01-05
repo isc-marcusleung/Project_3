@@ -273,7 +273,8 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 			{
 				//Set up episode request
 				set request = ##class(CDUI.Demo.Request.NewEpisode).%New()
-				set request.PatientID = $list(patientIdList,cnt)
+				set randPatientIdListIndex = $$$PRand($listlength(patientIdList))+1
+				set request.PatientID = $list(patientIdList,randPatientIdListIndex)
 				set request.PAADMType = $piece(admType, ",",$$$PRand(2)+1)
 				set request.PAADMAdmDate = ##class(PUtil).CustomDate($zdateh(minAdmDate), $piece($horolog, ",", 1))
 				set request.PAADMAdmTime = ##class(PUtil).Time(2)
@@ -291,6 +292,8 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeIdList)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){ //No error message
 						set $list(episodeIdList, * + 1) = json.ID
+						//remove the used patient id from the patientIdList
+						set patientIdList = $List(patientIdList,1,randPatientIdListIndex-1)_$list(patientIdList,randPatientIdListIndex+1,$LISTLENGTH(patientIdList))
 					} else 
 					{
 						$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(Json): "_json.ERROR)
