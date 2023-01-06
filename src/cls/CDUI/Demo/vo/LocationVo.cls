@@ -1,6 +1,6 @@
 Import CDUI.Demo.Utils
 
-Class CDUI.Demo.vo.Location Extends %RegisteredObject
+Class CDUI.Demo.vo.LocationVo Extends %RegisteredObject
 {
 
 Property CTLOCCode As %String;
@@ -15,7 +15,7 @@ Property CTLOCDateActiveFrom As %Date;
 
 Property CTLOCDateActiveTo As %Date;
 
-ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.Location
+ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.LocationVo
 {
     set obj = ..%New()
     set obj.CTLOCCode = dynamicObj.CTLOCCode

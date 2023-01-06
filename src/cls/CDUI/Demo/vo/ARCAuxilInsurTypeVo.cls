@@ -1,6 +1,6 @@
 Import CDUI.Demo.Utils
 
-Class CDUI.Demo.vo.ARCAuxilInsurType Extends %RegisteredObject
+Class CDUI.Demo.vo.ARCAuxilInsurTypeVo Extends %RegisteredObject
 {
 
 Property AUXITRowId As %String;
@@ -15,7 +15,7 @@ Property AUXITDateFrom As %Date;
 
 Property AUXITDateTo As %Date;
 
-ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.ARCAuxilInsurType
+ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.ARCAuxilInsurTypeVo
 {
     set obj = ..%New()
     set obj.AUXITRowId = dynamicObj.AUXITRowId

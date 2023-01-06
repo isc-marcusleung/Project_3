@@ -45,7 +45,7 @@ ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set insurType = ##class("CDUI.Demo.vo.ARCItmMast").newInstance(value)
+			set insurType = ##class("CDUI.Demo.vo.ARCItmMasVo").newInstance(value)
 			do ResultObjList.Insert(insurType)
 		}
 	}
@@ -92,7 +92,7 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set location = ##class("CDUI.Demo.vo.Location").newInstance(value)
+			set location = ##class("CDUI.Demo.vo.LocationVo").newInstance(value)
 			do ResultObjList.Insert(location)
 		}
 	}
@@ -132,7 +132,7 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
+			set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurTypeVo").newInstance(value)
 			do ResultObjList.Insert(insurType)
 		}
 	}
@@ -303,7 +303,7 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){ 
 						//No error then store the record to episodeVoObjList
-						do episodeVoObjList.Insert(##class(CDUI.Demo.vo.Episode).newInstance(request,json.ID)) 
+						do episodeVoObjList.Insert(##class(CDUI.Demo.vo.EpisodeVo).newInstance(request,json.ID)) 
 						//For the printout purpose in the bottom
 						set $list(episodeIdList, * + 1) = json.ID
 						//remove the used patient id from the patientIdList if it is used for the creation of episode successfully

@@ -1,4 +1,4 @@
-Class CDUI.Demo.vo.Episode Extends %RegisteredObject
+Class CDUI.Demo.vo.EpisodeVo Extends %RegisteredObject
 {
 
 Property ID As %String;
@@ -13,7 +13,7 @@ Property PAADMAdmTime As %String;
 
 Property CTLOCDesc As %String;
 
-ClassMethod newInstance(NewEpisodeReq, EpisodeID) As CDUI.Demo.vo.Episode
+ClassMethod newInstance(NewEpisodeReq, EpisodeID) As CDUI.Demo.vo.EpisodeVo
 {
     set obj = ..%New()
     set obj.ID = EpisodeID

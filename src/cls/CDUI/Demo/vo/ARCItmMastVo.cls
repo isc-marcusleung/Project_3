@@ -1,6 +1,6 @@
 Import CDUI.Demo.Utils
 
-Class CDUI.Demo.vo.ARCItmMast Extends %RegisteredObject
+Class CDUI.Demo.vo.ARCItmMasVo Extends %RegisteredObject
 {
 
 Property ID As %String;
@@ -17,7 +17,7 @@ Property ARCIMItemCatDR As %String;
 
 Property ARCIMEffDate As %String;
 
-ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.ARCItmMast
+ClassMethod newInstance(dynamicObj As %DynamicObject) As CDUI.Demo.vo.ARCItmMasVo
 {
     set obj = ..%New()
     set obj.ID = dynamicObj.ID
