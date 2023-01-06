@@ -5,16 +5,17 @@ Include %syPrompt
 Class CDUI.Demo.Test Extends Ens.Util.IOLogger
 {
 
-// Default page size for record retrieval.
-
+///  Default page size for record retrieval.
 Parameter DefaultPageSize = 500;
 
+/// Default Max number of retry in the process
 Parameter MaxNumOfRetry = 8;
 
 ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
 	$$$LOGINFO("[GetARCItmMast] Start retrieving ARCItmMast...")
 	set request = ##class(CDUI.Demo.Request.ARCItmMast).%New()
+	//Set up request
 	if Page'=""
 	{
 		set request.page = Page
@@ -28,11 +29,15 @@ ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 	} elseif Active = 0 {
 		set request.Active = "N"
 	}
+
 	$$$LOGINFO("[GetARCItmMast] Request body: "_request.SerialisedGet())
+
+	//Send the request
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-	set ResultObjList = ##class(%ListOfObjects).%New()
 
+	//Store the retrieved ARCItmMast records to a object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
 	if $$$ISOK(sc)
 	{
 		//$$$LOGINFO("[GetARCItmMast] Response body: "_response.StringValue)
@@ -51,7 +56,7 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 {
 	$$$LOGINFO("[GetLocation] Start retrieving Location...")
 	set request = ##class(CDUI.Demo.Request.Location).%New()
-	
+	//Set up a request
 	if StartsWith '= "" {
 		set request.Description = StartsWith
 	}
@@ -73,10 +78,13 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 	}
 
 	$$$LOGINFO("[GetLocation] Request body: "_request.SerialisedGet())
+
+	//Send the request
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-	set ResultObjList = ##class(%ListOfObjects).%New()
 
+	//Store the retrieved Location records to a object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
 	if $$$ISOK(sc)
 	{	
 		//$$$LOGINFO("[GetLocation] Response body: "_response.StringValue)
@@ -86,9 +94,6 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 		{	
 			set location = ##class("CDUI.Demo.vo.Location").newInstance(value)
 			do ResultObjList.Insert(location)
-			#; if ((value.CTLOCDateActiveFrom <= currentDate) && ((value.CTLOCDateActiveTo = "") || (value.CTLOCDateActiveTo >= currentDate))){
-			#; 	set location = ##class("CDUI.Demo.vo.Location").newInstance(value)
-			#; 	do ResultList.Insert(location)
 		}
 	}
 	quit sc
@@ -97,6 +102,7 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
 	set request = ##class(CDUI.Demo.Request.ARCAuxilInsurType).%New()
+	//Set up the request
 	if Page'=""
 	{
 		set request.page = Page
@@ -112,10 +118,13 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 	}
 
 	$$$LOGINFO("[GetARCAuxilInsurType] Request body: "_request.SerialisedGet())
+
+	//Send the request
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-	set ResultObjList = ##class(%ListOfObjects).%New()
 
+	//Store the retrieved ARCAuxilInsurType records to a object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
 	if $$$ISOK(sc)
 	{
 		//$$$LOGINFO("[GetARCAuxilInsurType] Response body: "_response.StringValue)
@@ -125,11 +134,6 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 		{	
 			set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
 			do ResultObjList.Insert(insurType)
-			#; if ((value.AUXITDateFrom <= currentDate) && ((value.AUXITDateTo = "") || (value.AUXITDateTo >= currentDate))){
-			#; 	set insurType = ##class("CDUI.Demo.vo.ARCAuxilInsurType").newInstance(value)
-			#; 	#; set Results($increment(Results)) = $listbuild(value)
-			#; 	do ResultObjList.Insert(insurType)
-			#; }
 		}
 	}
 	quit sc
@@ -151,10 +155,9 @@ ClassMethod NewLocation()
 	quit sc
 }
 
-// Return patient ID list
-
 ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 {
+	//Retrieve the ARCAuxilInsurType list for the creation of patient
 	$$$LOGINFO("[NewPatient] Retrive the insurance list.")
 	set sc = ..GetARCAuxilInsurType(1, ..#DefaultPageSize,,.insurTypeObjList)
 	if $$$ISERR(sc)
@@ -162,9 +165,8 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 		$$$LOGERROR("[NewPatient] Failed to get ARCAuxilInsurTypes.")
 		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 	}
-
-	$$$LOGINFO("[NewPatient] Create new patients.")
 	// generate patient records and insert them to TrakCare via API.
+	$$$LOGINFO("[NewPatient] Create new patients.")
 	set trialCnt = 1
 	set numOfLoop = NumOfPatient
 	while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0)){
@@ -183,18 +185,19 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 				set currentDateInt = $piece($horolog, ",", 1)
 				set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
 				set request.PAPERDob = ##class(PUtil).CustomDate(minDateInt, currentDateInt) 
-						
-				//TODO save the isurTypeObjList to global for resue
+
+				// Randomly select the insurance record from insurTypeObjList 		
 				if (insurTypeObjList.Count() > 0){
 					set randInsurTypeIndex = ##class(PUtil).Random(insurTypeObjList.Count()) + 1
 					set insurType = insurTypeObjList.GetAt(randInsurTypeIndex)
 					set request.INSTDesc = insurType.AUXITInsTypeDR
 					set request.AUXITDesc = insurType.AUXITDesc
 				}
-				//TODO add PAPMIMedicare
+				//TODO Marcus add PAPMIMedicare
 
 				$$$LOGINFO("[NewPatient] Request body: "_request.SerialisedGet())
-				// trigger business service
+				
+				//Send the request
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 				if $$$ISOK(sc)
@@ -202,6 +205,7 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 					$$$LOGINFO("[NewPatient] Response body: "_response.StringValue)
 					set json = {}.%FromJSON(response.StringValue)
 					if (json.ERROR = ""){
+						//No error then store the patient Id
 						set $list(patientIdList, * + 1) = json.ID
 					} else {
 						$$$LOGERROR("[NewPatient] Failed to create a patient. Error(JSON): "_json.ERROR)
@@ -246,11 +250,12 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 {
 	set failedCount = 0
-	set locationTypeId = "E" // TODO make it constant / enum
+	set locationTypeId = "E" // TODO Marcus make it constant / enum
 	set admType = "I,E"
 	set minAdmDate = "1/1/1990"
 	set episodeVoObjList = ##class(%ListOfObjects).%New()
 
+	//Retrieve the location list for the creation of a new episode
 	$$$LOGINFO("[NewEpisode] Retrive the location list.")
 	set sc = ..GetLocation(,1,locationTypeId,..#DefaultPageSize,, .locationObjList)
 	if $$$ISERR(sc)
@@ -287,6 +292,8 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 				}
 
 				$$$LOGINFO("[NewEpisode] Request: "_request.SerialisedGet())
+
+				//Send the request
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 
@@ -294,17 +301,17 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 				{	
 					$$$LOGINFO("[NewEpisode] Response body: "_response.StringValue)
 					set json = {}.%FromJSON(response.StringValue)
-					if (json.ERROR = ""){ //No error message
-						//For the return
+					if (json.ERROR = ""){ 
+						//No error then store the record to episodeVoObjList
 						do episodeVoObjList.Insert(##class(CDUI.Demo.vo.Episode).newInstance(request,json.ID)) 
-						//For the printout
+						//For the printout purpose in the bottom
 						set $list(episodeIdList, * + 1) = json.ID
-						//remove the used patient id from the patientIdList
+						//remove the used patient id from the patientIdList if it is used for the creation of episode successfully
 						set patientIdList = $List(patientIdList,1,randPatientIdListIndex-1)_$list(patientIdList,randPatientIdListIndex+1,$LISTLENGTH(patientIdList))
 					} else 
 					{
 						$$$LOGERROR("[NewEpisode] Failed to create an episode. Error(Json): "_json.ERROR)
-						// if it matches, remove the invalid insurance record from the list
+						// if it matches, remove the invalid insurance record from the list.
 						set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^CTLOCDesc.*")
 						if isMatch {
 							do locationObjList.RemoveAt(randLocationIndex)
@@ -335,6 +342,7 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 {
 	set failedCount = 0
 	
+	//Retrieve the ARCItmMast list for the creation of a new order 
 	$$$LOGINFO("[NewOrder] Retrive the ARCItmMast list.")
 	set sc = ..GetARCItmMast(1,,..#DefaultPageSize, .arcItmMastObjList)
 	if $$$ISERR(sc)
@@ -343,7 +351,7 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
 	}
 
-	//create patient, the number of episode is equal to the number of patient
+	//create episode, the number of order is equal to the number of episode
 	do ..NewEpisode(NumOfOrder, .episodeVoObjList)
 	
 	set trialCnt = 1
@@ -368,8 +376,8 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 				set request.Item = arcItmMastVo.ID
 				set request.EpisodeID = episodeVo.ID
 
-				//ARCItmMast (ARCIMEffDate) > Order (OEORISttDat,OEORISttTim)
-				//Episode (PAADMAdmDate,PAADMAdmTime) > Order (OEORISttDat, OEORISttTim)
+				//ARCItmMast (ARCIMEffDate) must > Order (OEORISttDat,OEORISttTim)
+				//Episode (PAADMAdmDate,PAADMAdmTime) must > Order (OEORISttDat, OEORISttTim)
 				set arcimEffDate = arcItmMastVo.ARCIMEffDate
 				set paadmAdmDate = $zdateh(episodeVo.PAADMAdmDate,4)
 				set minDate = paadmAdmDate
@@ -391,15 +399,18 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 				}
 
 				$$$LOGINFO("[NewOrder] Request: "_request.SerialisedGet())
+
+				//Send a request
 				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.Demo.Service.Adaptorless",.svc)
 				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 				if $$$ISOK(sc)
 				{	
-					$$$LOGINFO("[NewEpisode] Response body: "_response.StringValue)
+					$$$LOGINFO("[NewOrder] Response body: "_response.StringValue)
 					set json = {}.%FromJSON(response.StringValue)
-					if (json.ERROR = ""){ //No error message
+					if (json.ERROR = ""){ 
+						//No error, then store the order id in orderIdList
 						set $list(orderIdList, * + 1) = json.ID
-						//remove the episodeVo and arcItmMastVo from lists
+						//remove the episodeVo and arcItmMastVo from lists after it is used
 						do episodeVoObjList.RemoveAt(randEpisodeVoListIndex)
 						do arcItmMastObjList.RemoveAt(randArcItmMastObjListIndex)
 					} else 
@@ -423,54 +434,8 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 	}
 		
 	set resultSize = $listlength(orderIdList)
-	$$$LOGINFO("orderIdList: "_$LISTTOSTRING(orderIdList))
+	$$$LOGINFO("[NewOrder] orderIdList: "_$LISTTOSTRING(orderIdList))
 	$$$LOGINFO("[NewOrder] Success count: "_resultSize_", Failure count: "_(NumOfOrder - resultSize))
 }
-
-// ClassMethod ListLocations()
-
-// {
-
-// 	set promptResult = ##class(%Prompt).GetString("Search for location starting with : ",.value)
-
-// 	set sc = ..List(value,,24,.page,.results)
-
-// 	set i = ""
-
-// 	for
-
-// 	{
-
-// 		set i = $order(results(i),1,location)
-
-// 		quit:i=""
-
-// 		set code = $listget(location),codelen = $length(code)
-
-// 		write !,$listget(location,1)_$justify("",(15-codelen))_" : "_$listget(location,2)
-
-// 	}
-
-// }
-
-// ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %Integer = "")
-
-// {
-
-// 	set sc = ..GetARCAuxilInsurType(, PageSize,Page,.results)
-
-// 	set i = ""
-
-// 	set size = results.Count()
-
-// 		for cnt=1:1:size{
-
-// 			zw results.GetAt(cnt)
-
-// 		}
-
-// }
-
-// 
 
 }
