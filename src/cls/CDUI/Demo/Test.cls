@@ -178,8 +178,11 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 			{
 				// Set up patient creation request
 				set request = ##class(CDUI.Demo.Request.NewPatient).%New()
-				set request.PAPERName = ##class(PUtil).FullName()
-				set request.PAPERName2 = ##class(PUtil).FullName()
+				// Set last name
+				set request.PAPERName = ##class(PUtil).LastName()
+
+				// set first name
+				set request.PAPERName2 = ##class(PUtil).FirstName()
 				set request.CTSEXDesc = ##class(PUtil).ListElement($listfromstring(##class(Constants).#genders,","))
 				// min date = current date - maxAge, max date is current date
 				set currentDateInt = $piece($horolog, ",", 1)
