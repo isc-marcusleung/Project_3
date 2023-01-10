@@ -376,8 +376,8 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 				set request.Item = arcItmMastVo.ID
 				set request.EpisodeID = episodeVo.ID
 
-				//ARCItmMast (ARCIMEffDate) must > Order (OEORISttDat,OEORISttTim)
-				//Episode (PAADMAdmDate,PAADMAdmTime) must > Order (OEORISttDat, OEORISttTim)
+				//ARCItmMast (ARCIMEffDate) must < Order (OEORISttDat,OEORISttTim)
+				//Episode (PAADMAdmDate,PAADMAdmTime) must < Order (OEORISttDat, OEORISttTim)
 				set arcimEffDate = arcItmMastVo.ARCIMEffDate
 				set paadmAdmDate = $zdateh(episodeVo.PAADMAdmDate,4)
 				set minDate = paadmAdmDate
