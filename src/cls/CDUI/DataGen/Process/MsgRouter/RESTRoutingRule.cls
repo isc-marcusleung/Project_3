@@ -26,7 +26,7 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 </rule>
 <rule name="Patient">
 <constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
-<constraint name="msgClass" value="CDUI.DataGenGenGen.Request.NewPatient"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.NewPatient"></constraint>
 <when condition="1">
 <send transform="" target="CDUI.DataGen.Operation.REST.Patient"></send>
 <return></return>
