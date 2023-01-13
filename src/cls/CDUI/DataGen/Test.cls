@@ -341,7 +341,6 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 	$$$LOGINFO("[NewEpisode] Success count: "_resultSize_", Failure count: "_(NumOfEpisode - resultSize))
 }
 
-
 ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 {
 	set failedCount = 0
@@ -443,8 +442,8 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 	$$$LOGINFO("[NewOrder] Success count: "_resultSize_", Failure count: "_(NumOfOrder - resultSize))
 }
 
-
 // V1.0 Yufan only create Rad result, exception handling, obtain a list input from NewOrder
+
 ClassMethod NewResult(ResultType As %String, NumOfResult As %Integer = 1, Output resultIdList)
 {
     //TODO Yufan input ResultType should only have fixed options
