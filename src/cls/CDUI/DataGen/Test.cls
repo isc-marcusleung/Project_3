@@ -434,6 +434,7 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 		$$$LOGINFO("[NewOrder] Number of failure: "_numOfFailed)
 		set numOfLoop = numOfFailed
 		set trialCnt = trialCnt + 1
+		return sc
 	}
 		
 	set resultSize = $listlength(orderIdList)
@@ -583,6 +584,92 @@ ClassMethod createNewOrder(Count As %Integer = "", OrderCat As %String, NumOfOrd
 	set resultSize = $listlength(orderIdList)
 	$$$LOGINFO("[NewOrder] orderIdList: "_$LISTTOSTRING(orderIdList))
 	$$$LOGINFO("[NewOrder] Success count: "_resultSize_", Failure count: "_(NumOfOrder - resultSize))
+}
+
+// V1.0 Yufan only create Rad result, exception handling, obtain a list input from NewOrder
+
+ClassMethod NewResult(ResultType As %String, NumOfResult As %Integer = 1, Output resultIdList)
+{
+    //TODO Yufan input ResultType should only have fixed options
+	//TODO Yufan try catch
+    set failedCount = 0
+	
+	//If the user wants to generate Rad results
+	if ResultType = "Rad"{
+		//Create an order id list for the creation of new results
+		set sc = ..NewOrder(NumOfResult, .orderIdList)
+		if $$$ISERR(sc)
+		{
+			$$$LOGERROR("[NewResult] Failed to create an order id list.")
+			Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+		}
+		
+		$$$LOGINFO("[NewResult] Start generating Radiology results.")			
+		set trialCnt = 1
+		set numOfLoop = NumOfResult
+		while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0))
+		{
+			$$$LOGINFO("[NewResult] Trail: "_trialCnt_", Number of Rad result created: "_numOfLoop)
+			set numOfFailed = 0
+
+			for cnt = 1:1:numOfLoop
+			{
+				try
+				{
+					set request = ##class(CDUI.DataGen.Request.NewRadResult).%New()
+					set randOrderIDListIndex = $$$PRand($LISTLENGTH(orderIdList))+1
+					set request.OEOrdItemID = $list(orderIdList,randOrderIDListIndex)
+
+					$$$LOGINFO("[NewResult] Request: "_request.SerialisedGet())
+					set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+					set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+					
+					if $$$ISOK(sc)
+					{
+						$$$LOGINFO("[NewResult] Response body: "_response.StringValue)
+						set json = {}.%FromJSON(response.StringValue)
+						set $list(resultIdList, *+1) = json.ID
+					}
+					else
+					{
+						$$$LOGERROR("[NewResult] Fariled to create a result. Error(Json): "_json.ERROR)
+						set numOfFailed = numOfFailed + 1 
+					}
+				} 
+				
+				catch ex
+				{
+					$$$LOGERROR("[NewResult] Failed to create a new Rad result. Error(Ex): "_ex.DisplayString())
+					set numOfFailed = numOfFailed + 1
+				}
+
+			}
+		set numOfLoop = numOfFailed
+		set trialCnt = trialCnt + 1
+		}
+		
+		set resultSize = $LISTLENGTH(resultIdList)
+		$$$LOGINFO("result ID list: "_ $LISTTOSTRING(resultIdList))
+		$$$LOGINFO("[NewResult] Success count: "_resultSize)
+	}
+
+
+
+
+    if ResultType = "Rad"{
+        //TODO Yufan randomly get an orderItemID from a list generated from NewOrder()
+        $$$LOGINFO("[NewResult] Start generating Radiology results.")
+        set orderItemID = "24181||1"
+        set request = ##class(CDUI.DataGen.Request.NewRadResult).%New()
+        set request.OEOrdItemID = orderItemID
+        $$$LOGINFO("[NewResult] Request Body: "_request.SerialisedGet())
+        set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+        set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+        if $$$ISOK(sc)
+        {
+            $$$LOGINFO("[NewResult] Response body: "_response.StringValue)
+        }
+    }
 }
 
 }
