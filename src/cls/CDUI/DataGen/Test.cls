@@ -544,6 +544,150 @@ ClassMethod NewLabOrder(NumOfLabOrder As %Integer = 1, Output labOrdVoObjList) A
 	return sc
 }
 
+ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRef ResultObjList) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetOrderByCategory).%New()
+
+	//Set up the request
+	if Count'=""
+	{
+		set request.count = Count
+	}
+	if Category'=""
+	{
+		set request.category = Category
+	}
+
+	$$$LOGINFO("[GetOrderByCat] Request body: "_request.SerialisedGet())
+
+	//Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	//Store the retrieved order categories, order items records to an object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
+	if $$$ISOK(sc)
+	{
+		//$$$LOGINFO("[Get...] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set insurType = ##class("CDUI.DataGen.vo.OrderCatVo").newInstance(value)
+			do ResultObjList.Insert(insurType)
+			#; write !, value.ORCATDesc,?30,value.ID
+		}
+	}
+
+	quit sc
+}
+
+/// New method to create new order by inputting order category
+ClassMethod createNewOrder(Count As %Integer = "", OrderCat As %String, NumOfOrder As %Integer = 1, ByRef orderIdList)
+{
+	set failedCount = 0
+	
+	//Retrieve the order list by category  
+	$$$LOGINFO("[NewOrder] Retrieve the GetOrderByCat list.")
+	set sc = ..GetOrderByCat(Count, OrderCat, .orderVoObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[NewOrder] Failed to get GetOrderByCat.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
+
+	//Create episode, the number of order is equal to the number of episode
+	do ..NewEpisode(NumOfOrder, .episodeVoObjList)
+	
+	set trialCnt = 1
+	set numOfLoop = NumOfOrder
+	while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0))
+	{
+		$$$LOGINFO("[NewOrder] Trial: "_trialCnt_", Number of order to be created: "_numOfLoop)
+		set numOfFailed = 0
+		
+		for cnt = 1:1:numOfLoop 
+		{	
+			try 
+			{				
+				//Set up Order request
+				set request = ##class(CDUI.DataGen.Request.NewOrder).%New()
+
+				// Get a random episode object index 
+				set randEpisodeVoListIndex = ($$$PRand(episodeVoObjList.Count()) + 1)
+
+				// Get a random ordercategory object index 
+				set randorderVoObjListListIndex = ($$$PRand(orderVoObjList.Count()) + 1)
+
+				// Get the episode and ordercategory objects
+				set episodeVo = episodeVoObjList.GetAt(randEpisodeVoListIndex)
+				set orderCatVo = orderVoObjList.GetAt(randorderVoObjListListIndex)
+
+				set request.Item = orderCatVo.ID
+				set request.EpisodeID = episodeVo.ID
+
+				//orderCatVo (ARCIMEffDate) must < Order (OEORISttDat,OEORISttTim)
+				//Episode (PAADMAdmDate,PAADMAdmTime) must < Order (OEORISttDat, OEORISttTim)
+				set arcimEffDate = orderCatVo.ARCIMEffDate
+				set paadmAdmDate = $zdateh(episodeVo.PAADMAdmDate,4)
+				set minDate = paadmAdmDate
+				set isAdmDateAsMinDate = 1
+
+				//Get the larger date as a min date for the generation of the date (OEORISttDat) in Order 
+				if arcimEffDate > paadmAdmDate {
+					set minDate = arcimEffDate
+					set isAdmDateAsMinDate = 0
+				}
+				$$$LOGINFO("[NewOrder] arcimEffDate: "_$zdate(arcimEffDate, 4)_", PAADMAdmDate: "_episodeVo.PAADMAdmDate_", minDate for order: "_$zdate(minDate, 4))
+		
+				set request.OEORISttDat = ##class(PUtil).CustomDate(minDate, $piece($horolog, ",", 1))
+
+				if isAdmDateAsMinDate {
+					set request.OEORISttTim = ##class(PUtil).Time(episodeVo.PAADMAdmTime,,2)
+				} else {
+					set request.OEORISttTim = ##class(PUtil).Time(,,2)
+				}
+
+				$$$LOGINFO("[NewOrder] Request: "_request.SerialisedGet())
+
+				//Send a request
+				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+				if $$$ISOK(sc)
+				{	
+					$$$LOGINFO("[NewOrder] Response body: "_response.StringValue)
+					set json = {}.%FromJSON(response.StringValue)
+					if (json.ERROR = ""){ 
+						//No error, then store the order id in orderIdList
+						set $list(orderIdList, * + 1) = json.ID
+						//remove the episodeVo and orderVoObjList from lists after it is used
+						do episodeVoObjList.RemoveAt(randEpisodeVoListIndex)
+						do orderVoObjList.RemoveAt(randorderVoObjListListIndex)
+					} else 
+					{
+						$$$LOGERROR("[NewOrder] Failed to create an order. Error(Json): "_json.ERROR)
+						set numOfFailed = numOfFailed + 1
+					}
+				} else {
+						$$$LOGERROR("[NewOrder] Failed to create an order. Error(SC): "_$System.Status.DisplayError(sc))
+						set numOfFailed = numOfFailed + 1
+				}
+			} catch ex 
+			{	
+					$$$LOGERROR("[NewOrder] Failed to create an order. Error(Ex): "_ex.DisplayString())
+					set numOfFailed = numOfFailed + 1
+			} 
+		}
+		$$$LOGINFO("[NewOrder] Number of failure: "_numOfFailed)
+		set numOfLoop = numOfFailed
+		set trialCnt = trialCnt + 1
+	}
+		
+	set resultSize = $listlength(orderIdList)
+	$$$LOGINFO("[NewOrder] orderIdList: "_$LISTTOSTRING(orderIdList))
+	$$$LOGINFO("[NewOrder] Success count: "_resultSize_", Failure count: "_(NumOfOrder - resultSize))
+}
+
 // V1.0 Yufan only create Rad result, exception handling, obtain a list input from NewOrder
 
 ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1, Output resultIdList) As %Status

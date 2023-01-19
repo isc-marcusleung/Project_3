@@ -72,6 +72,14 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
+<rule name="OrderList">
+<constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.GetOrderByCategory"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.DataGen.Operation.REST.OrderCategory"></send>
+<return></return>
+</when>
+</rule>
 <rule name="RadResult">
 <constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
 <constraint name="msgClass" value="CDUI.DataGen.Request.NewRadResult"></constraint>
