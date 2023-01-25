@@ -1,6 +1,6 @@
 Import CDUI.DataGen.Utils
 
-Class CDUI.DataGen.vo.ARCItmMasVo Extends %RegisteredObject
+Class CDUI.DataGen.vo.ARCItmMasVo Extends BaseVo
 {
 
 Property ID As %String;
