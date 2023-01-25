@@ -35,7 +35,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	set numOfLoop = patientInput.NumOfPatient
 	set insurTypeObjList = patientInput.InsurTypeObjList
 	set patientVoObjList = patientOutput.PatientVoObjList
-	
+
 	if '$ISOBJECT(patientVoObjList) {
 		set patientVoObjList =  ##class(%ListOfObjects).%New()
 	}

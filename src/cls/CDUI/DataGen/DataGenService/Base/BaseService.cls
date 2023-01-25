@@ -28,6 +28,8 @@ Method RunWithRetry(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOut
 
 // If the return value is > 0, then RunWithRetry will retry
 
+// Override this function for RunWithRetry
+
 Method Run(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
 {
     return 0

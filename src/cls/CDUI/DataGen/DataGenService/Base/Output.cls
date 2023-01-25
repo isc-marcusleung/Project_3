@@ -1,6 +1,6 @@
 Class CDUI.DataGen.DataGenService.Base.Output Extends %RegisteredObject
 {
 
-Property NumOfFailed As %Integer;
+Property NumOfFailed As %Integer [ InitialExpression = 0 ];
 
 }

@@ -19,7 +19,7 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 		set request.Active = "N"
 	}
 
-	$$$LOGINFO("[GetARCAuxilInsurType] Request body: "_request.SerialisedGet())
+	$$$LOGINFO("[TrakCareService.GetARCAuxilInsurType] Request body: "_request.SerialisedGet())
 
 	//Send the request
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
@@ -43,7 +43,7 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 
 ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
-	$$$LOGINFO("[GetARCItmMast] Start retrieving ARCItmMast...")
+	$$$LOGINFO("[TrakCareService.GetARCItmMast] Start retrieving ARCItmMast...")
 	set request = ##class(CDUI.DataGen.Request.ARCItmMast).%New()
 	//Set up request
 	if Page'=""
@@ -60,7 +60,7 @@ ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 		set request.Active = "N"
 	}
 
-	$$$LOGINFO("[GetARCItmMast] Request body: "_request.SerialisedGet())
+	$$$LOGINFO("[TrakCareService.GetARCItmMast] Request body: "_request.SerialisedGet())
 
 	//Send the request
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
@@ -84,7 +84,7 @@ ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 
 ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", LocationTypeID As %String = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
-	$$$LOGINFO("[GetLocation] Start retrieving Location...")
+	$$$LOGINFO("[TrakCareService.GetLocation] Start retrieving Location...")
 	set request = ##class(CDUI.DataGen.Request.Location).%New()
 	//Set up a request
 	if StartsWith '= "" {
@@ -107,7 +107,7 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 		set request.Active = "N"
 	}
 
-	$$$LOGINFO("[GetLocation] Request body: "_request.SerialisedGet())
+	$$$LOGINFO("[TrakCareService.GetLocation] Request body: "_request.SerialisedGet())
 
 	//Send the request
 	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
