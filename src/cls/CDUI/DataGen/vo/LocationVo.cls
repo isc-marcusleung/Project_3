@@ -1,6 +1,6 @@
 Import CDUI.DataGen.Utils
 
-Class CDUI.DataGen.vo.LocationVo Extends %RegisteredObject
+Class CDUI.DataGen.vo.LocationVo Extends BaseVo
 {
 
 Property CTLOCCode As %String;

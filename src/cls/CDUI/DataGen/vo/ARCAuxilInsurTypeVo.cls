@@ -1,6 +1,6 @@
 Import CDUI.DataGen.Utils
 
-Class CDUI.DataGen.vo.ARCAuxilInsurTypeVo Extends %RegisteredObject
+Class CDUI.DataGen.vo.ARCAuxilInsurTypeVo Extends BaseVo
 {
 
 Property AUXITRowId As %String;

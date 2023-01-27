@@ -1,4 +1,4 @@
-Class CDUI.DataGen.vo.EpisodeVo Extends %RegisteredObject
+Class CDUI.DataGen.vo.EpisodeVo Extends BaseVo
 {
 
 Property ID As %String;

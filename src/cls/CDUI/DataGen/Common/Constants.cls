@@ -7,4 +7,12 @@ Parameter maxAge As INTEGER [ Final ] = 100;
 
 Parameter obsHeader As STRING [ Final ] = "IcuStayId,Date,Hour,SBP,DBP,HeartRate,Respirations,Temp,Height,Weight";
 
+// C: Cancel, A: Current, N: Did Not Attend, D: Discharge, P: Pre-admission
+
+Parameter visitStatusCode As STRING [ Final ] = "C,A,N,D,P";
+
+// I: in-patient, E: Emergency, O: out-patient
+
+Parameter admTypeCode As STRING [ Final ] = "I,E,O";
+
 }

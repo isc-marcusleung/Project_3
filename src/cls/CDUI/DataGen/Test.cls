@@ -757,4 +757,17 @@ ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1
 	return sc
 }
 
+ClassMethod marcus(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
+{
+	kill patientVoObjList
+	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
+	do patientService.NewPatient(NumOfPatient, .patientVoObjList)
+	w !
+	zw patientVoObjList
+
+	for cnt = 1:1:patientVoObjList.Count(){
+		w patientVoObjList.GetAt(cnt).SerialisedGet()
+	}
+}
+
 }
