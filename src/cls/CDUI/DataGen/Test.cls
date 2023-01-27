@@ -672,16 +672,28 @@ ClassMethod NewResult(ResultType As %String, NumOfResult As %Integer = 1, Output
     }
 }
 
-ClassMethod marcus(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
+ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
 {
-	kill patientVoObjList
+	kill PatientVoObjList
 	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
-	do patientService.NewPatient(NumOfPatient, .patientVoObjList)
+	do patientService.NewPatient(NumOfPatient, .PatientVoObjList)
 	w !
-	zw patientVoObjList
+	zw PatientVoObjList
 
-	for cnt = 1:1:patientVoObjList.Count(){
-		w patientVoObjList.GetAt(cnt).SerialisedGet()
+	for cnt = 1:1:PatientVoObjList.Count(){
+		w PatientVoObjList.GetAt(cnt).SerialisedGet()
+	}
+}
+
+ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+{
+	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
+	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList)
+	w !
+	zw PatientVoObjList
+
+	for cnt = 1:1:PatientVoObjList.Count(){
+		w PatientVoObjList.GetAt(cnt).SerialisedGet()
 	}
 }
 

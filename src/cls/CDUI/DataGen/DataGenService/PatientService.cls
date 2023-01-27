@@ -24,9 +24,9 @@ Method NewPatient(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
 	do ..RunWithRetry(patientInput, patientOutput)
 	
 	set patientIdList = patientOutput.PatientIdList
-	set resultSize = $LISTLENGTH(patientIdList)
+	set resultSize = patientIdList.Count()
 	set patientVoObjList = patientOutput.PatientVoObjList
-	$$$LOGINFO("[PatientService.NewPatient] patientIdList: "_$LISTTOSTRING(patientIdList))
+	$$$LOGINFO("[PatientService.NewPatient] patientIdList: "_patientIdList)
 	$$$LOGINFO("[PatientService.NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
 }
 
@@ -35,6 +35,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	set numOfLoop = patientInput.NumOfPatient
 	set insurTypeObjList = patientInput.InsurTypeObjList
 	set patientVoObjList = patientOutput.PatientVoObjList
+	set patientIdList = ##class(%ListOfDataTypes).%New()
 
 	if '$ISOBJECT(patientVoObjList) {
 		set patientVoObjList =  ##class(%ListOfObjects).%New()
@@ -46,6 +47,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	{	
 		try 
 		{
+			$$$LOGINFO("[PatientService.Run] Initialize patient request")
 			do ..InitPatientRequestByRandom(insurTypeObjList,.request,.randInsurTypeIndex)
 			//TODO Marcus add PAPMIMedicare
 
@@ -61,7 +63,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 				if (json.ERROR = ""){
 					//No error then create an patientVo
 					do patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,json.ID)) 
-					set $list(patientIdList, * + 1) = json.ID
+					do patientIdList.Insert(json.ID)
 				} else {
 					$$$LOGERROR("[PatientService.Run] Failed to create a patient. Error(JSON): "_json.ERROR)
 					// if it matches, remove the invalid insurance record from the list
@@ -86,10 +88,12 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	set patientOutput.PatientVoObjList = patientVoObjList
 
 	//combine the list or assign a new one
-	if patientOutput.PatientIdList '= ""
-	{
-		set patientOutput.PatientIdList = $List(patientOutput.PatientIdList,1,$LISTLENGTH(patientOutput.PatientIdList))_$list(patientIdList,1,$LISTLENGTH(patientIdList))
-	} else {
+	if patientOutput.PatientIdList '= "" {	
+		for cnt=1:1:patientIdList.Count(){
+			do patientOutput.PatientIdList.Insert(patientIdList.GetAt(cnt))
+		}
+		//set patientOutput.PatientIdList = $List(patientOutput.PatientIdList,1,$LISTLENGTH(patientOutput.PatientIdList))_$list(patientIdList,1,$LISTLENGTH(patientIdList))
+	} else { 
 		set patientOutput.PatientIdList = patientIdList
 	}
 
