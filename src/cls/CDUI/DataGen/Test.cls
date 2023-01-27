@@ -573,7 +573,7 @@ ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRe
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set insurType = ##class("CDUI.DataGen.vo.OrderCatVo").newInstance(value)
+			set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
 			do ResultObjList.Insert(insurType)
 			#; write !, value.ORCATDesc,?30,value.ID
 		}
@@ -755,25 +755,6 @@ ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1
 		$$$LOGINFO("[NewResult] Success count: "_resultSize)
 	}
 	return sc
-}
-
-ClassMethod LoadExternal() As %Status
-{
-
-	// &sql(LOAD DATA FROM FILE 'C://Users/ysun/Downloads/D_ITEMS.csv')
-	 //do %SQL.Import.ImportCSV("../external/D_ITEMS.csv", "CDUI_DataGen_MIMIC.DITEMS")
-	do ##class(%SQL.Import).ImportCSV("D_ITEMS.csv","cls_CDUI_DataGen_MIMIC.DITEMS")
-}
-
-ClassMethod ReadFile() As %Status
-{
-       set stream=##class(%Stream.FileCharacter).%New()
-       set sc=stream.LinkToFile("C:\Users\ysun\localGit\Project_3\tests\cls\CDUI\external\D_ITEMS.csv")
-      do stream.Rewind()
-       while 'stream.AtEnd {
-                 set line=stream.ReadLine()
-                 W line,!
-        }
 }
 
 }
