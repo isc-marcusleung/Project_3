@@ -250,7 +250,7 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 		}
 }
 
-ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
+ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList) As %Status
 {
 	set failedCount = 0
 	set locationTypeId = "E" // TODO Marcus make it constant / enum
@@ -339,6 +339,7 @@ ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList)
 	set resultSize = $listlength(episodeIdList)
 	$$$LOGINFO("episodeIdList: "_$LISTTOSTRING(episodeIdList))
 	$$$LOGINFO("[NewEpisode] Success count: "_resultSize_", Failure count: "_(NumOfEpisode - resultSize))
+	return sc
 }
 
 ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
@@ -442,6 +443,107 @@ ClassMethod NewOrder(NumOfOrder As %Integer = 1, ByRef orderIdList)
 	$$$LOGINFO("[NewOrder] Success count: "_resultSize_", Failure count: "_(NumOfOrder - resultSize))
 }
 
+// Proof of concept, call OE_Order/LAB
+
+ClassMethod NewLabOrder(NumOfLabOrder As %Integer = 1, Output labOrdVoObjList) As %Status
+{
+	set failedCount = 0
+
+	//Create a VO list of ARCItmMast, it contains all kinds of items, not only radiology test items
+	$$$LOGINFO("[NewLabOrder] Retrieve the ARCItmMast List.")
+	set sc = ..GetARCItmMast(1,,..#DefaultPageSize,.arcItmMastObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[NewLabOrder] Failed to get ARCItmMast.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
+
+	//Create a VO list of Episode
+	do ..NewEpisode(NumOfLabOrder,.episodeVoObjList)
+
+	set trialCnt = 1
+	set numOfLoop = NumOfLabOrder
+	while ((..#MaxNumOfRetry >= trialCnt) && (numOfLoop > 0))
+	{
+		$$$LOGINFO("[NewLabOrder] Trial: "_trialCnt_", Number of order to be created: "_numOfLoop)
+		set numOfFailed = 0
+		
+		for cnt = 1:1:numOfLoop 
+		{	
+			try
+			{
+				set request = ##class(CDUI.DataGen.Request.NewLabOrder).%New()
+				set randArcItmMastObjListIndex = ($$$PRand(arcItmMastObjList.Count()) + 1)
+				set randEpisodeVoListIndex = ($$$PRand((episodeVoObjList).Count()) + 1)
+
+				set episodeVo = episodeVoObjList.GetAt(randEpisodeVoListIndex)
+				set arcItmMastVo = arcItmMastObjList.GetAt(randArcItmMastObjListIndex)
+
+				set request.Item = arcItmMastVo.ID
+				set request.EpisodeID = episodeVo.ID
+
+				set arcimEffDate = arcItmMastVo.ARCIMEffDate
+				set paadmAdmDate = $zdateh(episodeVo.PAADMAdmDate,4)
+				set minDate = paadmAdmDate
+				set isAdmDateAsMinDate = 1
+
+				//Get the larger date as a min date for the generation of the date (OEORISttDat) in Order 
+				if arcimEffDate > paadmAdmDate {
+					set minDate = arcimEffDate
+					set isAdmDateAsMinDate = 0
+				}
+				$$$LOGINFO("[NewLabOrder] arcimEffDate: "_$zdate(arcimEffDate, 4)_", PAADMAdmDate: "_episodeVo.PAADMAdmDate_", minDate for order: "_$zdate(minDate, 4))
+		
+				set request.OEORISttDat = ##class(PUtil).CustomDate(minDate, $piece($horolog, ",", 1))
+
+				if isAdmDateAsMinDate {
+					set request.OEORISttTim = ##class(PUtil).Time(episodeVo.PAADMAdmTime,,2)
+				} else {
+					set request.OEORISttTim = ##class(PUtil).Time(,,2)
+				}
+
+				set request.OECPRDesc = "Normal"
+				$$$LOGINFO("[NewLabOrder] Request: "_request.SerialisedGet())
+				
+				//Send a request
+				set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+				set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+				if $$$ISOK(sc)
+				{	
+					$$$LOGINFO("[NewLabOrder] Response body: "_response.StringValue)
+					set json = {}.%FromJSON(response.StringValue)
+					if (json.ERROR = ""){ 
+						//No error, then store the order id in orderIdList
+						set $list(orderIdList, * + 1) = json.ID
+						//remove the episodeVo and arcItmMastVo from lists after it is used
+						do episodeVoObjList.RemoveAt(randEpisodeVoListIndex)
+						do arcItmMastObjList.RemoveAt(randArcItmMastObjListIndex)
+					} else 
+					{
+						$$$LOGERROR("[NewLabOrder] Failed to create an order. Error(Json): "_json.ERROR)
+						set numOfFailed = numOfFailed + 1
+					}
+				} else {
+						$$$LOGERROR("[NewLabOrder] Failed to create an order. Error(SC): "_$System.Status.DisplayError(sc))
+						set numOfFailed = numOfFailed + 1
+				}
+			} catch ex 
+			{	
+					$$$LOGERROR("[NewLabOrder] Failed to create an order. Error(Ex): "_ex.DisplayString())
+					set numOfFailed = numOfFailed + 1
+			} 
+		}
+		$$$LOGINFO("[NewLabOrder] Number of failure: "_numOfFailed)
+		set numOfLoop = numOfFailed
+		set trialCnt = trialCnt + 1
+		}
+
+	set resultSize = $listlength(orderIdList)
+	$$$LOGINFO("[NewLabOrder] orderIdList: "_$LISTTOSTRING(orderIdList))
+	$$$LOGINFO("[NewLabOrder] Success count: "_resultSize_", Failure count: "_(NumOfLabOrder - resultSize))
+	return sc
+}
+
 ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRef ResultObjList) As %Status
 {
 	set request = ##class(CDUI.DataGen.Request.GetOrderByCategory).%New()
@@ -471,7 +573,7 @@ ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRe
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set insurType = ##class("CDUI.DataGen.vo.OrderCatVo").newInstance(value)
+			set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
 			do ResultObjList.Insert(insurType)
 			#; write !, value.ORCATDesc,?30,value.ID
 		}
@@ -588,7 +690,7 @@ ClassMethod createNewOrder(Count As %Integer = "", OrderCat As %String, NumOfOrd
 
 // V1.0 Yufan only create Rad result, exception handling, obtain a list input from NewOrder
 
-ClassMethod NewResult(ResultType As %String, NumOfResult As %Integer = 1, Output resultIdList)
+ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1, Output resultIdList) As %Status
 {
     //TODO Yufan input ResultType should only have fixed options
 	//TODO Yufan try catch
@@ -652,24 +754,7 @@ ClassMethod NewResult(ResultType As %String, NumOfResult As %Integer = 1, Output
 		$$$LOGINFO("result ID list: "_ $LISTTOSTRING(resultIdList))
 		$$$LOGINFO("[NewResult] Success count: "_resultSize)
 	}
-
-
-
-
-    if ResultType = "Rad"{
-        //TODO Yufan randomly get an orderItemID from a list generated from NewOrder()
-        $$$LOGINFO("[NewResult] Start generating Radiology results.")
-        set orderItemID = "24181||1"
-        set request = ##class(CDUI.DataGen.Request.NewRadResult).%New()
-        set request.OEOrdItemID = orderItemID
-        $$$LOGINFO("[NewResult] Request Body: "_request.SerialisedGet())
-        set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
-        set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
-        if $$$ISOK(sc)
-        {
-            $$$LOGINFO("[NewResult] Response body: "_response.StringValue)
-        }
-    }
+	return sc
 }
 
 ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
