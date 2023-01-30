@@ -1,6 +1,8 @@
 Class CDUI.DataGen.DataGenService.TrakCareService Extends Ens.Util.IOLogger
 {
 
+Parameter DispatchName = "CDUI.DataGen.Service.Adaptorless";
+
 ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer = "", ByRef Page As %Integer = "", ByRef ResultObjList) As %Status
 {
 	set request = ##class(CDUI.DataGen.Request.ARCAuxilInsurType).%New()
@@ -22,7 +24,7 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 	$$$LOGINFO("[TrakCareService.GetARCAuxilInsurType] Request body: "_request.SerialisedGet())
 
 	//Send the request
-	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = ##class(Ens.Director).CreateBusinessService(..#DispatchName,.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 
 	//Store the retrieved ARCAuxilInsurType records to a object list
@@ -63,7 +65,7 @@ ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 	$$$LOGINFO("[TrakCareService.GetARCItmMast] Request body: "_request.SerialisedGet())
 
 	//Send the request
-	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = ##class(Ens.Director).CreateBusinessService(..#DispatchName,.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 
 	//Store the retrieved ARCItmMast records to a object list
@@ -110,7 +112,7 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 	$$$LOGINFO("[TrakCareService.GetLocation] Request body: "_request.SerialisedGet())
 
 	//Send the request
-	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = ##class(Ens.Director).CreateBusinessService(..#DispatchName,.svc)
 	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
 
 	//Store the retrieved Location records to a object list

@@ -762,24 +762,28 @@ ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
 	kill PatientVoObjList
 	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
 	do patientService.NewPatient(NumOfPatient, .PatientVoObjList)
-	w !
-	zw PatientVoObjList
-
+	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
-		w PatientVoObjList.GetAt(cnt).SerialisedGet()
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] Patient Id ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).PatientId)
 	}
+	$$$LOGINFO("================================ [End] Patient Id ================================")
 }
 
 ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
 	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList)
-	w !
-	zw PatientVoObjList
-
+	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
-		w PatientVoObjList.GetAt(cnt).SerialisedGet()
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
 	}
+	$$$LOGINFO("================================ [End] ================================")
 }
 
 }
