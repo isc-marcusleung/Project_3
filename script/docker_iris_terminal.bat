@@ -1,0 +1,1 @@
+cmd /k "docker exec -it INTERNPROJECT  iris session iris"
