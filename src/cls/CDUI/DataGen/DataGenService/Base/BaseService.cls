@@ -9,6 +9,8 @@ Property PageSize As %Integer [ InitialExpression = 500 ];
 /// Default Max number of retry in the process
 Property MaxNumOfRetry As %Integer [ InitialExpression = 8 ];
 
+Parameter DispatchName = "CDUI.DataGen.Service.Adaptorless";
+
 Method SetMaxNumOfRetry(maxNumOfRetry As %Integer)
 {
    set ..MaxNumOfRetry = maxNumOfRetry
@@ -57,7 +59,7 @@ Method Run(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CD
 
 Method SendRequest(request As Ens.Request, ByRef response) As %Status
 {
-    set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+    set sc = ##class(Ens.Director).CreateBusinessService(..#DispatchName,.svc)
     set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
     return sc
 }

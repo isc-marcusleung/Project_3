@@ -13,7 +13,6 @@ Parameter Discharge As STRING [ Final ] = "D";
 
 Parameter PreAdmission As STRING [ Final ] = "P";
 
-/// Description
 ClassMethod GeVisitStatusCodeString(delimiter As %String = ",") As %String
 {
     Return ..#Cancel_delimiter_..#Current_delimiter_..#DidNotAttend_delimiter_..#Discharge_delimiter_..#PreAdmission
