@@ -1,6 +1,6 @@
-Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base)
+Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base, CDUI.DataGen.Enum)
 
-Class CDUI.DataGen.DataGenService.EpisodeService Extends (%RegisteredObject, BaseService)
+Class CDUI.DataGen.DataGenService.EpisodeService Extends BaseService
 {
 
 Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
@@ -13,7 +13,7 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
 
 	//Retrieve the location list for the creation of a new episode
 	$$$LOGINFO("[EpisodeService.NewEpisode] Retrive the location list.")
-    set sc = ##class(TrakCareService).GetLocation(,1,locationTypeId,..#DefaultPageSize,, .locationObjList)
+    set sc = ##class(TrakCareService).GetLocation(,1,locationTypeId,..PageSize,, .locationObjList)
 	if $$$ISERR(sc)
 	{
 		$$$LOGERROR("[EpisodeService.NewEpisode] Failed to get Locations.")
@@ -35,7 +35,7 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
         do ..InitEpisodeRequestPerPatientByRandom(minAdmDate, locationObjList, NumOfEpisodePerPatient, patientVo, .episodeInput)
         set episodeOutput = ##class(CDUI.DataGen.DataGenService.Custom.EpisodeOutput).%New()
 
-        do ..RunWithRetry(episodeInput, episodeOutput)
+        do ..RunWithRetry(episodeInput, episodeOutput,)
 
         //set the inserted episodeVo back to patient for further use if necessary
         set patientVo.EpisodeObjList = episodeOutput.EpisodeVoObjList
@@ -51,13 +51,16 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
             set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
         }
         
-        $$$LOGINFO("[EpisodeService.NewEpisode] pateint Id: "_patientVo.PatientId_", episodeIdList: "_episodeIdList)
+        $$$LOGINFO("[EpisodeService.NewEpisode] pateint Id: "_patientVo.PatientId_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(episodeIdList))
         $$$LOGINFO("[EpisodeService.NewEpisode] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
     }
     set cnt = 0
     set key = $Order(failedByPatientIdArr(""))
     while (key '= "") {
-        $$$LOGINFO("Patient Id: "_key_", Number of Failure: "_failedByPatientIdArr(key))
+        if (cnt = 0) {
+            $$$LOGINFO("[EpisodeService.NewEpisode] Failure per patient")
+        }
+        $$$LOGINFO("[EpisodeService.NewEpisode] Patient Id: "_key_", Number of Failure: "_failedByPatientIdArr(key))
         set key = $Order(failedByPatientIdArr(key))
         set cnt = cnt + 1
     }
@@ -68,7 +71,8 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
 
 Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
 {
-    kill idxTmpArr
+    kill idxOfRemoveLocationObjListArr
+    kill idxOfRemoveLocationIndexListArr
 	set requestObjList = episodeInput.RequestObjList
     set locationObjList = episodeInput.LocationObjList
     set locationIndexList = episodeInput.LocationIndexList
@@ -79,7 +83,7 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
     set numOfLoop = requestObjList.Count()
     set numOfFailed = 0
 
-    if '$ISOBJECT(episodeVoObjList) {
+    if '$Data(episodeVoObjList) {
 		set episodeVoObjList =  ##class(%ListOfObjects).%New()
 	}
 
@@ -93,8 +97,7 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
         set isSuccess = 0
         try {
             //Send the request
-            set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
-            set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+            set sc = ..SendRequest(request,.response)
 
             if $$$ISOK(sc)
             {	
@@ -110,7 +113,8 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
                     // if it matches, remove the invalid insurance record from the list.
                     set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^CTLOCDesc.*")
                     if isMatch {
-                        set idxTmpArr(locationIndexList.GetAt(cnt)) = ""
+                        set idxOfRemoveLocationObjListArr(locationIndexList.GetAt(cnt)) = ""
+                        set idxOfRemoveLocationIndexListArr(cnt) = ""
                     }
                 }
             } else {
@@ -125,8 +129,12 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
             set numOfFailed = numOfFailed + 1
         }
     }
-    if $Order(idxTmpArr("")) {
-        do ..RemoveItemsInverseFromList(locationObjList, .idxTmpArr)
+    if $Order(idxOfRemoveLocationObjListArr("")) {
+        do ..RemoveItemsInverseFromList(locationObjList, .idxOfRemoveLocationObjListArr)
+    }
+
+    if $Order(idxOfRemoveLocationIndexListArr("")) {
+        do ..RemoveItemsInverseFromList(locationIndexList, .idxOfRemoveLocationIndexListArr)
     }
 
     //Special heandling to re-select the location to deal with invalid location data retrieved from db.
@@ -154,24 +162,14 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
 	quit numOfFailed
 }
 
-Method RemoveItemsInverseFromList(sourceList As %ListOfObjects, ByRef removalIndexArray)
-{
-
-    set key = $Order(removalIndexArray(""), -1) //inverse order, delete the items in inverse order
-    while (key '= "") {
-        do sourceList.RemoveAt(key)
-        set key = $Order(removalIndexArray(key), -1)
-    }
-}
-
-Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, locationObjList As %ListOfObjects, numOfEpisodePerPatient As %Integer, patientVo As CDUI.DataGen.vo.PatientVo, Output episodeInput As CDUI.DataGen.DataGenService.Custom.EpisodeInput)
+Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, locationObjList As %ListOfObjects, numOfEpisodePerPatient As %Integer, patientVo As CDUI.DataGen.vo.PatientVo, Output episodeInput As CDUI.DataGen.DataGenService.Custom.EpisodeInput) [ Private ]
 {
     kill episodeInput
     kill dateGenArr
 
     set episodeInput = ##class(CDUI.DataGen.DataGenService.Custom.EpisodeInput).%New()
-    set admTypeList = $LISTFROMSTRING(##class(Constants).#admTypeCode,",",0)
-    set visitStatusList = $LISTFROMSTRING(##class(Constants).#visitStatusCode,",",0)
+    set admTypeList = $LISTFROMSTRING(##class(AdmTypeCode).GetAdmTypeCodeString(),",",0)
+    set visitStatusList = $LISTFROMSTRING(##class(VisitStatusCode).GeVisitStatusCodeString(),",",0)
     set inPatientWithCurrentAdmDate = ""
     set episodeTmpList = ##class(%ListOfObjects).%New()
    /*
@@ -192,16 +190,21 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, locationObjLi
 
     //Generate different type of episode with different status
     set isInpatientWithCurrent = 0
+    set inPatient = ##class(AdmTypeCode).#InPatient
+    set statusCurrent = ##class(VisitStatusCode).#Current
+    set statusDischarge = ##class(VisitStatusCode).#Discharge
+
+
     for cnt=1:1:numOfEpisodePerPatient {
         set request = ##class(CDUI.DataGen.Request.NewEpisode).%New()
         set request.PAADMType = $List(admTypeList, $$$PRand($listlength(admTypeList))+1)
         set request.PAADMVisitStatus = $List(visitStatusList, $$$PRand($listlength(visitStatusList))+1)
 
-        while(isInpatientWithCurrent = 1 && request.PAADMType = "I" &&  request.PAADMVisitStatus = "A") {
+        while(isInpatientWithCurrent = 1 && request.PAADMType = inPatient &&  request.PAADMVisitStatus = statusCurrent) {
             set request.PAADMVisitStatus = $List(visitStatusList, $$$PRand($listlength(visitStatusList))+1)
         }
 
-        if (isInpatientWithCurrent = 0 && request.PAADMType = "I" &&  request.PAADMVisitStatus = "A") {
+        if (isInpatientWithCurrent = 0 && request.PAADMType = inPatient &&  request.PAADMVisitStatus = statusCurrent) {
             set isInpatientWithCurrent = 1
         }
 
@@ -218,9 +221,9 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, locationObjLi
         for cnt=1:1:episodeTmpList.Count()
         {
             set request = episodeTmpList.GetAt(cnt)
-            if (request.PAADMType = "I" &&  request.PAADMVisitStatus = "A") {
+            if (request.PAADMType = inPatient &&  request.PAADMVisitStatus = statusCurrent) {
                 set idxOfCurrentInPatient = cnt
-            } elseif (request.PAADMType = "I"){
+            } elseif (request.PAADMType = inPatient){
                 set idxOflastInPatient = cnt
             }
         }
@@ -244,7 +247,7 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, locationObjLi
         set dateGenArrKey = $ORDER(dateGenArr(dateGenArrKey))
 
         //TODO Marcus check if discharge should only be applied to in-patient
-        if (request.PAADMVisitStatus = "D")
+        if (request.PAADMVisitStatus = statusDischarge)
         {
             //PAADMDischgDate should be after PAADMAdmDate
             set currentDate = $piece($horolog, ",", 1)
@@ -267,7 +270,7 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, locationObjLi
     set episodeInput.LocationIndexList = locationIndexList
 }
 
-Method GetPatientIdList(patientVoObjList As %ListOfObjects, Output patientIdList As %List)
+Method GetPatientIdList(patientVoObjList As %ListOfObjects, Output patientIdList As %List) [ Private ]
 {
     kill patientIdList
 
@@ -276,14 +279,28 @@ Method GetPatientIdList(patientVoObjList As %ListOfObjects, Output patientIdList
     }
 }
 
-Method AssignLocation(locationObjList As %ListOfObjects, request As CDUI.DataGen.Request.NewEpisode, Output locationIndexList)
+Method AssignLocation(locationObjList As %ListOfObjects, request As CDUI.DataGen.Request.NewEpisode, Output locationIndexList) [ Private ]
 {
+       if ('$Data(locationIndexList)) {
+           set locationIndexList = ##class(%ListOfDataTypes).%New()
+       }
        if (locationObjList.Count() > 0){
                 set randLocationIndex = ##class(PUtil).Random(locationObjList.Count()) + 1
                 set location = locationObjList.GetAt(randLocationIndex)
                 set request.CTLOCDesc = location.CTLOCDesc
-                set $list(locationIndexList, * + 1) = randLocationIndex
+                do locationIndexList.Insert(randLocationIndex)
         }
+}
+
+Method RemoveItemsInverseFromList(sourceList, ByRef removalIndexArray) [ Private ]
+{
+    $$$LOGINFO("[EpisodeService.RemoveItemsInverseFromList] Before removal of item - sourceList Size: "_sourceList.Count())
+    set key = $Order(removalIndexArray(""), -1) //inverse order, delete the items in inverse order
+    while (key '= "") {
+        do sourceList.RemoveAt(key)
+        set key = $Order(removalIndexArray(key), -1)
+    }
+    $$$LOGINFO("[EpisodeService.RemoveItemsInverseFromList] After removal of item - sourceList Size: "_sourceList.Count())
 }
 
 }

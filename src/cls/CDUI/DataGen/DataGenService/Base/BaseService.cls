@@ -1,21 +1,42 @@
 Import CDUI.DataGen.DataGenService
 
-Class CDUI.DataGen.DataGenService.Base.BaseService Extends Ens.Util.IOLogger
+Class CDUI.DataGen.DataGenService.Base.BaseService Extends (%RegisteredObject, Ens.Util.IOLogger) [ Abstract ]
 {
 
 ///  Default page size for record retrieval.
-Parameter DefaultPageSize = 500;
+Property PageSize As %Integer [ InitialExpression = 500 ];
 
 /// Default Max number of retry in the process
-Parameter MaxNumOfRetry = 8;
+Property MaxNumOfRetry As %Integer [ InitialExpression = 8 ];
 
-Method RunWithRetry(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CDUI.DataGen.DataGenService.Base.Output)
+Method SetMaxNumOfRetry(maxNumOfRetry As %Integer)
+{
+   set ..MaxNumOfRetry = maxNumOfRetry
+}
+
+Method SetPageSize(pageSize As %Integer)
+{
+   set ..PageSize = pageSize
+}
+
+Method RunWithRetry(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CDUI.DataGen.DataGenService.Base.Output, NumOfRetry As %Integer)
 {
     set trialCnt = 1
     set isRetry = 1
+    $$$LOGINFO("[BaseService.RunWithRetry] MaxNumOfRetry: "_..MaxNumOfRetry)
+    if ($Get(NumOfRetry) '= "") {
+       set numOfRetry = NumOfRetry
+    } else {
+        set numOfRetry = ..MaxNumOfRetry
+    }
 
-    while ((..#MaxNumOfRetry >= trialCnt) && isRetry){
-        $$$LOGINFO("[BaseService] Trial: "_trialCnt)
+    //if the number of retry specified is less than 0 then set it to 0 so it can run 1 time.
+    if (numOfRetry < 0) {
+        set numOfRetry = 0
+    }
+
+    while ((numOfRetry >= trialCnt) && isRetry){
+        $$$LOGINFO("[BaseService.RunWithRetry] Trial: "_trialCnt)
         set result = ..Run(BaseInput, BaseOutput)
 
         if result > 0 {
@@ -28,11 +49,17 @@ Method RunWithRetry(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOut
 
 // If the return value is > 0, then RunWithRetry will retry
 
-// Override this function for RunWithRetry
+// Implement this function for RunWithRetry
 
-Method Run(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
+Method Run(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer [ Abstract, Private ]
 {
-    return 0
+}
+
+Method SendRequest(request As Ens.Request, ByRef response) As %Status
+{
+    set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+    set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+    return sc
 }
 
 }

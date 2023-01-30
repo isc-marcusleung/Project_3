@@ -1,13 +1,13 @@
 Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base)
 
-Class CDUI.DataGen.DataGenService.PatientService Extends (%RegisteredObject, BaseService)
+Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
 
 Method NewPatient(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
 {
 	//Retrieve the ARCAuxilInsurType list for the creation of patient
 	$$$LOGINFO("[PatientService.NewPatient] Retrive the insurance list.")
-	set sc = ##class(TrakCareService).GetARCAuxilInsurType(1, ..#DefaultPageSize,,.insurTypeObjList)
+	set sc = ##class(TrakCareService).GetARCAuxilInsurType(1, ..PageSize,,.insurTypeObjList)
 	if $$$ISERR(sc)
 	{
 		$$$LOGERROR("[PatientService.NewPatient] Failed to get ARCAuxilInsurTypes.")
@@ -21,12 +21,13 @@ Method NewPatient(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
 	set patientInput.NumOfPatient = NumOfPatient
 	set patientInput.InsurTypeObjList = insurTypeObjList
 
-	do ..RunWithRetry(patientInput, patientOutput)
+	do ..RunWithRetry(patientInput, patientOutput,)
 	
 	set patientIdList = patientOutput.PatientIdList
 	set resultSize = patientIdList.Count()
 	set patientVoObjList = patientOutput.PatientVoObjList
-	$$$LOGINFO("[PatientService.NewPatient] patientIdList: "_patientIdList)
+	
+	$$$LOGINFO("[PatientService.NewPatient] patientIdList: "_##class(CommonUtil).convertListOfDataTypeToString(patientIdList))
 	$$$LOGINFO("[PatientService.NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
 }
 
@@ -37,7 +38,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	set patientVoObjList = patientOutput.PatientVoObjList
 	set patientIdList = ##class(%ListOfDataTypes).%New()
 
-	if '$ISOBJECT(patientVoObjList) {
+	if '$Data(patientVoObjList) {
 		set patientVoObjList =  ##class(%ListOfObjects).%New()
 	}
 
@@ -54,8 +55,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 			$$$LOGINFO("[PatientService.Run] Request body: "_request.SerialisedGet())
 			
 			//Send the request
-			set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
-			set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+			set sc = ..SendRequest(request,.response)
 			if $$$ISOK(sc)
 			{
 				$$$LOGINFO("[PatientService.Run] Response body: "_response.StringValue)
@@ -103,7 +103,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	quit numOfFailed
 }
 
-Method InitPatientRequestByRandom(insurTypeObjList As %ListOfObjects, ByRef request As CDUI.DataGen.Request.NewPatient, ByRef randInsurTypeIndex As %Integer)
+Method InitPatientRequestByRandom(insurTypeObjList As %ListOfObjects, ByRef request As CDUI.DataGen.Request.NewPatient, ByRef randInsurTypeIndex As %Integer) [ Private ]
 {
     kill request
     kill randInsurTypeIndex
@@ -122,7 +122,7 @@ Method InitPatientRequestByRandom(insurTypeObjList As %ListOfObjects, ByRef requ
     set request.PAPERDob = ##class(PUtil).CustomDate(minDateInt, currentDateInt) 
 
     // Randomly select the insurance record from insurTypeObjList 		
-    if $ISOBJECT(insurTypeObjList) && (insurTypeObjList.Count() > 0){
+    if $Data(insurTypeObjList) && (insurTypeObjList.Count() > 0){
         set randInsurTypeIndex = ##class(PUtil).Random(insurTypeObjList.Count()) + 1
         set insurType = insurTypeObjList.GetAt(randInsurTypeIndex)
         set request.INSTDesc = insurType.AUXITInsTypeDR
