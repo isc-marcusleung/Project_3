@@ -786,4 +786,19 @@ ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjL
 	$$$LOGINFO("================================ [End] ================================")
 }
 
+ClassMethod mCreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects)
+{
+	set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
+	set OrderCat = OrderCat
+	do orderService.NewOrder(NumOfOrderPerEpisode, OrderCat, PatientVoObjList)
+	w !!!!
+	for cnt = 1:1:PatientVoObjList.Count(){
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+	}
+	$$$LOGINFO("================================ [End] ================================")
+}
+
 }
