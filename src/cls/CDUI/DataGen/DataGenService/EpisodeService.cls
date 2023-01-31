@@ -51,7 +51,7 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
             set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
         }
         
-        $$$LOGINFO("[EpisodeService.NewEpisode] pateint Id: "_patientVo.PatientId_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(episodeIdList))
+        $$$LOGINFO("[EpisodeService.NewEpisode] pateint Id: "_patientVo.PatientId_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(episodeIdList,))
         $$$LOGINFO("[EpisodeService.NewEpisode] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
     }
     set cnt = 0

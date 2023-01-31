@@ -27,7 +27,7 @@ Method NewPatient(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
 	set resultSize = patientIdList.Count()
 	set patientVoObjList = patientOutput.PatientVoObjList
 	
-	$$$LOGINFO("[PatientService.NewPatient] patientIdList: "_##class(CommonUtil).convertListOfDataTypeToString(patientIdList))
+	$$$LOGINFO("[PatientService.NewPatient] patientIdList: "_##class(CommonUtil).convertListOfDataTypeToString(patientIdList,))
 	$$$LOGINFO("[PatientService.NewPatient] Success count: "_resultSize_", Failure count: "_(NumOfPatient - resultSize))
 }
 
