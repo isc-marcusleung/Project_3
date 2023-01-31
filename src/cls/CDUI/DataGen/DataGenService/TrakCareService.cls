@@ -131,4 +131,78 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 	quit sc
 }
 
+ClassMethod GetLocationServices(loc As %Integer = "", ByRef ResultObjList) As %Status
+{
+	$$$LOGINFO("[TrakCareService.LocationServices] Start retrieving Location Services...")
+	set request = ##class(CDUI.DataGen.Request.LocationServices).%New()
+	//Set up a request
+
+	if loc'=""
+	{
+		set request.loc = loc
+	}
+
+	$$$LOGINFO("[TrakCareService.LocationServices] Request body: "_request.SerialisedGet())
+
+	//Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService(..#DispatchName,.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	//Store the retrieved Location services records to an object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
+	if $$$ISOK(sc)
+	{	
+		// $$$LOGINFO("[GetLocationServices] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set locServices = ##class("CDUI.DataGen.vo.LocationServicesVo").newInstance(value)
+			do ResultObjList.Insert(locServices)
+			#; write !, value.Order,?30,value.RowID
+		}
+	}
+	quit sc
+}
+
+ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize As %Integer = "", ByRef ResultObjList) As %Status
+{
+	$$$LOGINFO("[TrakCareService.Slots] Start retrieving Slots...")
+	set request = ##class(CDUI.DataGen.Request.Slots).%New()
+	//Set up a request
+
+	if PageSize'=""
+	{
+		set request.count = PageSize
+	}
+	if LocId '= "" {
+		set request.LocId = LocId
+	}
+	if ServId '= "" {
+		set request.ServId = ServId
+	}
+
+	$$$LOGINFO("[TrakCareService.Slots] Request body: "_request.SerialisedGet())
+
+	//Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService(..#DispatchName,.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	//Store the retrieved Location services records to an object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
+	if $$$ISOK(sc)
+	{	
+		// $$$LOGINFO("[GetSlots] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set slot = ##class("CDUI.DataGen.vo.SlotVo").newInstance(value)
+			do ResultObjList.Insert(slot)
+			#; write !, value.Date,?30,value.USRN
+		}
+	}
+	quit sc
+}
+
 }
