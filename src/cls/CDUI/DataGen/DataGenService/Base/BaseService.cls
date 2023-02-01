@@ -11,16 +11,6 @@ Property MaxNumOfRetry As %Integer [ InitialExpression = 8 ];
 
 Parameter DispatchName = "CDUI.DataGen.Service.Adaptorless";
 
-Method SetMaxNumOfRetry(maxNumOfRetry As %Integer)
-{
-   set ..MaxNumOfRetry = maxNumOfRetry
-}
-
-Method SetPageSize(pageSize As %Integer)
-{
-   set ..PageSize = pageSize
-}
-
 Method RunWithRetry(BaseInput As CDUI.DataGen.DataGenService.Base.Input, BaseOutput As CDUI.DataGen.DataGenService.Base.Output, NumOfRetry As %Integer)
 {
     set trialCnt = 1

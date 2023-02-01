@@ -3,7 +3,7 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
 
-Method NewPatient(NumOfPatient As %Integer = 1, ByRef patientVoObjList)
+Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 {
 	//Retrieve the ARCAuxilInsurType list for the creation of patient
 	$$$LOGINFO("[PatientService.NewPatient] Retrive the insurance list.")
