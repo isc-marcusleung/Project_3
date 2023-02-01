@@ -29,7 +29,19 @@ Method TestConvertListOfDataTypeToString1()
     set delimiter = "+"
     set tExpected = sourceList.GetAt(1)_delimiter_sourceList.GetAt(2)_delimiter_sourceList.GetAt(3)
 
-    set tResults = ##class(CDUI.DataGen.Utils.CommonUtil).convertListOfDataTypeToString(sourceList, "+")
+    set tResults = ##class(CDUI.DataGen.Utils.CommonUtil).convertListOfDataTypeToString(sourceList, delimiter)
+    Do $$$AssertEquals(tResults,tExpected,tExpected_" = "_tResults)
+}
+
+Method TestConvertListOfDataTypeToString2()
+{
+    set sourceList = ##class(%ListOfDataTypes).%New()
+    do sourceList.Insert(100)
+
+    set delimiter = "#"
+    set tExpected = sourceList.GetAt(1)
+
+    set tResults = ##class(CDUI.DataGen.Utils.CommonUtil).convertListOfDataTypeToString(sourceList, delimiter)
     Do $$$AssertEquals(tResults,tExpected,tExpected_" = "_tResults)
 }
 
