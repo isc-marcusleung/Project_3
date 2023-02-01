@@ -19,4 +19,18 @@ Method TestDecodeXMLEscapedChar()
     Do $$$AssertEquals(tResults,tExpected,tExpected_" = "_tResults)
 }
 
+Method TestConvertListOfDataTypeToString1()
+{
+    set sourceList = ##class(%ListOfDataTypes).%New()
+    do sourceList.Insert(100)
+    do sourceList.Insert("Hello")
+    do sourceList.Insert("World")
+
+    set delimiter = "+"
+    set tExpected = sourceList.GetAt(1)_delimiter_sourceList.GetAt(2)_delimiter_sourceList.GetAt(3)
+
+    set tResults = ##class(CDUI.DataGen.Utils.CommonUtil).convertListOfDataTypeToString(sourceList, "+")
+    Do $$$AssertEquals(tResults,tExpected,tExpected_" = "_tResults)
+}
+
 }
