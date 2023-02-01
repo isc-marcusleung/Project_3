@@ -159,7 +159,7 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
                         $$$LOGINFO("[OrderService.Run] Removing order index...")
 
                         // Check index
-                        $$$LOGINFO("[OrderService.Run] orderIndexList.GetAt(cnt) value: "_orderIndexList.GetAt(cnt))
+                        $$$LOGINFO("[OrderService.Run] Order index to be removed: "_orderIndexList.GetAt(cnt))
                         #; $$$LOGINFO("[OrderService.Run] Index_OrderObjListArr: "_idxOfRemoveOrderObjListArr(orderIndexList.GetAt(cnt)))
                         #; $$$LOGINFO("[OrderService.Run] Index_OrderIndexListArr: "_idxOfRemoveOrderIndexListArr(cnt))
                         set idxOfRemoveOrderObjListArr(orderIndexList.GetAt(cnt)) = ""
@@ -206,11 +206,9 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
 	}
      
     // Combine the list or assign a new one
-    
-    // Check
-    $$$LOGINFO("[OrderService.Run2] Check value of orderOutput.OrderIdList: "_orderOutput.OrderIdList)  
+    #; $$$LOGINFO("[OrderService.Run2] Check value of orderOutput.OrderIdList: "_orderOutput.OrderIdList)  
     if (orderOutput.OrderIdList '= "") {     
-        $$$LOGINFO("[OrderService.Run2] Counts before insertion: "_orderOutput.OrderIdList.Count())   
+        $$$LOGINFO("[OrderService.Run2] Count of OrderIdList before new order insertion: "_orderOutput.OrderIdList.Count())   
 		for cnt=1:1:orderIdList.Count(){
             $$$LOGINFO("[OrderService.Run2] Insertion: "_orderIdList.GetAt(cnt))
 			do orderOutput.OrderIdList.Insert(orderIdList.GetAt(cnt))
@@ -238,16 +236,17 @@ Method RemoveItemsInverseFromList(sourceList, ByRef removalIndexArray) [ Private
     $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] Before removal of item - sourceList Size: "_sourceList.Count())
     
     set key = $Order(removalIndexArray(""), -1) //inverse order, delete the items in inverse order
-    $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] Key value: "_key)
+    
 
     while (key '= "") {
         do sourceList.RemoveAt(key)
         set key = $Order(removalIndexArray(key), -1)
+        $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] Remove index in reverse order: "_key)
     }
     $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] After removal of item - sourceList Size: "_sourceList.Count())
 }
 
-// Initialise the resquest for orders
+// Initialise the request for orders
 
 Method InitOrderRequestByRandom(orderObjList As %ListOfObjects, NumOfOrderPerEpisode As %Integer, EpisodeId As %String, EpisodeAdmDate As %String, EpisodeAdmTime As %String, Output orderInput As CDUI.DataGen.DataGenService.Custom.OrderInput, Output orderIndexList)
 {

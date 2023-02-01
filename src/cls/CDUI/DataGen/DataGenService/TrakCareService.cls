@@ -197,9 +197,14 @@ ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize A
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set slot = ##class("CDUI.DataGen.vo.SlotVo").newInstance(value)
-			do ResultObjList.Insert(slot)
-			#; write !, value.Date,?30,value.USRN
+			// If the slot has a USRN number, that slot is available and hasn't been used
+			if (value.USRN '= "")
+			{
+				set slot = ##class("CDUI.DataGen.vo.SlotVo").newInstance(value)
+				do ResultObjList.Insert(slot)
+				#; write !, value.Date,?30,value.USRN
+			}
+			
 		}
 	}
 	quit sc

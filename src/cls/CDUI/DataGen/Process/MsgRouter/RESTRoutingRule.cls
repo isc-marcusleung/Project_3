@@ -112,6 +112,14 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
+<rule name="Appointment">
+<constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.NewAppointment"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.DataGen.Operation.REST.Appointment"></send>
+<return></return>
+</when>
+</rule>
 </ruleSet>
 </ruleDefinition>
 }
