@@ -25,7 +25,8 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
         set randServIndex = ##class(PUtil).Random(locServObjList.Count()) + 1
         set servItem = locServObjList.GetAt(randServIndex)
         set servId = servItem.RowID
-        $$$LOGINFO("[ApptService.NewAppt] Service ID: "_servId)
+        set servName = servItem.Order
+        $$$LOGINFO("[ApptService.NewAppt] Service ID: "_servId_", Name: "_servName)
     }
 
     // Retrieve the slots list
@@ -62,6 +63,7 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
    
         do ..RunWithRetry(apptInput, apptOutput,)
 
+        // Add the ApptObjList back to patientVo for reuse later
         set patientVo.ApptObjList = apptOutput.ApptVoObjList
         set apptIdList = apptOutput.ApptIdList
 
@@ -78,6 +80,7 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
             set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
         }
         
+        /// TO DO How to print out the slot details here??? 
         $$$LOGINFO("[ApptService.NewAppt] Results: patient Id: "_patientVo.PatientId_", apptId: "_##class(CommonUtil).convertListOfDataTypeToString(apptIdList,))
         $$$LOGINFO("[ApptService.NewAppt] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
 
@@ -105,6 +108,9 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
     set requestObjList = apptInput.RequestObjList
     set slotsObjList = apptInput.SlotsObjList
     set slotsIndexList = apptInput.SlotsIndexList
+    set slotDetailObjList = apptInput.SlotDetailObjList
+
+
     set apptIdList = ##class(%ListOfDataTypes).%New()
     
     set apptVoObjList = apptOutput.ApptVoObjList
@@ -140,7 +146,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
                 { 
 
                     //No error then store the results to AppointmentVo objects
-                    do apptVoObjList.Insert(##class(CDUI.DataGen.vo.AppointmentVo).newInstance(request,json.ID))
+                    do apptVoObjList.Insert(##class(CDUI.DataGen.vo.AppointmentVo).newInstance(request,json.ID,slotDetailObjList.GetAt(cnt)))
                     do apptIdList.Insert(json.ID)
                     set isSuccess = 1
                 } 
@@ -190,62 +196,200 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
 	quit numOfFailed
 }
 
-Method InitApptRequestPerPatientByRandom(slotsObjList As %ListOfObjects, NumOfApptPerPatient As %Integer = 1, patientVo As CDUI.DataGen.vo.PatientVo, Output apptInput As CDUI.DataGen.DataGenService.Custom.ApptInput) [ Private ]
+Method InitApptRequestPerPatientByRandom(slotsObjList As %ListOfObjects, NumOfApptPerPatient As %Integer = 1, patientVo As CDUI.DataGen.vo.PatientVo, Output apptInput As CDUI.DataGen.DataGenService.Custom.ApptInput, apptOutput As CDUI.DataGen.DataGenService.Custom.ApptOutput) [ Private ]
 {
     kill apptInput
     set apptInput = ##class(CDUI.DataGen.DataGenService.Custom.ApptInput).%New()
     set apptTmpList = ##class(%ListOfObjects).%New()
 
+    set apptVoObjList = apptOutput.ApptVoObjList
+    // Store list of slot objects
+
+    /// Double check this as slot details need to go together with the request 
+    set slotTmpList = ##class(%ListOfObjects).%New()
+
+    
+
     for cnt=1:1:NumOfApptPerPatient{
 
-        $$$LOGINFO("[ApptService.Init] Loop number: "_cnt)
         // Randomly select the slots from slotsObjList	
-        if $Data(slotsObjList) && (slotsObjList.Count() > 0)
-        {
-            set randslotIndex = ##class(PUtil).Random(slotsObjList.Count()) + 1
-            set slot = slotsObjList.GetAt(randslotIndex)
+
+
+        // If there is no existing apptVoObjList
+        if '$Data(apptVoObjList) {
+            $$$LOGINFO("[ApptService.Init] No existing appointments...")
+            if $Data(slotsObjList) && (slotsObjList.Count() > 0)
+            {
+                set randslotIndex = ##class(PUtil).Random(slotsObjList.Count()) + 1
+                $$$LOGINFO("[ApptService.Init] Try slot index: "_randslotIndex)
+                set slot = slotsObjList.GetAt(randslotIndex)
+            }
+		    // Set up the appointment request 
+            set request = ##class(CDUI.DataGen.Request.NewAppointment).%New()
+
+            // Convert string PatientId to integer
+            set request.PatientID = patientVo.PatientId + 0
+            $$$LOGINFO("[ApptService.Init] PatientId: "_request.PatientID)
+            $$$LOGINFO("[ApptService.Init] USRN: "_slot.USRN)
+
+            // Remove empty string in the beginning of USRN 
+            if ($find(slot.USRN," ")'=0){
+                set usrn = $piece(slot.USRN," ", 2)
+            }
+            set request.USRN = usrn
+            set request.UBRN = usrn
+
+            do apptTmpList.Insert(request)
             
+            // Store the slot details for comparision between appointments later
+            do slotTmpList.Insert(slot)
+	    }
+
+        // if there are existing appointments
+        else {
+            do ..AssignSlot(slotsObjList, apptOutput, .slot)
+            
+
+            // Meaning no new slot can be found after 8 trials, so request for new appointment will not be made
+            if '$Data(slot) {
+                // Set up the appointment request 
+                set request = ##class(CDUI.DataGen.Request.NewAppointment).%New()
+
+                // Convert string PatientId to integer
+                set request.PatientID = patientVo.PatientId + 0
+                $$$LOGINFO("[ApptService.Init] PatientId: "_request.PatientID)
+                $$$LOGINFO("[ApptService.Init] USRN: "_slot.USRN)
+
+                // Remove empty string in the beginning of USRN 
+                if ($find(slot.USRN," ")'=0){
+                    set usrn = $piece(slot.USRN," ", 2)
+                }
+                set request.USRN = usrn
+                set request.UBRN = usrn
+
+                do apptTmpList.Insert(request)
+                
+                // Store the slot details for comparision between appointments later
+                do slotTmpList.Insert(slot)
+            }
         }
-        $$$LOGINFO("[ApptService.Init] Slot: "_slot)
-
-        // Get slot time
-        #; set slotDate = slot.Date 
-        #; set slotStartTime = slot.StartTime
-        #; set slotEndTime = slot.EndTime 
-
-        // Get date, start time, end time of existing appointments
-
-
-        // Compare if appoinments don't clash
-
-
-
-        // Handle USRN with blank string in the beginning 
-
-
-
-        // Set up the appointment request 
-        set request = ##class(CDUI.DataGen.Request.NewAppointment).%New()
-
-        // Convert string PatientId to integer
-        set request.PatientID = patientVo.PatientId + 0
-        $$$LOGINFO("[ApptService.Init] PatientId: "_request.PatientID)
-        $$$LOGINFO("[ApptService.Init] USRN: "_slot.USRN)
-
-        // Remove empty string in the beginning of USRN 
-        if ($find(slot.USRN," ")'=0){
-            set usrn = $piece(slot.USRN," ", 2)
-        }
-        set request.USRN = usrn
-        set request.UBRN = usrn
-
-        do apptTmpList.Insert(request)
-
     }
 
     // Output of this method is 
     set apptInput.RequestObjList = apptTmpList 
     set apptInput.SlotsObjList = slotsObjList
+    set apptInput.SlotDetailObjList = slotTmpList
+
+
+    /// Check if there is value in requestObjList
+    if (apptInput.RequestObjList '= "") {     
+        $$$LOGINFO("[ApptService.Init] Count of requestObjList: "_apptInput.RequestObjList.Count())   
+        for cnt=1:1:apptInput.RequestObjList.Count(){
+            $$$LOGINFO("[ApptService.Init] Get request: "_apptInput.RequestObjList.GetAt(cnt))
+        }
+	}
+    else { 
+        $$$LOGINFO("[ApptService.Init] No request found")
+	}
+}
+
+// Method to check if the slot has same time as the existing appointment
+
+ClassMethod AssignSlot(slotsObjList As %ListOfObjects, apptOutput As CDUI.DataGen.DataGenService.Custom.ApptOutput, Output slotFinal) As %Integer
+{
+    // Put in retry logic here to try 8 times to get new slot that doesn't clash with existing appointments
+    $$$LOGINFO("[ApptService.AssignSlot] Begin...")
+    set numOfTrial = 8
+    set isSuccess = 0
+    for i=1:1:numOfTrial {
+    
+        $$$LOGINFO("[ApptService.AssignSlot] Trial: "_i)
+
+        // Randomly select the slots from slotsObjList	
+        if $Data(slotsObjList) && (slotsObjList.Count() > 0)
+        {
+            set randslotIndex = ##class(PUtil).Random(slotsObjList.Count()) + 1
+            $$$LOGINFO("[ApptService.AssignSlot] Try slot index: "_randslotIndex)
+            set slotTmp = slotsObjList.GetAt(randslotIndex)
+            
+        }
+
+        // Get slot details
+        set slotDate = slotTmp.Date 
+        set slotStartTime = slotTmp.StartTime
+        set slotEndTime = slotTmp.EndTime 
+        $$$LOGINFO("[ApptService.AssignSlot] Slot details: "_slotTmp_", date: "_slotDate_", StartTime: "_slotStartTime_", EndTime: "_slotEndTime)
+
+        // Get existing appointments object list
+        set apptVoObjList = apptOutput.ApptVoObjList
+        set isFail = 0
+
+        // Check number of success count = number of appointments in the list
+        set successCount = 0
+        
+        $$$LOGINFO("[ApptService.AssignSlot] Count of existing appt: "_apptVoObjList.Count())
+        // Loop through apptVoObjList and get date, starttime, endtime
+        for cnt=1:1:apptVoObjList.Count(){
+
+            set apptItem = apptVoObjList.GetAt(cnt)
+            set exapptDate = apptItem.Date
+            set exapptStartTime = apptItem.StartTime
+            set exapptEndTime = apptItem.EndTime
+
+            // Check if the slot is same as existing appointment times
+            if ((slotDate = exapptDate) && (slotStartTime = exapptStartTime) && (slotEndTime = exapptEndTime))
+            {
+                //Remove slot from list 
+                $$$LOGINFO("[ApptService.AssignSlot] Remove slot index: "_randslotIndex)
+                do slotsObjList.RemoveAt(randslotIndex)
+                // Use while loop 
+                set isFail = 1        
+            }
+            
+            set successCount = successCount + 1
+            
+            // Quit the for loop & not check the next appointment if the slot clashes with one appointment
+            quit:isFail=1
+        }
+
+        if (successCount = apptVoObjList.Count) {
+            #; set isSuccess = 1
+            #; $$$LOGINFO("[ApptService.AssignSlot] Slot found in Trial: "_i_", date: "_slotDate_", StartTime: "_slotStartTime_", EndTime: "_slotEndTime)
+            #; return isSuccess
+            set slotFinal = slotTmp
+        }
+    }
+    #; return isSuccess
+
+    #; set dateList = ##class(%ListOfDataTypes).%New()
+    #; set startTimeList = ##class(%ListOfDataTypes).%New()
+    #; set endTimeList = ##class(%ListOfDataTypes).%New() 
+
+    #; // Loop through apptVoObjList
+    #; for cnt=1:1:apptVoObjList.Count() {
+    #;     set apptItem = apptVoObjList.GetAt(cnt)
+    #;     do dateList.Insert(apptItem.Date)
+    #;     do startTimeList.Insert(apptItem.StartTime)
+    #;     do endTimeList.Insert(apptItem.EndTime)
+    #; }
+
+    #; $$$LOGINFO("[ApptService.Init] List of dates: "_##class(CommonUtil).convertListOfDataTypeToString(dateList,))
+    #; $$$LOGINFO("[ApptService.Init] List of start times: "_##class(CommonUtil).convertListOfDataTypeToString(startTimeList,))
+    #; $$$LOGINFO("[ApptService.Init] List of end times: "_##class(CommonUtil).convertListOfDataTypeToString(endTimeList,))
+
+    // Compare if appoinments don't clash: try compare 1 appointment with 1 appointment first 
+    
+    #; for cnt=1:1:dateList.Count(){
+    #;     set date = dateList.GetAt(cnt)
+    #;     set startTime = startTimeList.GetAt(cnt)
+    #;     set endTime = endTimeList.GetAt(cnt)
+
+        // Put in another method here
+        // Logic to get another slot 
+        
+        // Compare two appointments
+
+        // If date is the same, either starTime or endTime is the same
 }
 
 }

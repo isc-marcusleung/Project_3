@@ -207,6 +207,8 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
      
     // Combine the list or assign a new one
     #; $$$LOGINFO("[OrderService.Run2] Check value of orderOutput.OrderIdList: "_orderOutput.OrderIdList)  
+
+    // If orderOutput.OrderIdList has values, execute the if {} to insert new order ID into the list via a loop
     if (orderOutput.OrderIdList '= "") {     
         $$$LOGINFO("[OrderService.Run2] Count of OrderIdList before new order insertion: "_orderOutput.OrderIdList.Count())   
 		for cnt=1:1:orderIdList.Count(){
@@ -214,7 +216,10 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
 			do orderOutput.OrderIdList.Insert(orderIdList.GetAt(cnt))
             $$$LOGINFO("[OrderService.Run2] Count after insertion: "_orderOutput.OrderIdList.Count())
 		}
-	} else { 
+	} 
+
+    // if (orderOutput.OrderIdList = "") ie. there is no value in orderOutput.OrderIdList, then set equal to new orderIdlist 
+    else { 
         $$$LOGINFO("[OrderService.Run2] Reset: "_orderIdList)
 		set orderOutput.OrderIdList = orderIdList
 	}
