@@ -17,8 +17,8 @@ ClassMethod newInstance(NewApptReq, ApptID, SlotDetailObjList) As CDUI.DataGen.v
     set obj.PatientID = NewApptReq.PatientID
     set obj.ID = ApptID
     set obj.Date = SlotDetailObjList.Date
-    set obj.StartTime = SlotDetailObjList.StartTime
-    set obj.EndTime = SlotDetailObjList.EndTime 
+    set obj.StartTime = SlotDetailObjList.SessStartTime
+    set obj.EndTime = SlotDetailObjList.SessEndTime 
 
     return obj
 }
