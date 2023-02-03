@@ -94,7 +94,6 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 		{	
 			set location = ##class("CDUI.DataGen.vo.LocationVo").newInstance(value)
 			do ResultObjList.Insert(location)
-			
 		}
 	}
 	quit sc
@@ -545,7 +544,7 @@ ClassMethod NewLabOrder(NumOfLabOrder As %Integer = 1, Output labOrdVoObjList) A
 	return sc
 }
 
-ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRef ResultObjList, ByRef Results) As %Status
+ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRef ResultObjList) As %Status
 {
 	set request = ##class(CDUI.DataGen.Request.GetOrderByCategory).%New()
 
@@ -577,8 +576,6 @@ ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRe
 			set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
 			do ResultObjList.Insert(insurType)
 			#; write !, value.ORCATDesc,?30,value.ID
-			set Results($increment(Results)) = $listbuild(value.Id,value.ORCATDesc)
-
 		}
 	}
 
@@ -763,125 +760,45 @@ ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1
 ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
 {
 	kill PatientVoObjList
-
-	#; New instance of this class
 	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
-
-	#; Call method NewPatient
 	do patientService.NewPatient(NumOfPatient, .PatientVoObjList)
-	w !
-	zw PatientVoObjList
-
+	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
-		w PatientVoObjList.GetAt(cnt).SerialisedGet()
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] Patient Id ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).PatientId)
 	}
+	$$$LOGINFO("================================ [End] Patient Id ================================")
 }
 
 ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
 	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList)
-	w !
-	zw PatientVoObjList
-
+	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
-		w PatientVoObjList.GetAt(cnt).SerialisedGet()
-	}
-}
-
-ClassMethod CreateOrder() As %ListOfObjects
-{
-	/// For auxxmisc testing later
-	/// 
-	#; set aa = {}
-	#; do aa.%Set("PatientId","11754")
-	#; do aa.%Set("EpisodeObjList",[{"ID":"14764","PatientID":"11754","PAADMType":"I","PAADMAdmDate":"26/01/2023", "PAADMAdmTime":"09:02","CTLOCDesc":"Community Mental Health C1"},{"ID":"14793","PatientID":"11754","PAADMType":"O","PAADMAdmDate":"20/07/2021","PAADMAdmTime":"16:25","CTLOCDesc":"Cardiology H1"}])
-	
-	#; set bb = {}
-	#; do bb.%Set("PatientId","11556")
-	#; do bb.%Set("EpisodeObjList",[{"ID":"14759","PatientID":"11556","PAADMType":"I","PAADMAdmDate":"01/12/2022", "PAADMAdmTime":"10:00","CTLOCDesc":"Cardiology H1"},{"ID":"14794","PatientID":"11556","PAADMType":"O","PAADMAdmDate":"29/03/2021", "PAADMAdmTime":"14:30","CTLOCDesc":"Cardiology NZ"}])
-	
-	/// For 9096 testing 
-	set aa = {}
-	do aa.%Set("PatientId","13878")
-	do aa.%Set("EpisodeObjList",[{"ID":"15515","PatientID":"13878","PAADMType":"I","PAADMAdmDate":"18/06/1992","PAADMAdmTime":"21:13","CTLOCDesc":"Geriatrics H2"},{"ID":"15516","PatientID":"13878","PAADMType":"I","PAADMAdmDate":"21/11/2003","PAADMAdmTime":"20:33","CTLOCDesc":"Orthopaedics H3"}])
-	#; set bb = {}
-	#; do bb.%Set("PatientId","13879")
-	#; do bb.%Set("EpisodeObjList",[{"ID":"15517","PatientID":"13879","PAADMType":"I","PAADMAdmDate":"14/05/1992","PAADMAdmTime":"15:43","CTLOCDesc":"General Medicine H2"},{"ID":"15518","PatientID":"13879","PAADMType":"O","PAADMAdmDate":"28/08/1971","PAADMAdmTime":"13:51","CTLOCDesc":"Radiology H1"}])
-	
-	#; {"PatientId":"13880","EpisodeObjList":[{"ID":"15519","PatientID":"13880","PAADMType":"I","PAADMAdmDate":"29/01/1995","PAADMAdmTime":"16:13","CTLOCDesc":"Specimen Collection Community C1"},{"ID":"15520","PatientID":"13880","PAADMType":"O","PAADMAdmDate":"23/06/2012","PAADMAdmTime":"21:16","CTLOCDesc":"Paediatrics H1"}]}
-
-	set PatientVoObjList = ##class(%ListOfObjects).%New()
-	do PatientVoObjList.Insert(aa)
-	#; do PatientVoObjList.Insert(bb)
-
-
-	#; w !, aa.%Get("PatientId")
-	#; w !, aa.%Get("EpisodeObjList")
-	#; w !, aa.%Get("EpisodeObjList").%Size()
-	#; w !, PatientVoObjList.GetAt(1)."PatientId"
-	#; w !, PatientVoObjList.GetAt(2)."PatientId"
-
-	#; set numEp = aa.%Get("EpisodeObjList").%Size()
-
-	set numOfLoop = PatientVoObjList.Count()
-
-	for cnt = 1:1:numOfLoop{
-		set epArray = PatientVoObjList.GetAt(cnt)."EpisodeObjList"
-		set iterator = epArray.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			set location = ##class("CDUI.DataGen.vo.LocationVo").newInstance(value)
-			set Episodes($increment(Episodes)) = $listbuild(value.ID,value.PAADMType)
-			#; write !, value.ID,?30,value.PAADMType, !
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] ================================")
 		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
 	}
-
-	#; w "Size of episode", !, PatientVoObjList.GetAt(1).%Get("EpisodeObjList").%Size()
-	return PatientVoObjList
+	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod TestingOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects)
+ClassMethod mCreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects)
 {
 	set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
 	set OrderCat = OrderCat
-
-	set PatientVoObjList = ..CreateOrder()
-
-	/// TO DO - CN to add category as parameter
 	do orderService.NewOrder(NumOfOrderPerEpisode, OrderCat, PatientVoObjList)
-	w !
-	zw PatientVoObjList
-
-	// TO DO - CN Something wrong here ??? 
-	#; for cnt = 1:1:PatientVoObjList.Count(){
-	#; 	w PatientVoObjList.GetAt(cnt).SerialisedGet()
-	#; }
-}
-
-ClassMethod Sunday()
-{
-	 set mylist=##class(%ListOfDataTypes).%New()
-	do mylist.Insert("red")
-	do mylist.Insert("green")
-	do mylist.Insert("blue")
-	w !, mylist.Count()
-	w !, mylist.GetAt(1)
-	w !, mylist.GetAt(2)
-}
-
-ClassMethod PatientObject()
-{
-	set patientVoObjList =  ##class(%ListOfObjects).%New()
-	set request = ##class(CDUI.DataGen.Request.NewPatient).%New()
-	do patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,11754))
-
-	set request = ##class(CDUI.DataGen.Request.NewPatient).%New()
-	do patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,11732))
-	#; zw patientVoObjList
-	#; w !, patientVoObjList.GetAt(1)
-	#; w !, patientVoObjList.GetAt(1).PatientId
-	return patientVoObjList
+	w !!!!
+	for cnt = 1:1:PatientVoObjList.Count(){
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+	}
+	$$$LOGINFO("================================ [End] ================================")
 }
 
 }
