@@ -3,6 +3,6 @@ Class CDUI.DataGen.DataGenService.Custom.PatientOutput Extends CDUI.DataGen.Data
 
 Property PatientVoObjList As %ListOfObjects;
 
-Property PatientIdList As %List;
+Property PatientIdList As %ListOfDataTypes;
 
 }

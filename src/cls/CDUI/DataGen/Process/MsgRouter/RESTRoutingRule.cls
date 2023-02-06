@@ -96,6 +96,30 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
+<rule name="LocationServices">
+<constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.LocationServices"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.DataGen.Operation.REST.LocationServices"></send>
+<return></return>
+</when>
+</rule>
+<rule name="Slots">
+<constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.Slots"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.DataGen.Operation.REST.Slots"></send>
+<return></return>
+</when>
+</rule>
+<rule name="Appointment">
+<constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.NewAppointment"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.DataGen.Operation.REST.Appointment"></send>
+<return></return>
+</when>
+</rule>
 </ruleSet>
 </ruleDefinition>
 }

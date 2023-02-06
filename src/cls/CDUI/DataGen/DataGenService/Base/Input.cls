@@ -1,4 +1,4 @@
-Class CDUI.DataGen.DataGenService.Base.Input Extends %RegisteredObject
+Class CDUI.DataGen.DataGenService.Base.Input Extends %RegisteredObject [ Abstract ]
 {
 
 }
