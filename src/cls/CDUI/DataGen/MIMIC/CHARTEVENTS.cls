@@ -1,27 +1,27 @@
 Class CDUI.DataGen.MIMIC.CHARTEVENTS Extends %Persistent
 {
 
-Property rowId As %Integer;
+Property RowId As %Integer;
 
-Property subjectId As %Integer;
+Property SubjectId As %Integer;
 
-Property hadmId As %Integer;
+Property HadmId As %Integer;
 
-Property icustayId As %Integer;
+Property IcustayId As %Integer;
 
-Property itemId As %Integer;
+Property ItemId As %Integer;
 
-Property charttime As %String;
+Property Charttime As %String;
 
-Property storetime As %String;
+Property Storetime As %String;
 
-Property cgid As %Integer;
+Property Cgid As %Integer;
 
-Property value As %Decimal;
+Property Value As %String;
 
-Property valuenum As %Decimal;
+Property Valuenum As %Decimal;
 
-Property valueuom As %String;
+Property Valueuom As %String;
 
 Storage Default
 {
@@ -30,40 +30,37 @@ Storage Default
 <Value>%%CLASSNAME</Value>
 </Value>
 <Value name="2">
-<Value>rowId</Value>
+<Value>RowId</Value>
 </Value>
 <Value name="3">
-<Value>subjectId</Value>
+<Value>SubjectId</Value>
 </Value>
 <Value name="4">
-<Value>hadmId</Value>
+<Value>HadmId</Value>
 </Value>
 <Value name="5">
-<Value>icustayId</Value>
+<Value>IcustayId</Value>
 </Value>
 <Value name="6">
-<Value>itemId</Value>
+<Value>ItemId</Value>
 </Value>
 <Value name="7">
-<Value>charttime</Value>
+<Value>Charttime</Value>
 </Value>
 <Value name="8">
-<Value>stroetime</Value>
+<Value>Storetime</Value>
 </Value>
 <Value name="9">
-<Value>cgid</Value>
+<Value>Cgid</Value>
 </Value>
 <Value name="10">
-<Value>value</Value>
+<Value>Value</Value>
 </Value>
 <Value name="11">
-<Value>valuenum</Value>
+<Value>Valuenum</Value>
 </Value>
 <Value name="12">
-<Value>valueuom</Value>
-</Value>
-<Value name="13">
-<Value>storetime</Value>
+<Value>Valueuom</Value>
 </Value>
 </Data>
 <DataLocation>^CDUI.DataGen.M372A.CHARTEVENTSD</DataLocation>
