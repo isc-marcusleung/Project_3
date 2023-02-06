@@ -5,20 +5,20 @@ Property PatientID As %String;
 
 Property ID As %String;
 
-// Property Date As %String;
+Property Date As %String;
 
-// Property SessStartTime As %String;
+Property StartTime As %String;
 
-// Property SessEndTime As %String;
+Property EndTime As %String;
 
-ClassMethod newInstance(NewApptReq, ApptID) As CDUI.DataGen.vo.AppointmentVo
+ClassMethod newInstance(NewApptReq, ApptID, SlotDetailObjList) As CDUI.DataGen.vo.AppointmentVo
 {
     set obj = ..%New()
     set obj.PatientID = NewApptReq.PatientID
     set obj.ID = ApptID
-    #; set obj.Date = NewApptReq.Date
-    #; set obj.SessStartTime = NewApptReq.SessStartTime
-    #; set obj.SessEndTime = NewApptReq.SessEndTime   
+    set obj.Date = SlotDetailObjList.Date
+    set obj.StartTime = SlotDetailObjList.SessStartTime
+    set obj.EndTime = SlotDetailObjList.SessEndTime 
 
     return obj
 }

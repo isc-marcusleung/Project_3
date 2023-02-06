@@ -801,4 +801,20 @@ ClassMethod mCreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %Stri
 	$$$LOGINFO("================================ [End] ================================")
 }
 
+ClassMethod CreateAppointment(NumOfApptPerPatient As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects)
+{
+	set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
+	#; set PatientVoObjList = ..PatApptObj()
+
+	do apptService.NewAppt(NumOfApptPerPatient, PatientVoObjList)
+	w !!!!
+	for cnt = 1:1:PatientVoObjList.Count(){
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+	}
+	$$$LOGINFO("================================ [End] ================================")
+}
+
 }

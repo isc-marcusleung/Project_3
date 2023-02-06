@@ -165,7 +165,7 @@ ClassMethod GetLocationServices(loc As %Integer = "", ByRef ResultObjList) As %S
 	quit sc
 }
 
-ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize As %Integer = "", ByRef ResultObjList) As %Status
+ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize As %Integer = 50, ByRef ResultObjList) As %Status
 {
 	$$$LOGINFO("[TrakCareService.Slots] Start retrieving Slots...")
 	set request = ##class(CDUI.DataGen.Request.Slots).%New()

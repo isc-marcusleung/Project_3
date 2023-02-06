@@ -9,7 +9,7 @@ Property LocId As %Integer [ InitialExpression = 241 ];
 
 Property ServId As %Integer;
 
-Property Serialised As %RawString(%JSONINCLUDE = "NONE") [ Transient ];
+// Property Serialised As %RawString(%JSONINCLUDE = "NONE") [ Transient ];
 
 Method SerialisedGet() As %RawString
 {

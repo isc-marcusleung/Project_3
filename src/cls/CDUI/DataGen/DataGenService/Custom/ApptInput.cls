@@ -7,4 +7,6 @@ Property SlotsObjList As %ListOfObjects;
 
 Property SlotsIndexList As %List;
 
+Property SlotDetailObjList As %ListOfObjects;
+
 }
