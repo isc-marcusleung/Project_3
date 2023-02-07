@@ -267,7 +267,7 @@ ClassMethod TerminateJob(id As %Integer)
 ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", isAscending As %Integer = 1, endpointUrl As %String) As CDUI.Web.Vo.GetJobsForDisplayVo
 {
     $$$LOGINFO("[JobService.GetJobsForDisplay] Start getting the jobs, count: "_count_", idPtr: "_idPtr_", isAscending: "_isAscending)
-
+    do ..checkSetup()
     if (isAscending > 0) {
         set isAscending = 1
     } else {
