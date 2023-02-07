@@ -127,6 +127,7 @@ ClassMethod AddJob() As %Integer
         TROLLBACK 
         Throw exception
     }
+    return id
 }
 
 ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, completeDateTime As %String)
@@ -182,8 +183,7 @@ ClassMethod DeleteJob(id As %Integer)
         if ($Data(^DataGen.Job("item",id))  = 0) { 
             $$$LOGINFO("[JobService.DeleteJob] Job is not found. Job Id: "_id)
             Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
-            TCOMMIT
-            return
+            Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
         }
 
         //If the job is not terminated, terminate it before remove it.
@@ -245,9 +245,7 @@ ClassMethod TerminateJob(id As %Integer)
         set locked = 1
         if ($Data(^DataGen.Job("item",id))  = 0) { 
             $$$LOGINFO("[JobService.TerminateJob] Job is not found. Job Id: "_id)
-            Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
-            TCOMMIT
-            return
+            Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
         }
 
         //If the job is not terminated, terminate it before remove it.
@@ -256,7 +254,7 @@ ClassMethod TerminateJob(id As %Integer)
         Lock -^DataGen.Job("item",id)
         TCOMMIT
         $$$LOGINFO("[JobService.TerminateJob] Finished deleting a job. Job Id: "_id)
-        
+        return 1
     } Catch exception {
         if locked {
             Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
@@ -266,20 +264,21 @@ ClassMethod TerminateJob(id As %Integer)
     }
 }
 
-ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", forward As %Integer = -1, endpointUrl As %String) As CDUI.Web.Vo.GetJobsForDisplayVo
+ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", isAscending As %Integer = 1, endpointUrl As %String) As CDUI.Web.Vo.GetJobsForDisplayVo
 {
-    $$$LOGINFO("[JobService.GetJobsForDisplay] Start getting the jobs, count: "_count_", idPtr: "_idPtr)
+    $$$LOGINFO("[JobService.GetJobsForDisplay] Start getting the jobs, count: "_count_", idPtr: "_idPtr_", isAscending: "_isAscending)
 
-    if forward > 0 {
-        set forward = 1
+    if (isAscending > 0) {
+        set isAscending = 1
     } else {
-        set forward = -1
+        set isAscending = -1
     }
 
-    SET key=$ORDER(^DataGen.Job("item",idPtr), forward)
-
+    SET key=$ORDER(^DataGen.Job("item",idPtr), isAscending)
+ 
     set getJobsForDisplayVo = ##class(CDUI.Web.Vo.GetJobsForDisplayVo).%New()
     set getJobsForDisplayVo.results = ##class(%ListOfObjects).%New()
+    set results = getJobsForDisplayVo.results
 
     set getJobsForDisplayVo.count = count
     set noOfJob = ^DataGen.Job("info","size")
@@ -292,47 +291,77 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", fo
         set jobVo.createDateTime = ^DataGen.Job("item", key, "createDateTime")  
         set jobVo.completeDateTime = ^DataGen.Job("item", key, "completeDateTime")  
         set jobVo.lastUpdateDateTime = ^DataGen.Job("item", key, "lastUpdateDateTime")  
-        do getJobsForDisplayVo.results.Insert(jobVo)
+        do results.Insert(jobVo)
 
         if (counter >= count) {
             quit
         }
         set counter = counter + 1
-        SET key = $ORDER(^DataGen.Job("item",key), forward)  
+        SET key = $ORDER(^DataGen.Job("item",key), isAscending)  
     }
 
-    if forward > 0 {
-        set startId = getJobsForDisplayVo.results.GetAt(1).id
-        set endId = getJobsForDisplayVo.results.GetAt(getJobsForDisplayVo.results.Count()).id
-    } else {
-        set startId = getJobsForDisplayVo.results.GetAt(getJobsForDisplayVo.results.Count()).id
-        set endId = getJobsForDisplayVo.results.GetAt(1).id
+    set startId = idPtr
+    set endId = idPtr
+
+    if results.Count() > 0 {
+        set startId = results.GetAt(1).id
+        set endId = results.GetAt(results.Count()).id  
     }
+
+    $$$LOGINFO("[JobService.GetJobsForDisplay] startId: "_startId_", endId: "_endId)
     
     set isPrev = 0
     set isNext = 0
-    set prevKey =$ORDER(^DataGen.Job("item",startId), -1)
-    set nextKey=$ORDER(^DataGen.Job("item",endId), 1)
-    if prevKey '= "" {
+
+    if (isAscending = 1){
+        set prevKey =$ORDER(^DataGen.Job("item",startId), -1)
+        set nextKey=$ORDER(^DataGen.Job("item",endId), 1)
+    } else {
+        set prevKey =$ORDER(^DataGen.Job("item",startId), 1)
+        set nextKey=$ORDER(^DataGen.Job("item",endId), -1)
+    }
+
+    if (prevKey '= "") {
         set isPrev = 1
     }
-    if nextKey '= "" {
+    if (nextKey '= "") {
         set isNext = 1
     }
+    $$$LOGINFO("[JobService.GetJobsForDisplay] isPrev: "_isPrev_", isNext: "_isNext)
+    $$$LOGINFO("[JobService.GetJobsForDisplay] prevKey: "_prevKey_", nextKey: "_nextKey)
 
     set link = ##class(%DynamicObject).%New()
     set link.nextPage = ""
     set link.preivousPage = ""
     set getJobsForDisplayVo.links = link
 
+    if (isAscending = -1){
+        set tmp = startId
+        set startId = endId
+        set endId = tmp
+    }
+
+    set url1 = endpointUrl_"?count="_count_"&beforeId="_startId
+    set url2 = endpointUrl_"?count="_count_"&afterId="_endId
+
     if isPrev {
-        set link.preivousPage = endpointUrl_"?count="_count_"&idPtr="_startId_"&forward=-1"
+        if (isAscending = 1){
+            set link.preivousPage = url1
+        } else {
+            set link.preivousPage = url2
+        }
     }
 
     if isNext {
-        set link.nextPage = endpointUrl_"?count="_count_"&idPtr="_endId_"&forward=1"
+        if (isAscending = 1){
+            set link.nextPage = url2
+        } else {
+            set link.nextPage = url1
+        }
     }
 
+    $$$LOGINFO("[JobService.GetJobsForDisplay] prev: "_link.preivousPage)
+    $$$LOGINFO("[JobService.GetJobsForDisplay] next: "_link.nextPage)
     $$$LOGINFO("[JobService.GetJobsForDisplay] Finished getting the jobs, count: "_count_", idPtr: "_idPtr)
 
     return getJobsForDisplayVo
