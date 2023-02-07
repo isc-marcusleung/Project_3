@@ -8,6 +8,7 @@ ClassMethod GetJobs() As %Status
 	set count = $Get(%request.Data("count", 1))
 	set beforeId = $Get(%request.Data("beforeId", 1))
 	set afterId = $Get(%request.Data("afterId", 1))
+	set reverse = $Get(%request.Data("reverse", 1))
 	set %response.ContentType = ..#CONTENTTYPEJSON
 
 	if $Data(beforeId) {
@@ -16,7 +17,12 @@ ClassMethod GetJobs() As %Status
 		set idPtr = afterId
 	}
 
-	set getJobsForDisplayVo = ##class(JobService).GetJobsForDisplay(count,idPtr,-1,%request.URL)
+	set order = 1
+	if (reverse = "Y"){
+		set order = -1
+	}
+	
+	set getJobsForDisplayVo = ##class(JobService).GetJobsForDisplay(count,idPtr,order,%request.URL)
     
 	write getJobsForDisplayVo.SerialisedGet()
 
