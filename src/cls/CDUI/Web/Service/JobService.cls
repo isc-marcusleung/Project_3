@@ -113,9 +113,9 @@ ClassMethod AddJob() As %Integer
         set id = ..GetNextId()
         set ^DataGen.Job("item",id,"status") = ..#StatusCreate //Update it in job process
         set ^DataGen.Job("item",id,"pid") = 0 //Update it in job process
-        set ^DataGen.Job("item",id,"createDateTime") = $zdatetime($horolog)        
+        set ^DataGen.Job("item",id,"createDateTime") = $ZDATETIME($HOROLOG,3,7)  //e.g. "2023-02-07T06:12:15Z"
         set ^DataGen.Job("item",id,"completeDateTime") = "" //Update it in job process
-        set ^DataGen.Job("item",id,"lastUpdateDateTime") = $zdatetime($horolog)   
+        set ^DataGen.Job("item",id,"lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)   
         set ^DataGen.Job("info","size") = ^DataGen.Job("info","size") + 1
         Lock -^DataGen.Job("info","size")
         TCOMMIT
@@ -150,7 +150,7 @@ ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, comple
         if $Data(completeDateTime) set ^DataGen.Job("item",id,"completeDateTime") = completeDateTime
 
         if $Data(status) || $Data(pid) || $Data(completeDateTime) {
-            set ^DataGen.Job("item",id,"lastUpdateDateTime") = $zdatetime($horolog)  
+            set ^DataGen.Job("item",id,"lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)  
         }
         Lock -^DataGen.Job("item", id)
         TCOMMIT
