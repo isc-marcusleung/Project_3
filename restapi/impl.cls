@@ -1,5 +1,5 @@
 /// Business logic class defined by OpenAPI in Custom.CDUI.REST.spec<br/>
-/// Updated Jan 17, 2023 03:41:40
+/// Updated Feb 6, 2023 07:05:40
 Class Custom.CDUI.REST.impl Extends %REST.Impl [ ProcedureBlock ]
 {
 
@@ -13,7 +13,6 @@ Parameter ExposeServerExceptions = 0;
 /// WARNING: This method's signature has changed.
 ClassMethod GetOrders(RowCount As %Integer = "", category As %String = "") As %DynamicObject
 {
-
 	set numRow = RowCount
 	set ret={}
 	set dynArray=[]
@@ -111,6 +110,37 @@ ClassMethod GetOrders(RowCount As %Integer = "", category As %String = "") As %D
 		set results."count" = count
 		quit results
 	}
+}
+
+/// Get ...
+ClassMethod GetCareProviders() As %DynamicObject
+{
+	set ret={}
+	set dynArray=[]
+	set count = 0
+
+	&SQL(DECLARE CPCursor CURSOR FOR 
+			SELECT Top 50 CTPCP_RowId1 into :DoctorID
+			FROM SQLUser.CT_CareProv
+		)
+
+		&sql(OPEN CPCursor)
+			QUIT:(SQLCODE'=0)
+
+		for {
+			&sql(FETCH CPCursor)
+			QUIT:SQLCODE
+				do ret.%Set("DoctorID", DoctorID)
+				do dynArray.%Set(count, ret)
+				set ret={}
+				set count = count + 1
+			}
+		
+		&sql(CLOSE CPCursor)
+		
+		set results = {}.%Set("results",dynArray)
+		set results."count" = count
+		quit results
 }
 
 }
