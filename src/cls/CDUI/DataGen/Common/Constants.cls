@@ -33,4 +33,6 @@ Parameter FBCItemId As STRING [ Final ] = "51301,51279,51222,51221,51250,51248,5
 
 Parameter FBCItemName As String [ Final ] = "WBC,RBC,HB,HCT,MCV,MCH,MCHC,RDW,PLT";
 
+Parameter oecprDesc As STRING [ Final ] = "NORM,U";
+
 }

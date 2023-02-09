@@ -210,4 +210,70 @@ ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize A
 	quit sc
 }
 
+ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRef ResultObjList) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetOrderByCategory).%New()
+
+	//Set up the request
+	if Count'=""
+	{
+		set request.count = Count
+	}
+	if Category'=""
+	{
+		set request.category = Category
+	}
+
+	$$$LOGINFO("[GetOrderByCat] Request body: "_request.SerialisedGet())
+
+	//Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	//Store the retrieved order categories, order items records to an object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
+	if $$$ISOK(sc)
+	{
+		//$$$LOGINFO("[Get...] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
+			do ResultObjList.Insert(insurType)
+			#; write !, value.ORCATDesc,?30,value.ID
+		}
+	}
+
+	quit sc
+}
+
+ClassMethod GetCareProvider(ByRef Results) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetCareProvider).%New()
+
+	// $$$LOGINFO("[GetCareProvider] Request body: "_request.SerialisedGet())
+
+	// Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	// Store the DoctorID in a ListOfDataTypes
+	set Results = ##class(%ListOfDataTypes).%New()
+
+	if $$$ISOK(sc)
+	{
+		//$$$LOGINFO("[Get...] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			do Results.Insert(value.DoctorID)
+			#; write !, value.DoctorID
+		}
+	}
+
+	quit sc
+}
+
 }
