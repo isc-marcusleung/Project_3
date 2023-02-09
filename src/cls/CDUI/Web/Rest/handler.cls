@@ -43,7 +43,8 @@ ClassMethod AddJob() As %Status
 
     if ('isValid || 'isReqBody) {
         set obj = {
-			"Error" : "Invalid Parameter"
+			"status" : "Error",
+			"message" : "Invalid Parameter"
 		}
         write obj.%ToJSON()
 	    Quit $$$OK
@@ -53,6 +54,7 @@ ClassMethod AddJob() As %Status
 	job ##class(DataGenService).prcoessRequest(request, jobId)
 
 	set obj = {
+		"status" : "Success",
 		"jobId" : (jobId)
 	}
 	write obj.%ToJSON()
@@ -71,13 +73,15 @@ ClassMethod TerminateJob(id As %Integer) As %Status
 	Quit $$$OK
 }
 
-Parameter HandleCorsRequest = 0;
+// TODO marucs to turn it off
+
+Parameter HandleCorsRequest = 1;
 
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 {
 <Routes>
 <Route Url="/job" Method="GET" Call="GetJobs"/>
-<Route Url="/Addjob" Method="POST" Call="AddJob"/>
+<Route Url="/addJob" Method="POST" Call="AddJob"/>
 <Route Url="/job/:id" Method="DELETE" Call="DeleteJob"/>
 <Route Url="/job/terminate/:id" Method="POST" Call="TerminateJob"/>
 </Routes>
