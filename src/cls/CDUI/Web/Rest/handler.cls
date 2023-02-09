@@ -31,7 +31,7 @@ ClassMethod GetJobs() As %Status
 
 ClassMethod AddJob() As %Status
 {
-	set isReqBody = %request.Content '= ""
+	set isReqBody = $order(%request.Data("")) '= ""
 	set isValid = 0
 	set %response.ContentType = ..#CONTENTTYPEJSON
 
@@ -77,7 +77,7 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 {
 <Routes>
 <Route Url="/job" Method="GET" Call="GetJobs"/>
-<Route Url="/job" Method="PUT" Call="AddJob"/>
+<Route Url="/Addjob" Method="POST" Call="AddJob"/>
 <Route Url="/job/:id" Method="DELETE" Call="DeleteJob"/>
 <Route Url="/job/terminate/:id" Method="POST" Call="TerminateJob"/>
 </Routes>
