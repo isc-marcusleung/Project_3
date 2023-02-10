@@ -35,8 +35,7 @@ ClassMethod GetJobs() As %Status
 		set getJobsForDisplayVo.status = ..#ERROR
 		set getJobsForDisplayVo.message = ex.Name_"("_ex.Code_")"_": "_ex.Data
 	}
-	k ^marcus
-	s ^marcus(1) = getJobsForDisplayVo.SerialisedGet()
+
 	write getJobsForDisplayVo.SerialisedGet()
 
 	Quit $$$OK
@@ -84,13 +83,39 @@ ClassMethod AddJob() As %Status
 
 ClassMethod DeleteJob(id As %Integer) As %Status
 {
-	do ##class(JobService).DeleteJob(id)
+	Try {
+		do ##class(JobService).DeleteJob(id)
+		set obj = {
+			"status" : (..#SUCCESS)
+		}
+	} catch ex {
+		do LOG^%ETN
+		set obj = {
+			"status" : (..#ERROR),
+			"message" : (ex.Name_"("_ex.Code_")"_": "_ex.Data)
+		}
+	}
+	write obj.%ToJSON()
+
 	Quit $$$OK
 }
 
 ClassMethod TerminateJob(id As %Integer) As %Status
 {
-	do ##class(JobService).TerminateJob(id)
+	Try {
+		do ##class(JobService).TerminateJob(id)
+		set obj = {
+			"status" : (..#SUCCESS)
+		}
+	} catch ex {
+		do LOG^%ETN
+		set obj = {
+			"status" : (..#ERROR),
+			"message" : (ex.Name_"("_ex.Code_")"_": "_ex.Data)
+		}
+	}
+	write obj.%ToJSON()
+
 	Quit $$$OK
 }
 
