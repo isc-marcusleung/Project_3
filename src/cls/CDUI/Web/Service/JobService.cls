@@ -167,7 +167,7 @@ ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, comple
 
 ClassMethod DeleteJob(id As %Integer)
 {
-    $$$LOGINFO("[JobService.AddJob] Start deleting a job. Job Id: "_id)
+    $$$LOGINFO("[JobService.DeleteJob] Start deleting a job. Job Id: "_id)
     do ..checkSetup()
     TSTART
     set locked = 0
@@ -187,7 +187,10 @@ ClassMethod DeleteJob(id As %Integer)
         }
 
         //If the job is not terminated, terminate it before remove it.
-        do ..TerminateJobItem(id)
+        set status = ^DataGen.Job("item",id,"status")
+        if ((status = ..#StatusCreate) || (status = ..#StatusInProgress) ){
+            do ..TerminateJobItem(id)
+        }
         //Remove the job from global variable
         do ..RemoveJobItem(id)
         //update the size
@@ -223,9 +226,10 @@ ClassMethod TerminateJobItem(id As %Integer) [ Private ]
     $$$LOGINFO("[JobService.TerminateJobItem] Before Job termination, Job Id: "_id_", Job status: "_status)
     if ( status '= ..#StatusTerminated) && (status '= ..#StatusCompleted) && (status '= ..#StatusError){  
         do $SYSTEM.Process.Terminate(^DataGen.Job("item",id, "pid"))
-        set ^DataGen.Job("item",id, "status")  =  ..#StatusTerminated
+        set ^DataGen.Job("item",id, "status") =  ..#StatusTerminated
+        set ^DataGen.Job("item",id, "lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)  
     }
-    $$$LOGINFO("[JobService.TerminateJobItem] After Job termination, Job Id: "_id_", Job status: "_status)
+    $$$LOGINFO("[JobService.TerminateJobItem] After Job termination, Job Id: "_id_", Job status: "_^DataGen.Job("item",id, "status"))
 }
 
 ClassMethod TerminateJob(id As %Integer)
@@ -248,12 +252,11 @@ ClassMethod TerminateJob(id As %Integer)
             Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
         }
 
-        //If the job is not terminated, terminate it before remove it.
         do ..TerminateJobItem(id)
 
         Lock -^DataGen.Job("item",id)
         TCOMMIT
-        $$$LOGINFO("[JobService.TerminateJob] Finished deleting a job. Job Id: "_id)
+        $$$LOGINFO("[JobService.TerminateJob] Finished terminating a job. Job Id: "_id)
         return 1
     } Catch exception {
         if locked {
