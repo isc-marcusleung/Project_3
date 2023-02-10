@@ -14,8 +14,19 @@
 
 <body>
 	<section>
-		<div class="container text-center">
-		  <h2>Job Status</h2>        
+		<div class="container mt-5">
+			<div class="text-center">
+				<h1>Job Status</h1>
+			</div>
+			<div class="my-2">
+				<select id="actions" class="form-select w-auto d-inline" aria-label="selection">
+				  <option selected>Actions</option>
+				  <option value="1">Delete</option>
+				  <option value="2">Terminate</option>
+				</select>
+				<button id="actionConfirm" type="button" class="btn btn-primary d-inline mx-3">Confirm</button>
+
+			</div>
 		  <table id ="jobList" class="table table-striped">
 			<thead class="table-dark">
 			  <tr>

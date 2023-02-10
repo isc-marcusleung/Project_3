@@ -1,6 +1,8 @@
 $(document).ready(function(){
 	
 	reset(); 
+	
+	refreshJobList();
 
 	$('#noOfPatient').keyup(function(){
 		removeWarningBorder('noOfPatient');
@@ -142,9 +144,6 @@ $(document).ready(function(){
 		event.preventDefault();
 		addJob();
 	});
-
-
-	getJobList(10,null,null,'Y');
 	
 	$('#next .page-link').click(function(event){
 		event.preventDefault();
@@ -155,7 +154,87 @@ $(document).ready(function(){
 		event.preventDefault();
 		reloadTable(this.href);
 	});
+	
+	$('#actionConfirm').click(function(event){
+		var action = $('#actions').val();
+		
+		switch (action) { 
+		case '1': 
+			handleAction(deleteJob);
+			setTimeout(function(){refreshJobList();}, 1000);
+			break;
+		case '2': 
+			handleAction(terminateJob); 
+			setTimeout(function(){refreshJobList();}, 1000);
+			break;
+		default:
+			alert("Please select action !!!")
+		}
+	
+		
+	});
 });	
+
+function refreshJobList(){
+	getJobList(10,null,null,'Y');
+}
+
+function handleAction(fCallback){
+	$('#jobList input[type="checkbox"]').each(function() 
+	{   if ($(this).is(":checked")) {
+			//console.log("checked, id : " + this.id.split('-')[1]);
+			let id = this.id.split('-')[1]
+			fCallback(id);
+		}
+	});
+}
+
+function deleteJob(id){
+		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
+		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
+
+		$.ajax({
+		  url: endpoint + "/"+id,
+		  processData: false,
+		  contentType: false,
+		  dataType: 'json',
+		  type: 'DELETE',
+		  success: function(data){
+			  if (data.status === 'Success'){
+				   showMessage("Job (ID: " + id + ") is deleted.")
+			  } else {
+				   showMessage(data.message, 'error')
+			  }
+		  },
+		  error: function(jqXhr, textStatus, errorMessage) {
+			  showMessage(errorMessage, 'error')
+		  }
+		});
+}
+
+function terminateJob(id){
+		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
+		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job/terminate'
+
+		$.ajax({
+		  url: endpoint + "/"+id,
+		  processData: false,
+		  contentType: false,
+		  dataType: 'json',
+		  type: 'POST',
+		  success: function(data){
+			  if (data.status === 'Success'){
+				   showMessage("Job (ID: " + id + ") is terminated.")
+			  } else {
+				   showMessage(data.message, 'error')
+			  }
+		  },
+		  error: function(jqXhr, textStatus, errorMessage) {
+			  showMessage(errorMessage, 'error')
+		  }
+		});
+}
+
 
 function reloadTable(href){
 	var paramStr = href.split('?')[1];
@@ -194,23 +273,23 @@ function showMessage(message, type){
 	switch (type) { 
 	case 'info': 
 		var clazz = 'alert-info'
-		var prefix = "[Info]  "
+		var prefix = "Info:   "
 		break;
 	case 'success': 
 		var clazz = 'alert-success'
-		var prefix = "[Success]  "
+		var prefix = "Success:   "
 		break;
 	case 'warning': 
 		var clazz = 'alert-warning'
-		var prefix = "[Warning]  "
+		var prefix = "Warning:   "
 		break;		
 	case 'error': 
 		var clazz = 'alert-danger'
-		var prefix = "[Error]  "
+		var prefix = "Error:   "
 		break;
 	default:
 		var clazz = 'alert-info'
-		var prefix = "[Info]  "
+		var prefix = "Info:   "
 }
 	
 	let id = 'msg_'+$.now()
@@ -391,8 +470,8 @@ function buildTable(dataObj){
 		$('#previous').addClass( "disabled");
 	}
 	
-	console.log(nextpage);
-	console.log(previousPage);
+	//console.log(nextpage);
+	//console.log(previousPage);
 	
 }
 
@@ -519,14 +598,13 @@ function addJob(){
 		  type: 'POST',
 		  success: function(data){
 			  if (data.status === 'Success'){
-				   showMessage("Job ID: " + data.jobId, 'success')
+				   showMessage("Job (ID: " + data.jobId +') is created', 'success')
 			  } else {
 				   showMessage(data.message, 'error')
 			  }
-			  
-			 
 			  reset();
 			  moveToTop();
+			  refreshJobList();
 			 
 		  },
 		  error: function(jqXhr, textStatus, errorMessage) {
@@ -582,10 +660,18 @@ function convertDateFormat(dateStr){
 	var time = new Date(dateStr);
 
 	var date = time.getDate().toString();
-	var month = time.getMonth().toString(); 
+	var month = (time.getMonth() + 1).toString(); 
 	var year = time.getFullYear().toString();
-	var hour = time.getHours().toString()
-	var minute = time.getMinutes().toString()
-	var second = time.getSeconds().toString()
+	var hour = time.getHours().toString();
+	var minute = time.getMinutes().toString();
+	var second = time.getSeconds().toString();
+	
+	date = date.length == 2? date : '0' + date;
+	month= month.length == 2? month : '0' + month;
+	hour = hour.length == 2? hour : '0' + hour;
+	minute = minute.length == 2? minute : '0' + minute;
+	second = second.length == 2? second : '0' + second;
+	
 	return year+ "-"+month+"-"+date +" " + hour+":"+minute+":"+second;
+	
 }
