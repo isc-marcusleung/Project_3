@@ -264,18 +264,21 @@ ClassMethod TerminateJob(id As %Integer)
     }
 }
 
-ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", isAscending As %Integer = 1, endpointUrl As %String) As CDUI.Web.Vo.GetJobsForDisplayVo
+/// sortBy: 0 indicate acsending 1 indicates descending
+/// isForward : 0 indicates descending move , 1 indicates ascending move
+/// isForwardDisplay : 0 indicates descending display, 1 indicates ascending display
+ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", isForwardDisplay As %Integer = 1, isForward As %Integer = 1, sortBy As %Integer = 1, endpointUrl As %String) As CDUI.Web.Vo.GetJobsForDisplayVo
 {
-    $$$LOGINFO("[JobService.GetJobsForDisplay] Start getting the jobs, count: "_count_", idPtr: "_idPtr_", isAscending: "_isAscending)
+    $$$LOGINFO("[JobService.GetJobsForDisplay] Start getting the jobs, count: "_count_", idPtr: "_idPtr_", isForward: "_isForward)
     do ..checkSetup()
-    if (isAscending > 0) {
-        set isAscending = 1
+    if (isForward <= 0) {
+        set isForward = -1
     } else {
-        set isAscending = -1
+        set isForward = 1
     }
 
-    SET key=$ORDER(^DataGen.Job("item",idPtr), isAscending)
- 
+    SET key=$ORDER(^DataGen.Job("item",idPtr), isForward)
+
     set getJobsForDisplayVo = ##class(CDUI.Web.Vo.GetJobsForDisplayVo).%New()
     set getJobsForDisplayVo.results = ##class(%ListOfObjects).%New()
     set results = getJobsForDisplayVo.results
@@ -297,15 +300,20 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
             quit
         }
         set counter = counter + 1
-        SET key = $ORDER(^DataGen.Job("item",key), isAscending)  
+        SET key = $ORDER(^DataGen.Job("item",key), isForward)  
     }
 
     set startId = idPtr
     set endId = idPtr
 
-    if results.Count() > 0 {
-        set startId = results.GetAt(1).id
-        set endId = results.GetAt(results.Count()).id  
+    if (results.Count() > 0) {
+        if (isForward = 1){
+            set startId = results.GetAt(1).id
+            set endId = results.GetAt(results.Count()).id  
+        } else {
+            set startId =  results.GetAt(results.Count()).id 
+            set endId = results.GetAt(1).id
+        }
     }
 
     $$$LOGINFO("[JobService.GetJobsForDisplay] startId: "_startId_", endId: "_endId)
@@ -313,12 +321,13 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
     set isPrev = 0
     set isNext = 0
 
-    if (isAscending = 1){
-        set prevKey =$ORDER(^DataGen.Job("item",startId), -1)
-        set nextKey=$ORDER(^DataGen.Job("item",endId), 1)
-    } else {
-        set prevKey =$ORDER(^DataGen.Job("item",startId), 1)
-        set nextKey=$ORDER(^DataGen.Job("item",endId), -1)
+    set prevKey = $ORDER(^DataGen.Job("item",startId), -1)
+    set nextKey = $ORDER(^DataGen.Job("item",endId), 1)
+
+    if (isForwardDisplay = 0){
+        set tmp = prevKey
+        set prevKey = nextKey
+        set nextKey = tmp
     }
 
     if (prevKey '= "") {
@@ -332,39 +341,47 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
 
     set link = ##class(%DynamicObject).%New()
     set link.nextPage = ""
-    set link.preivousPage = ""
+    set link.previousPage = ""
     set getJobsForDisplayVo.links = link
 
-    if (isAscending = -1){
-        set tmp = startId
-        set startId = endId
-        set endId = tmp
-    }
-
-    set url1 = endpointUrl_"?count="_count_"&beforeId="_startId
-    set url2 = endpointUrl_"?count="_count_"&afterId="_endId
-
     if isPrev {
-        if (isAscending = 1){
-            set link.preivousPage = url1
+        if (isForwardDisplay = 1){
+            set link.previousPage = endpointUrl_"?count="_count_"&beforeId="_startId
         } else {
-            set link.preivousPage = url2
+            set link.previousPage =  endpointUrl_"?count="_count_"&afterId="_endId
         }
     }
 
     if isNext {
-        if (isAscending = 1){
-            set link.nextPage = url2
+        if (isForwardDisplay = 1){
+            set link.nextPage = endpointUrl_"?count="_count_"&afterId="_endId
         } else {
-            set link.nextPage = url1
+            set link.nextPage = endpointUrl_"?count="_count_"&beforeId="_startId
         }
     }
 
-    $$$LOGINFO("[JobService.GetJobsForDisplay] prev: "_link.preivousPage)
+    if ((isForward = 1 && sortBy = 1) || (isForward = -1 && sortBy = 0)){
+        do ..reverseListOrder(.results)
+    }
+
+    $$$LOGINFO("[JobService.GetJobsForDisplay] prev: "_link.previousPage)
     $$$LOGINFO("[JobService.GetJobsForDisplay] next: "_link.nextPage)
     $$$LOGINFO("[JobService.GetJobsForDisplay] Finished getting the jobs, count: "_count_", idPtr: "_idPtr)
 
     return getJobsForDisplayVo
+}
+
+ClassMethod reverseListOrder(ByRef list As %ListOfObjects) [ Private ]
+{
+    set tmp = ##class(%ListOfObjects).%New()
+    set size = list.Count()
+    for cnt=1:1:size {
+        do tmp.Insert(list.GetAt((size - cnt + 1)))
+    }
+    do list.Clear()
+    for cnt=1:1:size {
+        do list.Insert(tmp.GetAt(cnt))
+    }
 }
 
 }

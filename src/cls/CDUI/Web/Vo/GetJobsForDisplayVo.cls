@@ -1,6 +1,10 @@
 Class CDUI.Web.Vo.GetJobsForDisplayVo Extends (%RegisteredObject, %JSON.Adaptor)
 {
 
+Property status As %String;
+
+Property message As %String;
+
 Property count As %Integer;
 
 Property idPtr As %Integer;

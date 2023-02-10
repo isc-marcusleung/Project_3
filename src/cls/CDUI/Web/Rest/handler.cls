@@ -3,27 +3,40 @@ Import CDUI.Web.Service
 Class CDUI.Web.Rest.handler Extends %CSP.REST [ ProcedureBlock ]
 {
 
+Parameter SUCCESS = "Success";
+
+Parameter ERROR = "Error";
+
 ClassMethod GetJobs() As %Status
 {
 	set count = $Get(%request.Data("count", 1))
 	set beforeId = $Get(%request.Data("beforeId", 1))
 	set afterId = $Get(%request.Data("afterId", 1))
-	set reverse = $Get(%request.Data("reverse", 1))
 	set %response.ContentType = ..#CONTENTTYPEJSON
 
-	if $Data(beforeId) {
+	set idPtr = ""
+	set isForwardDisplay = 0
+	set isForward = 0
+	set sortBy = 1
+
+	if (beforeId '= ""){
 		set idPtr = beforeId
-	} else {
+		set isForward = -1
+	} elseif (afterId '="") {
 		set idPtr = afterId
+		set isForward = 1
 	}
 
-	set order = 1
-	if (reverse = "Y"){
-		set order = -1
+	Try {
+		set getJobsForDisplayVo = ##class(JobService).GetJobsForDisplay(count,idPtr,isForwardDisplay,isForward,sortBy,%request.URL)
+   		set getJobsForDisplayVo.status = ..#SUCCESS
+	} catch ex {
+		do LOG^%ETN
+		set getJobsForDisplayVo.status = ..#ERROR
+		set getJobsForDisplayVo.message = ex.Name_"("_ex.Code_")"_": "_ex.Data
 	}
-	
-	set getJobsForDisplayVo = ##class(JobService).GetJobsForDisplay(count,idPtr,order,%request.URL)
-    
+	k ^marcus
+	s ^marcus(1) = getJobsForDisplayVo.SerialisedGet()
 	write getJobsForDisplayVo.SerialisedGet()
 
 	Quit $$$OK
@@ -43,20 +56,28 @@ ClassMethod AddJob() As %Status
 
     if ('isValid || 'isReqBody) {
         set obj = {
-			"status" : "Error",
+			"status" : (..#ERROR),
 			"message" : "Invalid Parameter"
 		}
         write obj.%ToJSON()
 	    Quit $$$OK
     }
 	//TODO marcus to see if i need to catch the exception
-	set jobId = ##class(JobService).AddJob()
-	job ##class(DataGenService).prcoessRequest(request, jobId)
-
-	set obj = {
-		"status" : "Success",
-		"jobId" : (jobId)
+	Try {
+		set jobId = ##class(JobService).AddJob()
+		job ##class(DataGenService).prcoessRequest(request, jobId)
+		set obj = {
+			"status" : (..#SUCCESS),
+			"jobId" : (jobId)
+		}
+	} catch ex {
+		do LOG^%ETN
+		set obj = {
+			"status" : (..#ERROR),
+			"message" : (ex.Name_"("_ex.Code_")"_": "_ex.Data)
+		}
 	}
+
 	write obj.%ToJSON()
 	Quit $$$OK
 }
