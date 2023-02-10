@@ -28,29 +28,34 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
         set servName = servItem.Order
         $$$LOGINFO("[ApptService.NewAppt] Service ID: "_servId_", Name: "_servName)
     }
-
-    // Retrieve the slots list
-    set sc = ##class(TrakCareService).GetSlots(,servId,,.slotsObjList)
-	if $$$ISERR(sc)
-	{
-	    $$$LOGERROR("[ApptService.NewAppt] Failed to get slots")
-	    Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
+    
 
     $$$LOGINFO("[ApptService.NewAppt] Number of patient: "_PatientVoObjList.Count())
-    $$$LOGINFO("[ApptService.NewAppt] Number of appointments per patient: "_NumOfApptPerPatient)
+    $$$LOGINFO("[ApptService.NewAppt] Number of new appointments requested per patient: "_NumOfApptPerPatient)
 
     set numOfLoop = PatientVoObjList.Count()
 
-    for cnt=1:1:numOfLoop {
+    for i=1:1:numOfLoop {
 
-        // TO DO Should use different slotsObjList for each patient, 
+        // Get patient object
+        set patientVo = PatientVoObjList.GetAt(i)
+        $$$LOGINFO("[ApptService.NewAppt] Initialize appointment request, patient Id: "_patientVo.PatientId)
+
         // If a slot returns an internal server error, I will remove that slot from slotsObjList for that patient, but for another patient, that slot can work
         // Thus, the creation of new appointments for each patient should use a separate slotsObjList
 
-        set patientVo = PatientVoObjList.GetAt(cnt)
+        // Set random row number for the API call to get slots
+        set Rows = ##class(PUtil).Integer(1,20)
 
-        $$$LOGINFO("[ApptService.NewAppt] Initialize appointment request, patient Id: "_patientVo.PatientId)
+        // Retrieve the slots list
+        set sc = ##class(TrakCareService).GetSlots(,servId,,Rows,.slotsObjList)
+        if $$$ISERR(sc)
+        {
+            $$$LOGERROR("[ApptService.NewAppt] Failed to get slots")
+            Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+        }
+
+        $$$LOGINFO("[ApptService.NewAppt] Initialize appointment request, count of slots for this patient: "_slotsObjList.Count())
 
         /// Need for loop here, only one appointment request at a time because then you need to update the exApptOutput
         for k=1:1:NumOfApptPerPatient {
@@ -58,9 +63,8 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
             // Get existing appointment object lists of a patient
             set exApptOutput = patientVo.ApptObjList
 
-            $$$LOGINFO("[ApptService.NewAppt] Number of existing appointments for patient Id "_patientVo.PatientId_": "_exApptOutput.Count())
-            
             $$$LOGINFO("[ApptService.NewAppt] New appt request number "_k)
+            $$$LOGINFO("[ApptService.NewAppt] Number of existing appointments for patient Id "_patientVo.PatientId_": "_exApptOutput.Count())
 
             $$$LOGINFO("[ApptService.NewAppt] Initialising appt requests...")
             do ..InitApptRequestPerPatientByRandom(slotsObjList, patientVo, .apptInput, exApptOutput)
@@ -71,10 +75,10 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
 
             /// If ApptVoObjList is not empty, insert it back into patientVo for future use
             if (apptOutput.ApptVoObjList '= "") {
-                $$$LOGINFO("[ApptService.NewAppt] Count of ApptObjList for this patient before insertion: "_patientVo.ApptObjList.Count())
+                
                 $$$LOGINFO("[ApptService.NewAppt] Insert appt to existing ApptObjList...")
                 do patientVo.ApptObjList.Insert(apptOutput.ApptVoObjList)
-                $$$LOGINFO("[ApptService.NewAppt] Count of ApptObjList for this patient after insertion: "_patientVo.ApptObjList.Count())
+                
             }
 
             set apptIdList = apptOutput.ApptIdList
@@ -159,8 +163,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
                     set apptOutput.ApptVoObjList = ##class(CDUI.DataGen.vo.AppointmentVo).newInstance(request,json.ID,slotDetailObjList.GetAt(cnt))
                     do apptIdList.Insert(json.ID)
 
-                    // Remove that slot from slotsObjList if it's successful
-                    $$$LOGERROR("[ApptService.NewAppt] Successful request - Check value of slotsIndex to remove: "_slotsIndexList.GetAt(cnt))
+                    // Remove successful slot from slotsObjList
                     do slotsObjList.RemoveAt(slotsIndexList.GetAt(cnt))
                     set isSuccess = 1
                 } 
@@ -172,7 +175,6 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
             else 
             {   
                 // Print out the errors
-                $$$LOGERROR("[ApptService.NewAppt] Failed to create an appointment. Get error code: "_$System.Status.GetErrorCodes(sc))
                 $$$LOGERROR("[ApptService.NewAppt] Failed to create an appointment. Error(SC): "_$System.Status.DisplayError(sc))
                 $$$LOGINFO("[ApptService.Run] Slot index to be removed due to internal server error: "_slotsIndexList.GetAt(cnt))
                 set idxOfRemoveSlotObjListArr(slotsIndexList.GetAt(cnt)) = ""
@@ -207,10 +209,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
     for cnt=1:1:failedApptRequestObjList.Count(){
 
         set currentTrial = currentTrial + 1
-        $$$LOGINFO("[ApptService.Run] Value of current trial: "_currentTrial)
-        $$$LOGINFO("[ApptService.Run] Get MaxNumOfRetry: "_..MaxNumOfRetry) 
-        
-
+    
         // If currentTrial = MaxNumOfRetry, no need to run the AssignSlot Method anymore
         if (currentTrial '= ..MaxNumOfRetry) {
             $$$LOGINFO("[ApptService.Run] Running AssignSlot again to get new slot for failed request...") 
@@ -238,7 +237,6 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
         
         
     }
-
 
     if (apptOutput.ApptIdList '= "") {     
         $$$LOGINFO("[ApptService.Run] Count of ApptIdList before new appt insertion: "_apptOutput.ApptIdList.Count())   
@@ -295,7 +293,7 @@ Method InitApptRequestPerPatientByRandom(slotsObjList As %ListOfObjects, patient
             do slotsIndexList.Insert(randslotIndex)
             $$$LOGINFO("[ApptService.Init1] slotObjList Count: "_slotsObjList.Count())
             $$$LOGINFO("[ApptService.Init1] Try slot index: "_randslotIndex)
-            $$$LOGINFO("[ApptService.Init1] slotIndexList Count: "_slotsIndexList.Count())
+            #; $$$LOGINFO("[ApptService.Init1] slotIndexList Count: "_slotsIndexList.Count())
             for cnt=1:1:slotsIndexList.Count() {
                 $$$LOGINFO("[ApptService.Init1] slotsIndexList items: "_slotsIndexList.GetAt(cnt))
             }
@@ -447,9 +445,9 @@ ClassMethod AssignSlot(slotsObjList As %ListOfObjects, exApptOutput As CDUI.Data
                     {
                         //Remove slot from list 
                         $$$LOGINFO("[ApptService.AssignSlot] Overlapped, so remove slot index: "_randslotIndex)
-                        $$$LOGINFO("[ApptService.AssignSlot] Count before removal: "_slotsObjList.Count())
+                        #; $$$LOGINFO("[ApptService.AssignSlot] Count before removal: "_slotsObjList.Count())
                         do slotsObjList.RemoveAt(randslotIndex)
-                        $$$LOGINFO("[ApptService.AssignSlot] Count after removal: "_slotsObjList.Count())
+                        #; $$$LOGINFO("[ApptService.AssignSlot] Count after removal: "_slotsObjList.Count())
                         set isFail = 1   
                     }
                     #; Elseif same date, no overlap 
@@ -491,17 +489,12 @@ ClassMethod AssignSlot(slotsObjList As %ListOfObjects, exApptOutput As CDUI.Data
 
 Method RemoveItemsInverseFromList(sourceList, ByRef removalIndexArray) [ Private ]
 {
-    $$$LOGINFO("[ApptService.RemoveItemsInverseFromList] Before removal of item - sourceList Size: "_sourceList.Count())
-    
     set key = $Order(removalIndexArray(""), -1) //inverse order, delete the items in inverse order
     
-
     while (key '= "") {
         do sourceList.RemoveAt(key)
         set key = $Order(removalIndexArray(key), -1)
-        #; $$$LOGINFO("[ApptService.RemoveItemsInverseFromList] Remove index in reverse order: "_key)
     }
-    $$$LOGINFO("[ApptService.RemoveItemsInverseFromList] After removal of item - sourceList Size: "_sourceList.Count())
 }
 
 }
