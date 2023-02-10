@@ -187,10 +187,8 @@ ClassMethod DeleteJob(id As %Integer)
         }
 
         //If the job is not terminated, terminate it before remove it.
-        set status = ^DataGen.Job("item",id,"status")
-        if ((status = ..#StatusCreate) || (status = ..#StatusInProgress) ){
-            do ..TerminateJobItem(id)
-        }
+         do ..TerminateJobItem(id)
+
         //Remove the job from global variable
         do ..RemoveJobItem(id)
         //update the size
@@ -224,11 +222,15 @@ ClassMethod TerminateJobItem(id As %Integer) [ Private ]
 {
     set status = ^DataGen.Job("item",id, "status")
     $$$LOGINFO("[JobService.TerminateJobItem] Before Job termination, Job Id: "_id_", Job status: "_status)
-    if ( status '= ..#StatusTerminated) && (status '= ..#StatusCompleted) && (status '= ..#StatusError){  
-        do $SYSTEM.Process.Terminate(^DataGen.Job("item",id, "pid"))
+
+    if ((status = ..#StatusCreate) || (status = ..#StatusInProgress)){  
+        if (status = ..#StatusInProgress){  
+            do $SYSTEM.Process.Terminate(^DataGen.Job("item",id, "pid"))
+         }
         set ^DataGen.Job("item",id, "status") =  ..#StatusTerminated
         set ^DataGen.Job("item",id, "lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)  
     }
+
     $$$LOGINFO("[JobService.TerminateJobItem] After Job termination, Job Id: "_id_", Job status: "_^DataGen.Job("item",id, "status"))
 }
 
