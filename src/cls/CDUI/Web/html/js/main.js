@@ -3,6 +3,9 @@ $(document).ready(function(){
 	reset(); 
 	
 	refreshJobList();
+	setInterval(function () {
+        refreshJobList();
+    },5000);
 
 	$('#noOfPatient').keyup(function(){
 		removeWarningBorder('noOfPatient');
@@ -160,15 +163,26 @@ $(document).ready(function(){
 		
 		switch (action) { 
 		case '1': 
-			handleAction(deleteJob);
-			setTimeout(function(){refreshJobList();}, 1000);
+			var numOfDone = handleAction(deleteJob);
+			if (numOfDone == 0){
+				alert("Please select select job !!!");
+			} else {
+				setTimeout(function(){refreshJobList();}, 1000);
+			}
+			
 			break;
 		case '2': 
-			handleAction(terminateJob); 
-			setTimeout(function(){refreshJobList();}, 1000);
+			var numOfDone = handleAction(terminateJob); 
+			if (numOfDone == 0){
+				alert("Please select select job !!!");
+			} else {
+				setTimeout(function(){refreshJobList();}, 1000);
+			}
+			
+
 			break;
 		default:
-			alert("Please select action !!!")
+			alert("Please select action !!!");
 		}
 	
 		
@@ -180,16 +194,19 @@ function refreshJobList(){
 }
 
 function handleAction(fCallback){
+	var numOfDone = 0;
 	$('#jobList input[type="checkbox"]').each(function() 
 	{   if ($(this).is(":checked")) {
-			//console.log("checked, id : " + this.id.split('-')[1]);
 			let id = this.id.split('-')[1]
 			fCallback(id);
+			numOfDone += 1;
 		}
 	});
+	return numOfDone;
 }
 
 function deleteJob(id){
+		//TODO marcus
 		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
 		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
 
@@ -213,6 +230,7 @@ function deleteJob(id){
 }
 
 function terminateJob(id){
+		//TODO marcus
 		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
 		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job/terminate'
 
@@ -389,7 +407,7 @@ function enableInputElement(id){
 function getJobList(count,beforeId,afterId){
 	
 	var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
-	
+	//TODO marcus
 	//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
 	var paramsObj = new URLSearchParams();
    
