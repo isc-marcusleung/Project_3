@@ -19,18 +19,25 @@
 				<h1>Job Status</h1>
 			</div>
 			<div class="my-2">
-				<select id="actions" class="form-select w-auto d-inline" aria-label="selection">
+				<select id="actions" class="form-select w-auto d-inline-block" aria-label="selection">
 				  <option selected>Actions</option>
 				  <option value="1">Delete</option>
 				  <option value="2">Terminate</option>
 				</select>
-				<button id="actionConfirm" type="button" class="btn btn-primary d-inline mx-3">Confirm</button>
-
+				<button id="actionConfirm" type="button" class="btn btn-primary d-inline-block mx-3">Confirm</button>
+				<div class="form-check form-switch d-inline-block">
+						<input class="form-check-input" role="switch" type="checkbox" id="autoRefresh" name="range" value="N" >
+						<label class="form-check-label" for="autoRefresh">Auto-Refresh</label>
+				</div>
 			</div>
 		  <table id ="jobList" class="table table-striped">
 			<thead class="table-dark">
 			  <tr>
-				<th class="col-md-1"></th>
+				<th class="col-md-1">
+					<div class="custom-control custom-checkbox">
+						<input type="checkbox" class="custom-control-input" id="checkAll">
+					</div>
+				</th>
 				<th class="col-md-1">Id</th>
 				<th class="col-md-2">PID</th>
 				<th class="col-md-3">Start Time</th>

@@ -1,11 +1,8 @@
+var refreshInterval;
 $(document).ready(function(){
 	
 	reset(); 
-	
 	refreshJobList();
-	setInterval(function () {
-        refreshJobList();
-    },5000);
 
 	$('#noOfPatient').keyup(function(){
 		removeWarningBorder('noOfPatient');
@@ -26,7 +23,8 @@ $(document).ready(function(){
 	});
 
 	$('#noOfEpisodeFrom').keyup(function(){
-		removeWarningBorder('noOfEpisodeFrom')
+		removeWarningBorder('noOfEpisodeFrom');
+		removeWarningBorder('noOfEpisodeTo');
 		if ($('noOfEpisodeTo').value != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
@@ -37,6 +35,7 @@ $(document).ready(function(){
 		}
 	});
 	$('noOfEpisodeTo').keyup(function(){
+		removeWarningBorder('noOfEpisodeFrom');
 		removeWarningBorder('noOfEpisodeTo');
 		if ($('#noOfEpisodeFrom').value != '' ){
 			enableInputElements(true,true,true,true,true);
@@ -126,20 +125,26 @@ $(document).ready(function(){
 
 	$('#noOfAppointmentFrom').keyup(function(){
 		removeWarningBorder('noOfAppointmentFrom');
+		removeWarningBorder('noOfAppointmentTo');
 	});
 	$('#noOfAppointmentTo').keyup(function(){
+		removeWarningBorder('noOfAppointmentFrom');
 		removeWarningBorder('noOfAppointmentTo');
 	});
 	$('#noOfOrderFrom').keyup(function(){
 		removeWarningBorder('noOfOrderFrom');
+		removeWarningBorder('noOfOrderTo');
 	});
 	$('#noOfOrderTo').keyup(function(){
+		removeWarningBorder('noOfOrderFrom');
 		removeWarningBorder('noOfOrderTo');
 	});
 	$('#noOfObservationFrom').keyup(function(){
 		removeWarningBorder('noOfObservationFrom');
+		removeWarningBorder('noOfObservationTo');
 	});
 	$('#noOfObservationTo').keyup(function(){
+		removeWarningBorder('noOfObservationFrom');
 		removeWarningBorder('noOfObservationTo');
 	});
 	
@@ -165,7 +170,7 @@ $(document).ready(function(){
 		case '1': 
 			var numOfDone = handleAction(deleteJob);
 			if (numOfDone == 0){
-				alert("Please select select job !!!");
+				showMessage("Please select at least one job !!!", "warning");
 			} else {
 				setTimeout(function(){refreshJobList();}, 1000);
 			}
@@ -174,20 +179,63 @@ $(document).ready(function(){
 		case '2': 
 			var numOfDone = handleAction(terminateJob); 
 			if (numOfDone == 0){
-				alert("Please select select job !!!");
+				showMessage("Please select at least one job !!!", "warning");
 			} else {
 				setTimeout(function(){refreshJobList();}, 1000);
 			}
 			
-
 			break;
 		default:
-			alert("Please select action !!!");
+			showMessage("Please select action option !!!", "warning");
 		}
-	
-		
+
 	});
+	
+	$('#checkAll').change(
+    function(){
+        if ($(this).is(':checked')) {
+            	$('#jobList input[type="checkbox"]').each(function() 
+				{   $(this).prop("checked", true);
+				});
+        } else {
+			$('#jobList input[type="checkbox"]').each(function() 
+				{   
+					$(this).prop("checked", false);
+				});
+		}
+    });
+	
+	$('#autoRefresh').change(
+		function(){
+			if (this.value === 'Y') {
+				this.value = 'N'
+			} else {
+				this.value = 'Y'
+			}
+			
+			if (this.value === 'Y') {
+				 refreshInterval = setInterval(function () {
+					refreshJobList();
+				},5000);
+			} else {
+				clearInterval(refreshInterval);
+			}
+    });
+	
 });	
+
+function refreshCheckAll(){
+		if ($('#checkAll').is(':checked')) {
+            	$('#jobList input[type="checkbox"]').each(function() 
+				{   $(this).prop("checked", true);
+				});
+        } else {
+			$('#jobList input[type="checkbox"]').each(function() 
+				{   
+					$(this).prop("checked", false);
+				});
+		}
+}
 
 function refreshJobList(){
 	getJobList(10,null,null,'Y');
@@ -207,8 +255,8 @@ function handleAction(fCallback){
 
 function deleteJob(id){
 		//TODO marcus
-		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
-		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
+		var endpoint = location.protocol + '//' + location.host + '/csp/datagen/web/api/job';
+		//var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
 
 		$.ajax({
 		  url: endpoint + "/"+id,
@@ -232,7 +280,7 @@ function deleteJob(id){
 function terminateJob(id){
 		//TODO marcus
 		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
-		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job/terminate'
+		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job/terminate';
 
 		$.ajax({
 		  url: endpoint + "/"+id,
@@ -406,9 +454,9 @@ function enableInputElement(id){
 
 function getJobList(count,beforeId,afterId){
 	
-	var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
+	//var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
 	//TODO marcus
-	//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
+	var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job';
 	var paramsObj = new URLSearchParams();
    
 	if (count) {paramsObj.append('count', count)}
@@ -474,16 +522,16 @@ function buildTable(dataObj){
 	
 	var nextpage = dataObj.links.nextPage;
 	var previousPage = dataObj.links.previousPage;
-	
+	var host = location.protocol + '//' + location.host;
 	if (typeof nextpage != "undefined" && nextpage != ""){
 		$('#next').removeClass( "disabled" ); 
-		$('#next .page-link').prop('href','http://localhost:9094' + nextpage ) //todo marcus
+		$('#next .page-link').prop('href',host + nextpage ); //todo marcus
 	} else {
 		$('#next').addClass( "disabled");
 	}
 	if (typeof previousPage != "undefined" && previousPage !=""){
 		$('#previous').removeClass( "disabled");
-		$('#previous .page-link').prop('href','http://localhost:9094' + previousPage )  //todo marcus
+		$('#previous .page-link').prop('href',host + previousPage );  //todo marcus
 	} else {
 		$('#previous').addClass( "disabled");
 	}
@@ -565,6 +613,12 @@ function addJob(){
 			$('#noOfEpisodeFrom').addClass("border border-danger")
 		}
 		
+		if (noOfEpisodeFrom > noOfEpisodeTo){
+			isValid = false;
+			$('#noOfEpisodeFrom').addClass("border border-danger")
+			$('#noOfEpisodeTo').addClass("border border-danger")
+		}
+		
 		if (noOfOrderFrom != "" && noOfOrderTo == ""){
 			isValid = false;
 			$('#noOfOrderTo').addClass("border border-danger")
@@ -573,6 +627,12 @@ function addJob(){
 		if (noOfOrderFrom == "" && noOfOrderTo != ""){
 			isValid = false;
 			$('#noOfOrderFrom').addClass("border border-danger")
+		}
+		
+		if (noOfOrderFrom > noOfOrderTo){
+			isValid = false;
+			$('#noOfOrderFrom').addClass("border border-danger")
+			$('#noOfOrderTo').addClass("border border-danger")
 		}
 		
 		if (noOfAppointmentFrom != "" && noOfAppointmentTo == ""){
@@ -585,6 +645,12 @@ function addJob(){
 			$('#noOfAppointmentFrom').addClass("border border-danger")
 		}
 		
+		if (noOfAppointmentFrom > noOfAppointmentTo){
+			isValid = false;
+			$('#noOfAppointmentTo').addClass("border border-danger")
+			$('#noOfAppointmentFrom').addClass("border border-danger")
+		}
+		
 		if (noOfObservationFrom != "" && noOfObservationTo == ""){
 			isValid = false;
 			$('#noOfObservationTo').addClass("border border-danger")
@@ -594,6 +660,12 @@ function addJob(){
 			isValid = false;
 			$('#noOfObservationFrom').addClass("border border-danger")
 		}		
+		
+		if (noOfObservationFrom > noOfObservationTo){
+			isValid = false;
+			$('#noOfObservationTo').addClass("border border-danger")
+			$('#noOfObservationFrom').addClass("border border-danger")
+		}
 		
 		if (!isValid) {
 			showMessage("Invalid Input", 'error')
@@ -672,6 +744,11 @@ function reset(){
 	hideInputText('noOfObservationFrom');
 	hideInputText('noOfObservationTo');
 	unhideInputText('noOfObservation');
+	
+	$('#checkAll').prop("checked", false);
+
+	$('#autoRefresh').val('N');
+	$('#autoRefresh').prop("checked", false);
 }
 
 function convertDateFormat(dateStr){
