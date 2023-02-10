@@ -143,11 +143,47 @@ $(document).ready(function(){
 		addJob();
 	});
 
+
+	getJobList(10,null,null,'Y');
 	
+	$('#next .page-link').click(function(event){
+		event.preventDefault();
+		reloadTable(this.href);
+	});
 	
-//getJobList(10,null,null,'Y')
+	$('#previous .page-link').click(function(event){
+		event.preventDefault();
+		reloadTable(this.href);
+	});
 });	
 
+function reloadTable(href){
+	var paramStr = href.split('?')[1];
+	var params = paramStr.split('&');
+	
+	var count = '';
+	var beforeId = '';
+	var afterId = '';
+	
+	$.each (params, function (i, v){
+		let arr = v.split('=');
+		
+		switch(arr[0]) {
+			case 'count':
+				count = arr[1];
+				break;
+			case 'beforeId':
+				beforeId = arr[1];
+				break;
+			case 'afterId':
+				afterId = arr[1];
+				break;			
+		  default:
+			//do nothing
+		} 
+	});
+	getJobList(count,beforeId,afterId);
+}
 
 function removeWarningBorder(id){
 	$('#'+id).removeClass("border border-danger")
@@ -271,25 +307,93 @@ function enableInputElement(id){
 }
 
 
-
-function getJobList(count,beforeId,afterId,reverse){
-	var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
+function getJobList(count,beforeId,afterId){
+	
+	var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
+	
+	//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
 	var paramsObj = new URLSearchParams();
    
 	if (count) {paramsObj.append('count', count)}
 	if (beforeId) {paramsObj.append('beforeId', beforeId)}
 	if (afterId) {paramsObj.append('afterId', afterId)}
-	if (reverse) {paramsObj.append('reverse', reverse)}
-  
-	fetch(endpoint + '?' + new URLSearchParams(paramsObj),
-		{
-		method: 'GET'
-		}
-	).then(res => {
-		return res.json()
-	})
-	.then(data => console.log(data))
-	.catch(error => console.log(error))
+	var params = paramsObj.toString()
+	if (params != ''){
+		endpoint = endpoint + "?" + params
+	}
+	$.ajax({
+	  url: endpoint,
+	  processData: false,
+	  contentType: false,
+	  dataType: 'json',
+	  type: 'GET',
+	  success: function(data){
+		  if (data.status === 'Success'){
+			  buildTable(data)
+		  } else {
+			   showMessage(data.message, 'error')
+		  }
+	  },
+	  error: function(jqXhr, textStatus, errorMessage) {
+		  showMessage(errorMessage, 'error')
+	  }
+	});
+
+}
+
+function buildTable(dataObj){
+	console.log(dataObj)
+	$('#jobList tbody ').remove();
+	$('#jobList').append('<tbody></tbody>')
+	var $tbody = $('#jobList tbody');
+	$.each(dataObj.results, function (i, obj) {
+		var id = '';
+		var pid = '';
+		var createDateTime = '';
+		var completeDateTime = '';
+		var status = '';
+		
+		if (typeof obj.id != "undefined") {id = obj.id}
+		if (typeof obj.pid != "undefined") {pid = obj.pid}
+		if (typeof obj.createDateTime != "undefined") {createDateTime = convertDateFormat(obj.createDateTime)}
+		if (typeof obj.completeDateTime != "undefined") {completeDateTime = convertDateFormat(obj.completeDateTime)}
+		if (typeof obj.status != "undefined") {status = obj.status}
+		
+		$tbody.append( '<tr>' +
+		'<td class="col-md-1">' + 
+		'<div class="custom-control custom-checkbox">' +
+		'<input type="checkbox" class="custom-control-input" id="check-'+ obj.id +'">'+
+		'</div>' +
+		'<td class="col-md-1">'+ id +'</td>' +
+		'<td class="col-md-2">'+ pid  +'</td>' +
+		'<td class="col-md-3">'+ createDateTime +'</td>' +
+		'<td class="col-md-3">'+ completeDateTime +'</td>' +
+		'<td class="col-md-2">'+ status+'</td>' +
+		 '</tr>' );
+
+   // console.log(obj.id + ", " + obj.status + ", " + obj.createDateTime + ", " + obj.lastUpdateDateTime);
+
+	});
+	
+	var nextpage = dataObj.links.nextPage;
+	var previousPage = dataObj.links.previousPage;
+	
+	if (typeof nextpage != "undefined" && nextpage != ""){
+		$('#next').removeClass( "disabled" ); 
+		$('#next .page-link').prop('href','http://localhost:9094' + nextpage ) //todo marcus
+	} else {
+		$('#next').addClass( "disabled");
+	}
+	if (typeof previousPage != "undefined" && previousPage !=""){
+		$('#previous').removeClass( "disabled");
+		$('#previous .page-link').prop('href','http://localhost:9094' + previousPage )  //todo marcus
+	} else {
+		$('#previous').addClass( "disabled");
+	}
+	
+	console.log(nextpage);
+	console.log(previousPage);
+	
 }
 
 function addJob(){
@@ -472,4 +576,16 @@ function reset(){
 	hideInputText('noOfObservationFrom');
 	hideInputText('noOfObservationTo');
 	unhideInputText('noOfObservation');
+}
+
+function convertDateFormat(dateStr){
+	var time = new Date(dateStr);
+
+	var date = time.getDate().toString();
+	var month = time.getMonth().toString(); 
+	var year = time.getFullYear().toString();
+	var hour = time.getHours().toString()
+	var minute = time.getMinutes().toString()
+	var second = time.getSeconds().toString()
+	return year+ "-"+month+"-"+date +" " + hour+":"+minute+":"+second;
 }
