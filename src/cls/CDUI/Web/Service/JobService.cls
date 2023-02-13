@@ -43,7 +43,10 @@ ClassMethod InitGlobalVariable() [ Private ]
         if ($Data(^DataGen.Job) = 0){
             set ^DataGen.Job("info","size") = 0
             set ^DataGen.Job("info","nextId") = 1
-            set ^DataGen.Job("info","maxProcess") = 10
+            set ^DataGen.Job("info","maxProcess") = 100 //TODO marcus
+            set ^DataGen.Job("info","isProcessByBatch") = 1 //0 indicates false, 1 indicates true
+            set ^DataGen.Job("info","noOfPatientPerBatch") = 10 
+            set ^DataGen.Job("info","noOfCurrentProcess") = 0
         } else {
             $$$LOGINFO("[JobService.InitGlobalVariable] Global variable for job is already created.")
         }
@@ -54,6 +57,75 @@ ClassMethod InitGlobalVariable() [ Private ]
         if locked {
             Lock -^DataGen.Job
         }
+        Throw exception
+    }
+}
+
+/// Return value
+/// 0: failed to get a ticket
+/// 1: succeed to get a ticket
+ClassMethod GetTicketForJob() As %Integer
+{
+     $$$LOGINFO("[JobService.GetTicketForJob] Start getting a ticket.")
+    do ..checkSetup()
+    TSTART
+    set locked = 0
+    Try {
+        LOCK +(^DataGen.Job("info","maxProcess"),^DataGen.Job("info","noOfCurrentProcess")):..#DefaultTimeout
+
+        if '$TEST {
+            $$$LOGINFO("[JobService.GetTicketForJob] Failed to get a ticket.")
+            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.Web.Service.JobService","Failed to get an exclusive lock.")
+        }
+
+        set locked = 1
+        set maxProcess = ^DataGen.Job("info","maxProcess")
+        set noOfCurrentProcess = ^DataGen.Job("info","noOfCurrentProcess")
+        set result = 0
+      
+        if ((noOfCurrentProcess + 1 ) <= maxProcess){
+           set ^DataGen.Job("info","noOfCurrentProcess") = noOfCurrentProcess + 1
+           set result = 1
+        }
+        $$$LOGINFO("[JobService.GetTicketForJob] Finished getting a ticket. noOfCurrentProcess: "_^DataGen.Job("info","noOfCurrentProcess"))
+        Lock -(^DataGen.Job("info","maxProcess"),^DataGen.Job("info","noOfCurrentProcess"))
+        TCOMMIT
+        return result
+    } Catch exception {
+        if locked {
+            Lock -(^DataGen.Job("info","maxProcess"),^DataGen.Job("info","noOfCurrentProcess"))
+        }
+        TROLLBACK
+        Throw exception
+    }
+}
+
+ClassMethod RemoveTicketForJob()
+{
+     $$$LOGINFO("[JobService.RemoveTicketForJob] Start removing a ticket.")
+    do ..checkSetup()
+    TSTART
+    set locked = 0
+    Try {
+        LOCK +^DataGen.Job("info","noOfCurrentProcess"):..#DefaultTimeout
+
+        if '$TEST {
+            $$$LOGINFO("[JobService.RemoveTicketForJob] Failed to remove a ticket.")
+            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.Web.Service.JobService","Failed to get an exclusive lock.")
+        }
+
+        set locked = 1
+        set noOfCurrentProcess = ^DataGen.Job("info","noOfCurrentProcess") - 1
+        set ^DataGen.Job("info","noOfCurrentProcess") = noOfCurrentProcess
+        Lock -^DataGen.Job("info","noOfCurrentProcess")
+        TCOMMIT
+        $$$LOGINFO("[JobService.GetTicketForJob] Finished removing a ticket. noOfCurrentProcess: "_noOfCurrentProcess)
+
+    } Catch exception {
+        if locked {
+            Lock -^DataGen.Job("info","noOfCurrentProcess")
+        }
+        TROLLBACK
         Throw exception
     }
 }
@@ -99,6 +171,13 @@ ClassMethod AddJob() As %Integer
 {
     $$$LOGINFO("[JobService.AddJob] Start adding a new job.")
     do ..checkSetup()
+
+	set status = ##class(JobService).GetTicketForJob()
+    if 'status {
+        set msg = "The number of process reaches the maximum ("_^DataGen.Job("info","maxProcess")_"). Please terminate some jobs before retry."
+        Throw ##class(%Exception.General).%New("ReachLimitException","","CDUI.Web.Service.JobService", msg)
+    } 
+
     TSTART
     set locked = 0
     Try {
@@ -165,6 +244,42 @@ ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, comple
     }
 }
 
+ClassMethod TerminateJob(id As %Integer)
+{
+    $$$LOGINFO("[JobService.TerminateJob] Start terminating a job. Job Id: "_id)
+    do ..checkSetup()
+    TSTART
+    set locked = 0
+    Try {
+        LOCK +^DataGen.Job("item",id):..#DefaultTimeout
+
+        if '$TEST {
+            $$$LOGINFO("[JobService.TerminateJob] Failed to terminate a Job.")
+            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.Web.Service.JobService","Failed to get an exclusive lock.")
+        }
+        
+        set locked = 1
+        if ($Data(^DataGen.Job("item",id))  = 0) { 
+            $$$LOGINFO("[JobService.TerminateJob] Job is not found. Job Id: "_id)
+            Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
+        }
+    
+        do ..TerminateJobItem(id)
+        do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
+
+        Lock -^DataGen.Job("item",id)
+        TCOMMIT
+        $$$LOGINFO("[JobService.TerminateJob] Finished terminating a job. Job Id: "_id)
+        return 1
+    } Catch exception {
+        if locked {
+            Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
+        }
+        TROLLBACK 
+        Throw exception
+    }
+}
+
 ClassMethod DeleteJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.DeleteJob] Start deleting a job. Job Id: "_id)
@@ -207,6 +322,19 @@ ClassMethod DeleteJob(id As %Integer)
     }
 }
 
+ClassMethod FinishJob(id As %Integer)
+{
+    $$$LOGINFO("[JobService.FinishJob] Update to Completed. Job Id: "_id)
+    do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7))
+}
+
+ClassMethod ErrorJob(id As %Integer)
+{
+    $$$LOGINFO("[JobService.ErrorJob] Update to Error. Job Id: "_id)
+    do ..TerminateJob(id)
+    do ..UpdateJob(id, , ..#StatusError, )
+}
+
 ClassMethod RemoveJobItem(id As %Integer) [ Private ]
 {
     $$$LOGINFO("[JobService.RemoveJobItem] Remove a Job Item, Job Id: "_id)
@@ -232,41 +360,6 @@ ClassMethod TerminateJobItem(id As %Integer) [ Private ]
     }
 
     $$$LOGINFO("[JobService.TerminateJobItem] After Job termination, Job Id: "_id_", Job status: "_^DataGen.Job("item",id, "status"))
-}
-
-ClassMethod TerminateJob(id As %Integer)
-{
-    $$$LOGINFO("[JobService.TerminateJob] Start terminating a job. Job Id: "_id)
-    do ..checkSetup()
-    TSTART
-    set locked = 0
-    Try {
-        LOCK +^DataGen.Job("item",id):..#DefaultTimeout
-
-        if '$TEST {
-            $$$LOGINFO("[JobService.TerminateJob] Failed to terminate a Job.")
-            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.Web.Service.JobService","Failed to get an exclusive lock.")
-        }
-        
-        set locked = 1
-        if ($Data(^DataGen.Job("item",id))  = 0) { 
-            $$$LOGINFO("[JobService.TerminateJob] Job is not found. Job Id: "_id)
-            Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
-        }
-
-        do ..TerminateJobItem(id)
-
-        Lock -^DataGen.Job("item",id)
-        TCOMMIT
-        $$$LOGINFO("[JobService.TerminateJob] Finished terminating a job. Job Id: "_id)
-        return 1
-    } Catch exception {
-        if locked {
-            Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
-        }
-        TROLLBACK 
-        Throw exception
-    }
 }
 
 /// sortBy: 0 indicate acsending 1 indicates descending
@@ -295,6 +388,7 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
     WHILE (key'="") {
         set jobVo = ##class(CDUI.Web.Vo.JobVo).%New()
         set jobVo.id = key
+        set jobVo.pid = ^DataGen.Job("item", key, "pid") 
         set jobVo.status = ^DataGen.Job("item", key, "status")  
         set jobVo.createDateTime = ^DataGen.Job("item", key, "createDateTime")  
         set jobVo.completeDateTime = ^DataGen.Job("item", key, "completeDateTime")  
