@@ -1,4 +1,4 @@
-Class CDUI.Web.Request.CreateJobRequest Extends (%RegisteredObject, Ens.Util.IOLogger)
+Class CDUI.Web.Request.CreateJobRequest Extends (%RegisteredObject, Ens.Util.IOLogger, %JSON.Adaptor)
 {
 
 Property NumOfPatient As %Integer;
@@ -43,6 +43,14 @@ Property isAppointmentRange As %Boolean;
 
 Property isObservationRange As %Boolean;
 
+Property OrderCat As %String;
+
+Method SerialisedGet() As %RawString
+{
+	do ..%JSONExportToString(.json)
+	return json
+}
+
 ClassMethod newInstance(request As %CSP.Request) As CDUI.Web.Request.CreateJobRequest
 {
     set obj = ..%New()
@@ -68,6 +76,7 @@ ClassMethod newInstance(request As %CSP.Request) As CDUI.Web.Request.CreateJobRe
     set obj.isOrderRange = $Get(%request.Data("isOrderRange",1),default)  
     set obj.isAppointmentRange = $Get(%request.Data("isAppointmentRange",1),default) 
     set obj.isObservationRange = $Get(%request.Data("isObservationRange",1),default)
+    set obj.OrderCat = $Get(%request.Data("orderCat",1),default)
     
     //TODO marcus to remove it
     #; k ^marcus
@@ -108,11 +117,16 @@ ClassMethod isRequestValid(request As CDUI.Web.Request.CreateJobRequest) As %Int
     set isOrderRangeValid = (((request.MinNumOfOrderPerEpisode > 0 && request.MaxNumOfOrderPerEpisode > 0) && (request.isOrderRange)) || '(request.isOrderRange))
     set isAppointmentRangeValid = (((request.MinNumOfAppointmentPerPatient > 0 && request.MaxNumOfAppointmentPerPatient > 0) && (request.isAppointmentRange)) || '(request.isAppointmentRange))
     set isObservationRangeValid = (((request.MinNumOfObservationPerEpisode > 0 && request.MaxNumOfObservationPerEpisode > 0) && (request.isObservationRange)) || '(request.isObservationRange))
+    
+    set isOrderCatValid = 1
+    if (request.OrderCat =' "") {
+        set isOrderCatValid = $listfind($listfromstring(##class(CDUI.DataGen.Common.Constants).#SupportedOrderCategory,",") , request.OrderCat) > 0
+    }
 
-    set isAllValid = isPatientValid && isEpisodeValid && isOrderValid && isAppointmentValid && isObservationValid && isEpisodeRangeValid && isOrderRangeValid && isAppointmentRangeValid && isObservationRangeValid
+    set isAllValid = isPatientValid && isEpisodeValid && isOrderValid && isAppointmentValid && isObservationValid && isEpisodeRangeValid && isOrderRangeValid && isAppointmentRangeValid && isObservationRangeValid && isOrderCatValid
   
     $$$LOGINFO("[CreateJobRequest.validateRequest] isAllValid: "_isAllValid)
-    $$$LOGINFO("[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid)
+    $$$LOGINFO("[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid_", isOrderCatValid: "_isOrderCatValid)
     //TODO marcus to remove it
     #; s ^marcus("100") = "[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid
     return isAllValid

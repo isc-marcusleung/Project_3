@@ -35,4 +35,6 @@ Parameter FBCItemName As String [ Final ] = "WBC,RBC,HB,HCT,MCV,MCH,MCHC,RDW,PLT
 
 Parameter oecprDesc As STRING [ Final ] = "NORM,U";
 
+Parameter SupportedOrderCategory As STRING [ Final ] = "Radiology,Consultation,Laboratory";
+
 }

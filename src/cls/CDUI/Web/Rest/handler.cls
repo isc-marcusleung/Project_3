@@ -63,8 +63,11 @@ ClassMethod AddJob() As %Status
     }
 	//TODO marcus to see if i need to catch the exception
 	Try {
+		k ^marcus
+		s ^marcus=request.SerialisedGet()
 		set jobId = ##class(JobService).AddJob()
-		job ##class(DataGenService).prcoessRequest(request, jobId)
+		job ##class(DataGenService).processRequest(request, jobId)
+	//	do ##class(DataGenService).processRequest(request, jobId)
 		set obj = {
 			"status" : (..#SUCCESS),
 			"jobId" : (jobId)
