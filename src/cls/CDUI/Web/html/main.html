@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data Generation Tool</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.bundle.min.js"></script>
+	
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+	<script type="text/javascript" src="js/main.js"></script>
+</head>
+
+<body>
+	<section>
+		<div class="container mt-5">
+			<div class="text-center">
+				<h1>Job Status</h1>
+			</div>
+			<div class="my-2">
+				<select id="actions" class="form-select w-auto d-inline-block" aria-label="selection">
+				  <option selected>Actions</option>
+				  <option value="1">Delete</option>
+				  <option value="2">Terminate</option>
+				</select>
+				<button id="actionConfirm" type="button" class="btn btn-primary d-inline-block mx-3">Confirm</button>
+				<div class="form-check form-switch d-inline-block">
+						<input class="form-check-input" role="switch" type="checkbox" id="autoRefresh" name="range" value="N" >
+						<label class="form-check-label" for="autoRefresh">Auto-Refresh</label>
+				</div>
+			</div>
+		  <table id ="jobList" class="table table-striped">
+			<thead class="table-dark">
+			  <tr>
+				<th class="col-md-1">
+					<div class="custom-control custom-checkbox">
+						<input type="checkbox" class="custom-control-input" id="checkAll">
+					</div>
+				</th>
+				<th class="col-md-1">Id</th>
+				<th class="col-md-2">PID</th>
+				<th class="col-md-3">Start Time</th>
+				<th class="col-md-3">Complete Time</th>
+				<th class="col-md-2">Status</th>
+			  </tr>
+			</thead>
+			<tbody>	
+			</tbody>
+		  </table>
+		  <nav aria-label="...">
+		  <ul class="pagination justify-content-end">
+			<li id="previous" class="page-item disabled">
+			  <a class="page-link" href="#">Previous</a>
+			</li>
+			<li id="next" class="page-item">
+				<a class="page-link" href="#">Next</a>
+			</li>
+		  </ul>
+		</nav>
+		</div>
+	</section>
+
+
+	<section>
+		<div class="container-lg my-2 bg-dark w-50 text-light">
+			<div class="row justify-content-center my-5">
+				<div class="text-center">
+					<h2>Create a Job<h2>
+				</div>
+				<div class="col-lg-10">
+					<form class="row g-3 p-3" name="jobForm">
+						<div class="col-12">
+							<label for="noOfPatient" class="form-label">Number of Patient:</label>
+							<input type="text" oninput="this.value=this.value.replace(/^0/,'').replace(/[^\d]/,'')" class="form-control" id="noOfPatient" min="0">
+						</div>
+						
+						<div class="col-12 form-check form-switch px-5">
+							<input class="form-check-input" type="checkbox" id="appointmentRange" name="range" value="N" >
+							<label class="form-check-label" for="appointmentRange">Appointment Range</label>
+						</div> 
+						<div class="col-12">
+							<label for="noOfAppointment" class="form-label">Number of Appointment per Patient:</label>
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfAppointment" min="0" placeholder="optional">
+						</div>
+						<div class="col-6 mt-0">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfAppointmentFrom" min="0" placeholder="from">
+						</div>
+						<div class="col-6 mt-0">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfAppointmentTo" min="0" placeholder="to">
+						</div>
+						<div class="col-12 form-check form-switch px-5">
+							<input class="form-check-input" type="checkbox" id="episodeRange" name="range" value="N" >
+							<label class="form-check-label" for="episodeRange">Episode Range</label>
+						</div> 
+						<div class="col-12">
+							<label for="noOfEpisode" class="form-label">Number of Episode per Patient:</label>
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfEpisode" min="0" placeholder="optional">
+						</div>
+						<div class="col-6 mt-0">
+								<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfEpisodeFrom" min="0" placeholder="from">
+						</div>
+						<div class="col-6 mt-0">
+								<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfEpisodeTo" min="0" placeholder="to">
+						</div>
+						
+						<div class="col-12 form-check form-switch px-5">
+							<input class="form-check-input" type="checkbox" id="orderRange" name="range" value="N" >
+							<label class="form-check-label" for="orderRange">Order Range</label>
+						</div> 
+						<div class="col-12">
+							<label for="noOfOrder" class="form-label">Number of Order per Episode:</label>
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfOrder" min="0" placeholder="optional">
+						</div>
+						<div class="col-6 mt-0">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfOrderFrom" min="0" placeholder="from">
+						</div>
+						<div class="col-6 mt-0">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfOrderTo" min="0" placeholder="to">
+						</div>
+						
+						<div class="col-12 form-check form-switch px-5">
+							<input class="form-check-input" type="checkbox" id="observationRange" name="range" value="N" >
+							<label class="form-check-label" for="observationRange">Observation Range</label>
+						</div> 
+						<div class="col-12">
+							<label for="noOfObservation" class="form-label">Number of Observation per Episode:</label>
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfObservation" min="0" placeholder="optional">
+						</div>
+						<div class="col-6 mt-0">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfObservationFrom" min="0" placeholder="from">
+						</div>
+						<div class="col-6 mt-0">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfObservationTo" min="0" placeholder="to">
+						</div>
+						
+						
+						<div class="d-grid gap-2 mt-4">
+							<button type="submit" class="btn btn-lg btn-primary float-end">Submit</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+</body>
+
+
+
+</html>
