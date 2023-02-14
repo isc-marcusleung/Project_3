@@ -747,8 +747,8 @@ function reset(){
 	
 	$('#checkAll').prop("checked", false);
 
-	$('#autoRefresh').val('N');
-	$('#autoRefresh').prop("checked", false);
+	$('#autoRefresh').val('Y');
+	$('#autoRefresh').prop("checked", true);
 }
 
 function convertDateFormat(dateStr){
