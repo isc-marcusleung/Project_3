@@ -8,15 +8,10 @@ ClassMethod processRequest(request As CDUI.Web.Request.CreateJobRequest, jobId A
     //TODO marcus to implement it
     //update process id and status to ^DataGen
     try{
-       
-        s ^marcus($i(^marcus),1) = "111"
-
         set pid = $SYSTEM.SYS.ProcessID()
         set status = ##class(JobService).#StatusInProgress
         do ##class(JobService).UpdateJob(jobId, pid, status,)
-        s ^marcus($i(^marcus),2) = jobId
-     
-        s ^marcus($i(^marcus),3) = request.SerialisedGet()
+
         //Handle the request
         set isProcessByBatch = ^DataGen.Job("info","isProcessByBatch")
         set noOfPatientPerBatch = ^DataGen.Job("info","noOfPatientPerBatch") 
@@ -26,26 +21,20 @@ ClassMethod processRequest(request As CDUI.Web.Request.CreateJobRequest, jobId A
         set isValidNoOfPatientPerBatch = noOfPatientPerBatch > 0
         set noOfPatient = request.NumOfPatient
 
-
         if (isProcessByBatch && 'isValidNoOfPatientPerBatch){
             $$$LOGERROR("[DataGenService.prcoessRequest] Setting is incorrect. isProcessByBatch: "_isProcessByBatch_", noOfPatientPerBatch: "_noOfPatientPerBatch )
-            s ^marcus($i(^marcus),4) = ""
         }
-
 
         if (isProcessByBatch && isValidNoOfPatientPerBatch && (noOfPatient > noOfPatientPerBatch)){
             //Do it by batches
-            set noOfBatch = noOfPatientPerBatch
-            s ^marcus($i(^marcus),5) = ""
+            set noOfBatch = ##class(%SYSTEM.SQL.Functions).CEILING(noOfPatient / noOfPatientPerBatch) 
 
         } else {
             //Do it by single  
-            s ^marcus($i(^marcus),6) = ""
             do ..doProcess(request.NumOfPatient, request, jobId)
         }
         do ##class(JobService).FinishJob(jobId)
     } catch ex {
-        s ^marcus($i(^marcus),7) = ""
         do ##class(JobService).ErrorJob(jobId)
         do LOG^%ETN
         $$$LOGERROR("[DataGenService.prcoessRequest] Failed to process a job. Job id: "_jobId_", pid: "_pid)
@@ -65,9 +54,8 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
         do episodeService.NewEpisode(req.NumOfEpisodePerPatient, PatientVoObjList)
     } elseif(req.isEpisodeRange) {
-        set diff = req.MaxNumOfEpisodePerPatient - req.MinNumOfEpisodePerPatient
-        set ranNum = ##class(PUtil).Random(diff) + req.MinNumOfEpisodePerPatient
-        //TODO marcus
+        set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
+        do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList)
     }
 
     if (req.isAppointment){
@@ -76,7 +64,8 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     } elseif(req.isAppointmentRange) {
         set diff = req.MaxNumOfAppointmentPerPatient - req.MinNumOfAppointmentPerPatient
         set ranNum = ##class(PUtil).Random(diff) + req.MinNumOfAppointmentPerPatient
-          //TODO marcus
+        set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
+        do apptService.NewAppt(ranNum, PatientVoObjList)
     }
 
     if (req.isOrder){
@@ -85,7 +74,8 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     } elseif(req.isOrderRange) {
         set diff = req.MaxNumOfOrderPerEpisode - req.MinNumOfOrderPerEpisode
         set ranNum = ##class(PUtil).Random(diff) + req.MinNumOfOrderPerEpisode
-          //TODO marcus
+        set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
+        do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList)
     }
 
     if (req.isObservation){
@@ -93,6 +83,15 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     } elseif(req.isObservationRange) {
   //TODO marcus
     }
+
+    //TODO marcus to remove it
+
+    set log = ""
+	for cnt = 1:1:PatientVoObjList.Count(){
+		set log = log_PatientVoObjList.GetAt(cnt).SerialisedGet()
+	}
+    //TODO marcus to see if i need to remove it
+    set ^DataGen.Log(jobId,"result") = log
 }
 
 }

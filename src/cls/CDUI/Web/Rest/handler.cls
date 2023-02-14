@@ -48,8 +48,7 @@ ClassMethod AddJob() As %Status
 	set %response.ContentType = ..#CONTENTTYPEJSON
 
 	if (isReqBody) {
-		set contentDO = ##class(%DynamicObject).%FromJSON(%request.Content)
-		set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstance(contentDO)
+		set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstance(%request)
 		set isValid = ##class(CDUI.Web.Request.CreateJobRequest).isRequestValid(request)
 	}
 
@@ -63,11 +62,13 @@ ClassMethod AddJob() As %Status
     }
 	//TODO marcus to see if i need to catch the exception
 	Try {
-		k ^marcus
-		s ^marcus=request.SerialisedGet()
+		set reqVo = ##class(CDUI.Web.Vo.JobRequestVo).%New()
 		set jobId = ##class(JobService).AddJob()
-		job ##class(DataGenService).processRequest(request, jobId)
-	//	do ##class(DataGenService).processRequest(request, jobId)
+		 //TODO marcus to see if i need to remove it
+		set ^DataGen.Log(jobId,"request") = request.SerialisedGet()
+
+	//	job ##class(DataGenService).processRequest(reqVo, jobId)
+		do ##class(DataGenService).processRequest(request, jobId)
 		set obj = {
 			"status" : (..#SUCCESS),
 			"jobId" : (jobId)
