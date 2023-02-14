@@ -388,11 +388,11 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
     WHILE (key'="") {
         set jobVo = ##class(CDUI.Web.Vo.JobVo).%New()
         set jobVo.id = key
-        set jobVo.pid = ^DataGen.Job("item", key, "pid") 
-        set jobVo.status = ^DataGen.Job("item", key, "status")  
-        set jobVo.createDateTime = ^DataGen.Job("item", key, "createDateTime")  
-        set jobVo.completeDateTime = ^DataGen.Job("item", key, "completeDateTime")  
-        set jobVo.lastUpdateDateTime = ^DataGen.Job("item", key, "lastUpdateDateTime")  
+        set jobVo.pid = $Get(^DataGen.Job("item", key, "pid"),"")
+        set jobVo.status = $Get(^DataGen.Job("item", key, "status"),"")  
+        set jobVo.createDateTime = $Get(^DataGen.Job("item", key, "createDateTime") ,"")  
+        set jobVo.completeDateTime = $Get(^DataGen.Job("item", key, "completeDateTime")  ,"") 
+        set jobVo.lastUpdateDateTime =$Get(^DataGen.Job("item", key, "lastUpdateDateTime")  ,"") 
         do results.Insert(jobVo)
 
         if (counter >= count) {
