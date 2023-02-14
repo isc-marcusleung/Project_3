@@ -73,11 +73,11 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
 
             do ..RunWithRetry(apptInput, apptOutput,)
 
-            /// If ApptVoObjList is not empty, insert it back into patientVo for future use
-            if (apptOutput.ApptVoObjList '= "") {
+            /// If ApptVo is not empty, insert it back into patientVo for future use
+            if (apptOutput.ApptVo '= "") {
                 
                 $$$LOGINFO("[ApptService.NewAppt] Insert appt to existing ApptObjList...")
-                do patientVo.ApptObjList.Insert(apptOutput.ApptVoObjList)
+                do patientVo.ApptObjList.Insert(apptOutput.ApptVo)
                 
             }
 
@@ -160,7 +160,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
                 { 
 
                     //No error then store the results to AppointmentVo objects
-                    set apptOutput.ApptVoObjList = ##class(CDUI.DataGen.vo.AppointmentVo).newInstance(request,json.ID,slotDetailObjList.GetAt(cnt))
+                    set apptOutput.ApptVo = ##class(CDUI.DataGen.vo.AppointmentVo).newInstance(request,json.ID,slotDetailObjList.GetAt(cnt))
                     do apptIdList.Insert(json.ID)
 
                     // Remove successful slot from slotsObjList
@@ -217,7 +217,13 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
             set isSuccess = ..AssignSlot(slotsObjList, exApptOutput, .slot, .randslotIndex)
             
             if isSuccess = 1 {
-                set failedApptRequestObjList.GetAt(cnt).USRN = slot.USRN
+                // Remove empty string in the beginning of USRN
+                if ($find(slot.USRN," ")'=0){
+                    set formattedUSRN = $piece(slot.USRN," ",2)
+                }
+
+                set failedApptRequestObjList.GetAt(cnt).USRN = formattedUSRN
+                set failedApptRequestObjList.GetAt(cnt).UBRN = formattedUSRN
                 $$$LOGINFO("[ApptService.Run] Get new USRN & new request: "_slot.USRN) 
                 do slotsIndexList.Insert(randslotIndex)
                 $$$LOGINFO("[ApptService.Run] Slot index used: "_randslotIndex) 
