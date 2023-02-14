@@ -9,13 +9,7 @@ Parameter locationTypeId = "E";
 
 Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects)
 {
-        set sc = ##class(TrakCareService).GetLocation(,1, ..#locationTypeId,..PageSize,, .locationObjList)
-        if $$$ISERR(sc)
-        {
-            $$$LOGERROR("[EpisodeService.NewEpisode] Failed to get Locations.")
-            Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-        }
- 
+        do ..GetLocation(.locationObjList)
         set diff = MaxNumOfEpisode - MinNumOfEpisode
         set totalSuccess = 0
         set totalFailure = 0
@@ -64,17 +58,10 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
     set totalFailure = 0
     kill failedByPatientIdArr
 
-	//Retrieve the location list for the creation of a new episode
-	$$$LOGINFO("[EpisodeService.NewEpisode] Retrive the location list.")
-    set sc = ##class(TrakCareService).GetLocation(,1,..#locationTypeId,..PageSize,, .locationObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[EpisodeService.NewEpisode] Failed to get Locations.")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
-
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of episode per patient: "_NumOfEpisodePerPatient)
+    
+    do ..GetLocation(.locationObjList)
 
     set numOfLoop = PatientVoObjList.Count()
 
@@ -111,6 +98,18 @@ Method PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
 
     $$$LOGINFO("[EpisodeService.PrintResult] Total number of Patient with failed episode creation: "_cnt)
 	$$$LOGINFO("[EpisodeService.PrintResult] Total number of Success: "_totalSuccess_", Total number of Failure: "_totalFailure)
+}
+
+Method GetLocation(Output locationObjList As %ListOfObjects) [ Private ]
+{
+	//Retrieve the location list for the creation of a new episode
+	$$$LOGINFO("[EpisodeService.GetLocation] Retrive the location list.")
+    set sc = ##class(TrakCareService).GetLocation(,1,..#locationTypeId,..PageSize,, .locationObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[EpisodeService.GetLocation] Failed to get Locations.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
 }
 
 Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
