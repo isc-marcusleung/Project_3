@@ -3,11 +3,12 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.DataGenService)
 Class CDUI.Web.Service.DataGenService Extends Ens.Util.IOLogger [ ProcedureBlock ]
 {
 
-ClassMethod processRequest(request As CDUI.Web.Request.CreateJobRequest, jobId As %Integer)
+ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 {
     //TODO marcus to implement it
     //update process id and status to ^DataGen
     try{
+        set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstanceFromStringParamValues(requestParamValues)
         set pid = $SYSTEM.SYS.ProcessID()
         set status = ##class(JobService).#StatusInProgress
         do ##class(JobService).UpdateJob(jobId, pid, status,)

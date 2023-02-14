@@ -62,13 +62,13 @@ ClassMethod AddJob() As %Status
     }
 	//TODO marcus to see if i need to catch the exception
 	Try {
-		set reqVo = ##class(CDUI.Web.Vo.JobRequestVo).%New()
+
 		set jobId = ##class(JobService).AddJob()
-		 //TODO marcus to see if i need to remove it
+	     //TODO marcus to see if i need to remove it
 		set ^DataGen.Log(jobId,"request") = request.SerialisedGet()
 
-	//	job ##class(DataGenService).processRequest(reqVo, jobId)
-		do ##class(DataGenService).processRequest(request, jobId)
+		job ##class(DataGenService).processRequest(request.generateStringParamValues(), jobId)
+	//	do ##class(DataGenService).processRequest(request, jobId)
 		set obj = {
 			"status" : (..#SUCCESS),
 			"jobId" : (jobId)

@@ -132,4 +132,67 @@ ClassMethod isRequestValid(request As CDUI.Web.Request.CreateJobRequest) As %Int
     return isAllValid
 }
 
+Method generateStringParamValues() As %String
+{
+    set result = ..NumOfPatient
+    set result =  result_"^"_..NumOfEpisodePerPatient 
+    set result =  result_"^"_..NumOfOrderPerEpisode
+    set result =  result_"^"_..NumOfAppointmentPerPatient
+    set result =  result_"^"_..NumOfObservationPerEpisode
+    set result =  result_"^"_..MinNumOfEpisodePerPatient
+    set result =  result_"^"_..MaxNumOfEpisodePerPatient
+    set result =  result_"^"_..MinNumOfOrderPerEpisode
+    set result =  result_"^"_..MaxNumOfOrderPerEpisode
+    set result =  result_"^"_..MinNumOfAppointmentPerPatient
+    set result =  result_"^"_..MaxNumOfAppointmentPerPatient
+    set result =  result_"^"_..MinNumOfObservationPerEpisode
+    set result =  result_"^"_..MaxNumOfObservationPerEpisode
+    set result =  result_"^"_..isEpisode
+    set result =  result_"^"_..isOrder
+    set result =  result_"^"_..isAppointment
+    set result =  result_"^"_..isObservation
+    set result =  result_"^"_..isEpisodeRange
+    set result =  result_"^"_..isOrderRange
+    set result =  result_"^"_..isAppointmentRange
+    set result =  result_"^"_..isObservationRange
+    set result =  result_"^"_..OrderCat
+
+    s ^marcus(2) = result
+ 
+    return result
+}
+
+ClassMethod newInstanceFromStringParamValues(paramValues As %String) As CDUI.Web.Request.CreateJobRequest
+{
+	set alist = $listfromstring(paramValues, "^") 
+    set obj = ..%New()
+	
+    set obj.NumOfPatient = $list(alist, 1)
+    set obj.NumOfEpisodePerPatient = $list(alist, 2)
+    set obj.NumOfOrderPerEpisode =$list(alist, 3)
+    set obj.NumOfAppointmentPerPatient = $list(alist, 4)
+    set obj.NumOfObservationPerEpisode = $list(alist, 5)
+    set obj.MinNumOfEpisodePerPatient = $list(alist, 6)
+    set obj.MaxNumOfEpisodePerPatient = $list(alist, 7)
+    set obj.MinNumOfOrderPerEpisode = $list(alist, 8)
+    set obj.MaxNumOfOrderPerEpisode = $list(alist, 9)
+    set obj.MinNumOfAppointmentPerPatient = $list(alist, 10)
+    set obj.MaxNumOfAppointmentPerPatient = $list(alist, 11)
+    set obj.MinNumOfObservationPerEpisode = $list(alist, 12)
+    set obj.MaxNumOfObservationPerEpisode = $list(alist, 13)
+    set obj.isEpisode = $list(alist, 14)
+    set obj.isOrder = $list(alist, 15)
+    set obj.isAppointment = $list(alist, 16)
+    set obj.isObservation = $list(alist, 17)
+    set obj.isEpisodeRange = $list(alist, 18)
+    set obj.isOrderRange = $list(alist, 19)
+    set obj.isAppointmentRange = $list(alist, 20)
+    set obj.isObservationRange = $list(alist, 21)
+    set obj.OrderCat = $list(alist, 22)
+
+    s ^marcus(3) = obj.SerialisedGet()
+
+    return obj
+}
+
 }
