@@ -3,6 +3,71 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.ApptService Extends BaseService
 {
 
+Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects)
+{
+        set servId = ..GetServiceIdByRandom()
+
+        set diff = MaxNumOfAppt - MinNumOfAppt
+        set totalSuccess = 0
+        set totalFailure = 0
+        set failedByPatientIdArr = []
+        for i=1:1:PatientVoObjList.Count(){
+            // Set random row number for the API call to get slots
+            set Rows = ##class(PUtil).Integer(1,20)
+
+            // Retrieve the slots list
+            do ..GetSlotList(servId, Rows,.slotsObjList)
+            set ranNum = ##class(PUtil).Random(diff) + MinNumOfAppt
+            $$$LOGINFO("[ApptService.NewApptByRange] Number of appt: "_ranNum)
+            do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), .slotsObjList, .numOfSuccess, .numOfFailure)
+            set totalSuccess = totalSuccess + numOfSuccess
+            set totalFailure = totalFailure + numOfFailure
+
+            if (numOfFailure > 0) {
+                set failedByPatientIdArr(PatientVoObjList.GetAt(i).PatientId) = numOfFailure
+            }
+        }
+
+        do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+}
+
+Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef slotsObjList As %ListOfObjects, Output numOfSuccess As %Integer, Output numOfFailure As %Integer) [ Private ]
+{
+    set numOfSuccess = 0
+    set numOfFailure = 0
+    /// Need for loop here, only one appointment request at a time because then you need to update the exApptOutput
+    for k=1:1:NumOfApptPerPatient {
+
+        // Get existing appointment object lists of a patient
+        set exApptOutput = PatientVo.ApptObjList
+
+        $$$LOGINFO("[ApptService.NewApptPerPatient] New appt request number "_k)
+        $$$LOGINFO("[ApptService.NewApptPerPatient] Number of existing appointments for patient Id "_PatientVo.PatientId_": "_exApptOutput.Count())
+
+        $$$LOGINFO("[ApptService.NewApptPerPatient] Initialising appt requests...")
+        do ..InitApptRequestPerPatientByRandom(slotsObjList, PatientVo, .apptInput, exApptOutput)
+
+        set apptOutput = ##class(CDUI.DataGen.DataGenService.Custom.ApptOutput).%New()
+
+        do ..RunWithRetry(apptInput, apptOutput,)
+
+        /// If ApptVo is not empty, insert it back into patientVo for future use
+        if (apptOutput.ApptVo '= "") {
+
+            $$$LOGINFO("[ApptService.NewApptPerPatient] Insert appt to existing ApptObjList...")
+            do PatientVo.ApptObjList.Insert(apptOutput.ApptVo)
+        } 
+    }
+    set apptIdList = apptOutput.ApptIdList
+    set numOfSuccess = apptIdList.Count()
+    set numOfFailure = NumOfApptPerPatient - apptIdList.Count()
+
+    if numOfSuccess '= 0 {
+        $$$LOGINFO("[ApptService.NewApptPerPatient] Results: patient Id: "_PatientVo.PatientId_", apptId: "_##class(CommonUtil).convertListOfDataTypeToString(apptIdList,))
+    }
+    $$$LOGINFO("[ApptService.NewApptPerPatient] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
+}
+
 Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
 {
     set totalSuccess = 0
@@ -10,25 +75,7 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
     
     kill failedByPatientIdArr
 
-	//Retrieve the location service list
-	$$$LOGINFO("[ApptService.NewAppt] Retrieve the location service")
-    set sc = ##class(TrakCareService).GetLocationServices(,.locServObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[ApptService.NewAppt] Failed to get location Service")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
-
-    // Get a random serviceId
-    if $Data(locServObjList) && (locServObjList.Count() > 0)
-    {
-        set randServIndex = ##class(PUtil).Random(locServObjList.Count()) + 1
-        set servItem = locServObjList.GetAt(randServIndex)
-        set servId = servItem.RowID
-        set servName = servItem.Order
-        $$$LOGINFO("[ApptService.NewAppt] Service ID: "_servId_", Name: "_servName)
-    }
-    
+    set servId = ..GetServiceIdByRandom()
 
     $$$LOGINFO("[ApptService.NewAppt] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[ApptService.NewAppt] Number of new appointments requested per patient: "_NumOfApptPerPatient)
@@ -48,74 +95,71 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
         set Rows = ##class(PUtil).Integer(1,20)
 
         // Retrieve the slots list
-        set sc = ##class(TrakCareService).GetSlots(,servId,,Rows,.slotsObjList)
-        if $$$ISERR(sc)
-        {
-            $$$LOGERROR("[ApptService.NewAppt] Failed to get slots")
-            Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-        }
+        do ..GetSlotList(servId, Rows,.slotsObjList)
 
         $$$LOGINFO("[ApptService.NewAppt] Initialize appointment request, count of slots for this patient: "_slotsObjList.Count())
 
-        /// Need for loop here, only one appointment request at a time because then you need to update the exApptOutput
-        for k=1:1:NumOfApptPerPatient {
+        do ..NewApptPerPatient(NumOfApptPerPatient, patientVo, .slotsObjList, .numOfSuccess, .numOfFailure)
+        set totalSuccess = totalSuccess + numOfSuccess
+        set totalFailure = totalFailure + numOfFailure
+        set failedByPatientIdArr = []
 
-            // Get existing appointment object lists of a patient
-            set exApptOutput = patientVo.ApptObjList
-
-            $$$LOGINFO("[ApptService.NewAppt] New appt request number "_k)
-            $$$LOGINFO("[ApptService.NewAppt] Number of existing appointments for patient Id "_patientVo.PatientId_": "_exApptOutput.Count())
-
-            $$$LOGINFO("[ApptService.NewAppt] Initialising appt requests...")
-            do ..InitApptRequestPerPatientByRandom(slotsObjList, patientVo, .apptInput, exApptOutput)
-
-            set apptOutput = ##class(CDUI.DataGen.DataGenService.Custom.ApptOutput).%New()
-
-            do ..RunWithRetry(apptInput, apptOutput,)
-
-            /// If ApptVo is not empty, insert it back into patientVo for future use
-            if (apptOutput.ApptVo '= "") {
-                
-                $$$LOGINFO("[ApptService.NewAppt] Insert appt to existing ApptObjList...")
-                do patientVo.ApptObjList.Insert(apptOutput.ApptVo)
-                
-            }
-
-            set apptIdList = apptOutput.ApptIdList
-
-            set numOfSuccess = apptIdList.Count()
-
-            $$$LOGINFO("[ApptService.NewAppt] Number of successful appointments: "_numOfSuccess)
-            
-            set numOfFailure = 1 - numOfSuccess
-
-            set totalSuccess = totalSuccess + numOfSuccess
-            set totalFailure = totalFailure + numOfFailure
-
-            if (numOfFailure > 0) {
-                set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
-            }
-            
-            if numOfSuccess '= 0 {
-                $$$LOGINFO("[ApptService.NewAppt] Results: patient Id: "_patientVo.PatientId_", apptId: "_##class(CommonUtil).convertListOfDataTypeToString(apptIdList,))
-            }
-            $$$LOGINFO("[ApptService.NewAppt] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
+        if (numOfFailure > 0) {
+            set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
         }
-
-        set cnt = 0
-        set key = $Order(failedByPatientIdArr(""))
-        while (key '= "") {
-            if (cnt = 0) {
-                $$$LOGINFO("[ApptService.NewAppt] Failure per patient")
-            }
-            $$$LOGINFO("Patient Id: "_key_", Number of Failure: "_failedByPatientIdArr(key))
-            set key = $Order(failedByPatientIdArr(key))
-            set cnt = cnt + 1
-        }
-
-        $$$LOGINFO("[ApptService.NewAppt] Total number of Patient with failed appointment creation: "_cnt)
-        $$$LOGINFO("[ApptService.NewAppt] Total number of Success: "_totalSuccess_", Total number of Failure: "_totalFailure)
     }
+    do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+}
+
+Method GetServiceIdByRandom() As %Integer [ Private ]
+{
+    //Retrieve the location service list
+	$$$LOGINFO("[ApptService.getServiceIdByRandom] Retrieve the location service")
+    set sc = ##class(TrakCareService).GetLocationServices(,.locServObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[ApptService.getServiceIdByRandom] Failed to get location Service")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
+
+    // Get a random serviceId
+    if $Data(locServObjList) && (locServObjList.Count() > 0)
+    {
+        set randServIndex = ##class(PUtil).Random(locServObjList.Count()) + 1
+        set servItem = locServObjList.GetAt(randServIndex)
+        set servId = servItem.RowID
+        set servName = servItem.Order
+        $$$LOGINFO("[ApptService.getServiceIdByRandom] Service ID: "_servId_", Name: "_servName)
+        return servId
+    }
+      return ""
+}
+
+Method GetSlotList(ServId As %Integer, Rows As %Integer, Output SlotsObjList As %ListOfObjects)
+{
+    set sc = ##class(TrakCareService).GetSlots(,ServId,,Rows,.SlotsObjList)
+    if $$$ISERR(sc)
+    {
+    $$$LOGERROR("[ApptService.GetSlotList] Failed to get slots")
+    Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+    }
+}
+
+Method PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+{
+    set cnt = 0
+    set key = $Order(failedByPatientIdArr(""))
+    while (key '= "") {
+        if (cnt = 0) {
+            $$$LOGINFO("[ApptService.PrintResult] Failure per patient")
+        }
+        $$$LOGINFO("[ApptService.PrintResult] Patient Id: "_key_", Number of Failure: "_failedByPatientIdArr(key))
+        set key = $Order(failedByPatientIdArr(key))
+        set cnt = cnt + 1
+    }
+
+    $$$LOGINFO("[ApptService.PrintResult] Total number of Patient with failed episode creation: "_cnt)
+	$$$LOGINFO("[ApptService.PrintResult] Total number of Success: "_totalSuccess_", Total number of Failure: "_totalFailure)
 }
 
 Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
@@ -217,7 +261,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
             set isSuccess = ..AssignSlot(slotsObjList, exApptOutput, .slot, .randslotIndex)
             
             if isSuccess = 1 {
-                // Remove empty string in the beginning of USRN
+                 // Remove empty string in the beginning of USRN
                 if ($find(slot.USRN," ")'=0){
                     set formattedUSRN = $piece(slot.USRN," ",2)
                 }
