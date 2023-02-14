@@ -16,7 +16,8 @@ Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %In
         set failedByPatientIdArr = []
         for i=1:1:PatientVoObjList.Count(){
             set ranNum = ##class(PUtil).Random(diff) + MinNumOfEpisode
-            do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), .locationObjList, .numOfSuccess, .numOfFailure)
+            do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), .locationObjList, .numOfSuccess)
+            set numOfFailure = ranNum - numOfSuccess
             set totalSuccess = totalSuccess + numOfSuccess
             set totalFailure = totalFailure + numOfFailure
 
@@ -28,7 +29,7 @@ Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %In
         do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
-Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer, ByRef numOfFailure As %Integer) [ Private ]
+Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer) [ Private ]
 {
      
         $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Initialize episode request, patient Id: "_PatientVo.PatientId)
@@ -69,8 +70,8 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
         set patientVo = PatientVoObjList.GetAt(cnt)
         kill numOfSuccess
         kill numOfFailure
-        do ..NewEpisodePerPatient(NumOfEpisodePerPatient, patientVo, .locationObjList, .numOfSuccess, .numOfFailure)
-
+        do ..NewEpisodePerPatient(NumOfEpisodePerPatient, patientVo, .locationObjList, .numOfSuccess)
+        set numOfFailure = NumOfEpisodePerPatient - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
         set failedByPatientIdArr = []

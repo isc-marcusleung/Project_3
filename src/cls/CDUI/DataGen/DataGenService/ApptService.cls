@@ -19,7 +19,8 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
             do ..GetSlotList(servId, Rows,.slotsObjList)
             set ranNum = ##class(PUtil).Random(diff) + MinNumOfAppt
             $$$LOGINFO("[ApptService.NewApptByRange] Number of appt: "_ranNum)
-            do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), .slotsObjList, .numOfSuccess, .numOfFailure)
+            do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), .slotsObjList, .numOfSuccess)
+            set numOfFailure = ranNum - numOfSuccess
             set totalSuccess = totalSuccess + numOfSuccess
             set totalFailure = totalFailure + numOfFailure
 
@@ -31,7 +32,7 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
         do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
-Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef slotsObjList As %ListOfObjects, Output numOfSuccess As %Integer, Output numOfFailure As %Integer) [ Private ]
+Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef slotsObjList As %ListOfObjects, Output numOfSuccess As %Integer) [ Private ]
 {
     set numOfSuccess = 0
     set numOfFailure = 0
@@ -99,8 +100,9 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
 
         $$$LOGINFO("[ApptService.NewAppt] Initialize appointment request, count of slots for this patient: "_slotsObjList.Count())
 
-        do ..NewApptPerPatient(NumOfApptPerPatient, patientVo, .slotsObjList, .numOfSuccess, .numOfFailure)
+        do ..NewApptPerPatient(NumOfApptPerPatient, patientVo, .slotsObjList, .numOfSuccess)
         set totalSuccess = totalSuccess + numOfSuccess
+        set numOfFailure = NumOfApptPerPatient - numOfSuccess
         set totalFailure = totalFailure + numOfFailure
         set failedByPatientIdArr = []
 
