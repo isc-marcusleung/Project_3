@@ -62,20 +62,16 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
         do apptService.NewAppt(req.NumOfApptPerPatient, PatientVoObjList)
     } elseif(req.isAppointmentRange) {
-        set diff = req.MaxNumOfAppointmentPerPatient - req.MinNumOfAppointmentPerPatient
-        set ranNum = ##class(PUtil).Random(diff) + req.MinNumOfAppointmentPerPatient
         set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
-        do apptService.NewAppt(ranNum, PatientVoObjList)
+        do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, PatientVoObjList)
     }
 
     if (req.isOrder){
         set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
         do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList)
     } elseif(req.isOrderRange) {
-        set diff = req.MaxNumOfOrderPerEpisode - req.MinNumOfOrderPerEpisode
-        set ranNum = ##class(PUtil).Random(diff) + req.MinNumOfOrderPerEpisode
         set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
-        do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList)
+        do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList)
     }
 
     if (req.isObservation){

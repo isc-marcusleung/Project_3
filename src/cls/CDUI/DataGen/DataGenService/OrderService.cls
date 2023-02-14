@@ -3,9 +3,66 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.OrderService Extends (%RegisteredObject, BaseService)
 {
 
+Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects)
+{
+    do ..GetOrderByCat("", OrderCat, .orderVoObjList)
+
+    set diff = MaxNumOfOrder - MinNumOfOrder
+    set totalSuccess = 0
+    set totalFailure = 0
+    set failedByEpisodeIdArr = []
+    for i=1:1:EpisodeVoObjList.Count(){
+        set ranNum = ##class(PUtil).Random(diff) + MinNumOfOrder
+        do ..NewOrderPerPatient(ranNum, EpisodeVoObjList.GetAt(i), .orderVoObjList, .numOfSuccess, .numOfFailure)
+        set totalSuccess = totalSuccess + numOfSuccess
+        set totalFailure = totalFailure + numOfFailure
+
+        if (numOfFailure > 0) {
+            set failedByEpisodeIdArr(EpisodeVoObjList.GetAt(i).ID) = numOfFailure
+        }
+    }
+
+    do ..PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+}
+
+Method NewOrderPerPatient(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer, ByRef NumOfFailure As %Integer) [ Private ]
+{
+    // TO DO CN - Any better way? 
+    set EpisodeId = EpisodeItem.ID
+    set EpisodeAdmDate = EpisodeItem.PAADMAdmDate
+    set EpisodeAdmTime = EpisodeItem.PAADMAdmTime
+    set PatientID = EpisodeItem.PatientID
+
+    $$$LOGINFO("[OrderService.NewOrder] Initialize order request, episode Id: "_EpisodeId)
+
+    // Generate order records and insert them to TrakCare via API.
+    $$$LOGINFO("[OrderService.NewOrder] Create new order")
+
+    // Run the method to initialise the request body
+    do ..InitOrderRequestByRandom(OrderVoObjList, NumOfOrderPerEpisode, EpisodeId, EpisodeAdmDate, EpisodeAdmTime, PatientID, .orderInput,)
+
+    set orderOutput = ##class(CDUI.DataGen.DataGenService.Custom.OrderOutput).%New()
+
+    do ..RunWithRetry(orderInput, orderOutput,)
+
+    // Set the inserted ordersVo back to episodeVo for further use if necessary
+    set EpisodeItem.OrderObjList = orderOutput.OrderVoObjList
+
+    set orderIdList = orderOutput.OrderIdList
+    set NumOfSuccess = orderIdList.Count()
+
+    set failedByPatientIdArr = []
+    set NumOfFailure = NumOfOrderPerEpisode - NumOfSuccess
+
+    if NumOfSuccess '= 0 {
+        $$$LOGINFO("[OrderService.NewOrder] Results: patient Id: "_EpisodeItem.PatientID_", episode Id: "_EpisodeId_", orderId: "_##class(CommonUtil).convertListOfDataTypeToString(orderIdList,))
+    }
+
+    $$$LOGINFO("[EpisodeService.NewOrder] Success count: "_NumOfSuccess_", Failure count: "_NumOfFailure)
+}
+
 Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects)
 {
-	
     set Count = ""
     set OrderCat = OrderCat
 
@@ -14,16 +71,7 @@ Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, Episo
     
     kill failedByEpisodeIdArr
 
-	// Retrieve the order list for the creation of a new order
-    $$$LOGINFO("[OrderService.NewOrder] Retrieve the order list.")
-
-    set sc = ##class(TrakCareService).GetOrderByCat(Count, OrderCat, .orderVoObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[OrderService.NewOrder] Failed to get orders.")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
-
+    do ..GetOrderByCat(Count, OrderCat, .orderVoObjList)
     set NumOfEpisode = EpisodeVoObjList.Count()
 
     $$$LOGINFO("[OrderService.NewOrder] Number of episodes for this patient: "_NumOfEpisode)
@@ -34,45 +82,34 @@ Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, Episo
         
         set episodeItem = EpisodeVoObjList.GetAt(i)
         
-        // TO DO CN - Any better way? 
-        set EpisodeId = episodeItem.ID
-        set EpisodeAdmDate = episodeItem.PAADMAdmDate
-        set EpisodeAdmTime = episodeItem.PAADMAdmTime
-        set PatientID = episodeItem.PatientID
-
-        $$$LOGINFO("[OrderService.NewOrder] Initialize order request, episode Id: "_EpisodeId)
-
-        // Generate order records and insert them to TrakCare via API.
-        $$$LOGINFO("[OrderService.NewOrder] Create new order")
-
-        // Run the method to initialise the request body
-        do ..InitOrderRequestByRandom(orderVoObjList, NumOfOrderPerEpisode, EpisodeId, EpisodeAdmDate, EpisodeAdmTime, PatientID, .orderInput,)
-
-        set orderOutput = ##class(CDUI.DataGen.DataGenService.Custom.OrderOutput).%New()
-
-        do ..RunWithRetry(orderInput, orderOutput,)
-
-        // Set the inserted ordersVo back to episodeVo for further use if necessary
-        set episodeItem.OrderObjList = orderOutput.OrderVoObjList
-
-        set orderIdList = orderOutput.OrderIdList
-        set numOfSuccess = orderIdList.Count()
-
-        $$$LOGINFO("[OrderService.NewOrder] Number of successful orders: "_numOfSuccess)
+        do ..NewOrderPerPatient(NumOfOrderPerEpisode, episodeItem, .orderVoObjList, .numOfSuccess, .numOfFailure)
         
-        set numOfFailure = NumOfOrderPerEpisode - numOfSuccess
-
+        set failedByEpisodeIdArr = []
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
-
+        set episodeId = episodeItem.ID
         if (numOfFailure > 0) {
-            set failedByEpisodeIdArr(EpisodeId) = numOfFailure
+            set failedByEpisodeIdArr(episodeId) = numOfFailure
         }
-        
-        $$$LOGINFO("[OrderService.NewOrder] Results: patient Id: "_episodeItem.PatientID_", episode Id: "_EpisodeId_", orderId: "_##class(CommonUtil).convertListOfDataTypeToString(orderIdList,))
-        $$$LOGINFO("[OrderService.NewOrder] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
     }
+    do ..PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+}
 
+Method GetOrderByCat(Count As %Integer, OrderCat As %String, Output OrderVoObjList As %ListOfObjects) [ Private ]
+{
+	// Retrieve the order list for the creation of a new order
+    $$$LOGINFO("[OrderService.GetOrderByCat] Retrieve the order list.")
+
+    set sc = ##class(TrakCareService).GetOrderByCat(Count, OrderCat, .OrderVoObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[OrderService.GetOrderByCat] Failed to get orders.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
+}
+
+Method PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+{
     set cnt = 0
     set key = $Order(failedByEpisodeIdArr(""))
     while (key '= "") {
