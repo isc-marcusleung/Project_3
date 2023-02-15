@@ -5,6 +5,10 @@ Parameter genders As STRING [ Final ] = "Female,Indeterminate,Male,Other,Unknown
 
 Parameter maxAge As INTEGER [ Final ] = 100;
 
+// Used to initialize log file 
+
+Parameter logFileName As STRING = "/cduinterns/irissys/mgr/user/job_log.txt";
+
 // Used to create obs table and submission array
 
 Parameter obsHeader As STRING [ Final ] = "SubjectId,Date,Hour,SBP,DBP,HeartRate,Respirations,Temp,Height,Weight";

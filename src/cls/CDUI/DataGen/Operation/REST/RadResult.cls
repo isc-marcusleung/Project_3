@@ -10,7 +10,7 @@ XData MessageMap
 </MapItems>
 }
 
-Method createNewRadResult(Request As CDUI.DataGen.Request.NewRadResult, Output Response As Ens.StringResponse) As %Status
+Method createNewRadResult(Request As CDUI.DataGen.Request.NewRadResult, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
 {
 	set sc = ..httpPut(Request, .Response)
 	quit sc

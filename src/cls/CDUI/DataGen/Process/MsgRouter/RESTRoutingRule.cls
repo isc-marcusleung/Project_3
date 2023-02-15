@@ -48,6 +48,14 @@ XData RuleDefinition [ XMLNamespace = "http://www.intersystems.com/rule" ]
 <return></return>
 </when>
 </rule>
+<rule name="GetEpisode">
+<constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
+<constraint name="msgClass" value="CDUI.DataGen.Request.GetEpisodeById"></constraint>
+<when condition="1">
+<send transform="" target="CDUI.DataGen.Operation.REST.Episode"></send>
+<return></return>
+</when>
+</rule>
 <rule name="ARCItmMast">
 <constraint name="source" value="CDUI.DataGen.Service.Adaptorless"></constraint>
 <constraint name="msgClass" value="CDUI.DataGen.Request.ARCItmMast"></constraint>

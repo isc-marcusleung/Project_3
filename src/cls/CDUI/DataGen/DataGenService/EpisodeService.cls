@@ -3,7 +3,7 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.EpisodeService Extends BaseService
 {
 
-Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output EpisodeVoObjList As %ListOfObjects)
 {
 	set locationTypeId = "E" // TODO Marcus make it constant / enum
 	set minAdmDate = "1/1/1970"
@@ -23,6 +23,9 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of episode per patient: "_NumOfEpisodePerPatient)
 
+    //Initialize the log file
+	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Episode Creation")
+
     set numOfLoop = PatientVoObjList.Count()
 
     for cnt=1:1:numOfLoop{
@@ -37,6 +40,7 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
 
         do ..RunWithRetry(episodeInput, episodeOutput,)
 
+        set EpisodeVoObjList = episodeOutput.EpisodeVoObjList
         //set the inserted episodeVo back to patient for further use if necessary
         set patientVo.EpisodeObjList = episodeOutput.EpisodeVoObjList
 
@@ -102,6 +106,7 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
             if $$$ISOK(sc)
             {	
                 $$$LOGINFO("[EpisodeService.Run] Response body: "_response.StringValue)
+                $$$LOGINFO("[EpisodeService.Run] Response time: "_response.ResponseTime)
                 set json = {}.%FromJSON(response.StringValue)
                 if (json.ERROR = ""){ 
                     //No error then store the record to episodeVoObjList

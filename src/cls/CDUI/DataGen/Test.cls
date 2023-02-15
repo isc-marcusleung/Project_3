@@ -757,7 +757,7 @@ ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1
 	return sc
 }
 
-ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
+ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, Output PatientVoObjList)
 {
 	kill PatientVoObjList
 	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
@@ -772,16 +772,16 @@ ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
 	$$$LOGINFO("================================ [End] Patient Id ================================")
 }
 
-ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output EpisodeVoObjList As %ListOfObjects)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
-	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList)
+	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList, .EpisodeVoObjList)
 	w !!!!
-	for cnt = 1:1:PatientVoObjList.Count(){
+	for cnt = 1:1:EpisodeVoObjList.Count(){
 		if (cnt = 1) {
 			$$$LOGINFO("================================ [Start] ================================")
 		}
-		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+		$$$LOGINFO(EpisodeVoObjList.GetAt(cnt).SerialisedGet())
 	}
 	$$$LOGINFO("================================ [End] ================================")
 }
@@ -813,6 +813,20 @@ ClassMethod CreateAppointment(NumOfApptPerPatient As %Integer = 1, ByRef Patient
 			$$$LOGINFO("================================ [Start] ================================")
 		}
 		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+	}
+	$$$LOGINFO("================================ [End] ================================")
+}
+
+ClassMethod mCreateObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output ObsVoObjList As %ListOfObjects)
+{
+	set obsService = ##class(CDUI.DataGen.DataGenService.ObsService).%New()
+	do obsService.NewObs(NumOfObsPerEpisode, EpisodeVoObjList, .ObsVoObjList)
+	w !!!
+	for cnt = 1:1:ObsVoObjList.Count(){
+		if (cnt = 1){
+			$$$LOGINFO("================================ [Start] ================================")
+		}
+		$$$LOGINFO(ObsVoObjList.GetAt(cnt).SerialisedGet())
 	}
 	$$$LOGINFO("================================ [End] ================================")
 }

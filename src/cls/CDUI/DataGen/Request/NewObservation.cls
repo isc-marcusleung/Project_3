@@ -13,7 +13,13 @@ Property ObsTime As %String;
 
 Property OBSENTRYPatLocDesc As %String;
 
-Property TableItems As array Of CDUI.DataGen.Request.ObservationItem;
+Property TableItems As list Of CDUI.DataGen.Request.NewObservationItem;
+
+Method SerialisedGet() As %RawString
+{
+	do ..%JSONExportToString(.json)
+	return json
+}
 
 Storage Default
 {

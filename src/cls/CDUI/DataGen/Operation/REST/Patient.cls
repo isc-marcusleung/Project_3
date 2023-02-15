@@ -10,7 +10,7 @@ XData MessageMap
 </MapItems>
 }
 
-Method createNewPatient(Request As CDUI.DataGen.Request.NewPatient, Output Response As Ens.StringResponse) As %Status
+Method createNewPatient(Request As CDUI.DataGen.Request.NewPatient, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
 {
 	set sc = ..httpPut(Request, .Response)
 	quit sc
