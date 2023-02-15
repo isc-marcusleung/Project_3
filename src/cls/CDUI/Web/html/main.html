@@ -109,6 +109,15 @@
 							<label class="form-check-label" for="orderRange">Order Range</label>
 						</div> 
 						<div class="col-12">
+							<label for="orderCategory" class="form-label">Order Category:</label>
+							<select id="orderCategory" class="form-select form-select" aria-label=".form-select example">
+							  <option value="" selected>Select Order Category (optional)</option>
+							  <option value="Radiology">Radiology</option>
+							  <option value="Consultation">Consultation</option>
+							  <option value="Laboratory">Laboratory</option>
+							</select>
+						</div>
+						<div class="col-12">
 							<label for="noOfOrder" class="form-label">Number of Order per Episode:</label>
 							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfOrder" min="0" placeholder="optional">
 						</div>
@@ -133,8 +142,6 @@
 						<div class="col-6 mt-0">
 							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,0).replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfObservationTo" min="0" placeholder="to">
 						</div>
-						
-						
 						<div class="d-grid gap-2 mt-4">
 							<button type="submit" class="btn btn-lg btn-primary float-end">Submit</button>
 						</div>
