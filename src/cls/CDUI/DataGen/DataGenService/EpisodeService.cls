@@ -166,10 +166,10 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
                     }
                 }
             } else {
-                    $$$LOGERROR("[EpisodeService.NewEpisode] Failed to create an episode. Error(SC): "_$System.Status.DisplayError(sc))
+                    $$$LOGERROR("[EpisodeService.Run] Failed to create an episode. Error(SC): "_$System.Status.DisplayError(sc))
             }
         } catch ex {	
-                    $$$LOGERROR("[EpisodeService.NewEpisode] Failed to create an episode. Error(Ex): "_ex.DisplayString())
+                    $$$LOGERROR("[EpisodeService.Run] Failed to create an episode. Error(Ex): "_ex.DisplayString())
         }
 
         if isSuccess '= 1 {

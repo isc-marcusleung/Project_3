@@ -869,4 +869,21 @@ ClassMethod mCreateAppointmentByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt
 	$$$LOGINFO("================================ [End] ================================")
 }
 
+ClassMethod mCreateObs(NumOfObsPerEpisode As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects)
+{
+    set obsService = ##class(CDUI.DataGen.DataGenService.ObsService).%New()
+	for i=1:1:PatientVoObjList.Count(){
+		do obsService.NewObs(NumOfObsPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList)
+	}
+    
+	w !!!!
+    for cnt = 1:1:PatientVoObjList.Count(){
+        if (cnt = 1){
+            $$$LOGINFO("================================ [Start] ================================")
+        }
+        $$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+    }
+    $$$LOGINFO("================================ [End] ================================")
+}
+
 }

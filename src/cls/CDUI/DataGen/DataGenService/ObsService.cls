@@ -3,42 +3,64 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.ObsService Extends BaseService
 {
 
-// Assuming there is already a EpisodeVoObjList created 
+Parameter locationTypeId = "E";
 
-Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output ObsVoObjList As %ListOfObjects)
+Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.DataGen.vo.EpisodeVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer)
 {
-    set locationTypeId = "E"
+    $$$LOGINFO("[ObsService.NewObsPerEpisode] Initialize obs request, episode Id: "_EpisodeVo.ID)
+
+    //generate obsverations records 
+    $$$LOGINFO("[ObsService.NewObsPerEpisode] Create new obsverations.")
+    do ..InitObsRequest(locationObjList, NumOfObsPerEpisode, EpisodeVo,.obsInput)
+    set obsOutput = ##class(CDUI.DataGen.DataGenService.Custom.ObsOutput).%New()
+
+    do ..RunWithRetry(obsInput,obsOutput,)
+    //Insert the obsveration vo created back to respective episode vo
+    set EpisodeVo.ObsObjList = obsOutput.ObsVoObjList
+    set obsIdList = obsOutput.ObsIdList
+    set numOfSuccess = obsOutput.Count()
+    set numOfFailure = NumOfObsPerEpisode - numOfSuccess
+    if numOfSuccess '= 0 {
+        $$$LOGINFO("[ObsService.NewObsPerEpisode] episode Id: "_EpisodeVo.ID_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(obsIdList,))
+    }
+    $$$LOGINFO("[ObsService.NewObsPerEpisode] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
+}
+
+// Create same number of observations for all episodes
+
+Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects)
+{
+    set totalSuccess = 0
+    set totalFailure = 0
+    $$$LOGINFO("[ObsService.NewObs] Number of episode: "_EpisodeVoObjList.Count())
+    $$$LOGINFO("[ObsService.NewObs] Number of obserations per episode: "_NumOfObsPerEpisode)
     
     //Retrieve the location list for the creation of a new episode
 	$$$LOGINFO("[ObsService.NewObs] Retrive the location list.")
-    set sc = ##class(TrakCareService).GetLocation(,1,locationTypeId,..PageSize,, .locationObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[ObsService.NewObs] Failed to get Locations.")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
 
-    $$$LOGINFO("[ObsService.NewObs] Number of episode: "_EpisodeVoObjList.Count())
-    $$$LOGINFO("[ObsService.NewObs] Number of obserations per episode: "_NumOfObsPerEpisode)
-	
     //Initialize the log file
 	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Observation Creation")
+
+    do ..GetLocation(.locationObjList)
 
     set numOfLoop = EpisodeVoObjList.Count()
     for cnt = 1:1:numOfLoop{
         set episodeVo = EpisodeVoObjList.GetAt(cnt)
-        $$$LOGINFO("[ObsService.NewObs] Initialize observation request, episode Id: "_episodeVo.ID)
-        $$$LOGINFO("[ObsService.NewObs] Initialize observation request, episode location desc: "_episodeVo.CTLOCDesc)
+        kill numOfSuccess
+        kill numOfFailure
 
         //One to many mapping, for each episode, create multiple observation creation requests and store them in obsInput
-        do ..InitObsRequest(locationObjList, NumOfObsPerEpisode, episodeVo,.obsInput)
+        do ..NewObsPerEpisode(NumOfObsPerEpisode, episodeVo, .locationObjList, .numOfSuccess)
+        set numOfFailure = NumOfObsPerEpisode - numOfSuccess
+        set totalSuccess = totalSuccess + numOfSuccess
+        set totalFailure = totalFailure + numOfFailure
+        set failedByEpisodeIdArr = []
 
-        set obsOutput = ##class(CDUI.DataGen.DataGenService.Custom.ObsOutput).%New()
-
-        //Do business service call using obsInput, save response in obsOutput
-        do ..RunWithRetry(obsInput, obsOutput,)
-        set ObsVoObjList = obsOutput.ObsVoObjList
+        if (numOfFailure > 0) {
+            set failedByEpisodeIdArr(episodeVo.ID) = numOfFailure
+        }
     }
+    do ..PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
 }
 
 // initialize obs request for one episode, number of request depends on NumOfObsPerEpisode
@@ -54,9 +76,9 @@ Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %
     set locationDesc = episodeVo.CTLOCDesc
 
     for cnt = 1:1:NumOfObsPerEpisode{
-        
         do ..UpdateMradm(.episodeVo)
         do ..CheckLocObjList(locationObjList, locationDesc, .locationCode)
+        //update date and time so that each request has different date and time 
         do ..UpdateDT(.DateD,.TimeD,30)
         do ..UpdateD(.DateD)
         
@@ -131,10 +153,10 @@ ClassMethod UpdateD(ByRef dateR)
 
 ClassMethod UpdateMradm(ByRef episodeVo As CDUI.DataGen.vo.EpisodeVo)
 {
-    //call the API to get episode by id 
+    //call the API to get episode by id, name of the property in request has to match API requirement!
     try{
-        set request = ##class(CDUI.DataGen.Request.GetEpisodeById).%New()
-        set request.EpisodeIDs = episodeVo.ID
+        set request = ##class(CDUI.DataGen.Request.GetEpisodeById2).%New()
+        set request.EpisodeId = episodeVo.ID
 
         set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
 		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
@@ -215,6 +237,35 @@ ClassMethod UpdateTableItems(obsItemSet, itemCode As %String, ByRef obsReq As CD
     Do obsReq.TableItems.Insert(obsItem)
 }
 
+Method PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+{
+    set cnt = 0
+    set key = $Order(failedByEpisodeIdArr(""))
+    while (key '= "") {
+        if (cnt = 0) {
+            $$$LOGINFO("[ObsService.PrintResult] Failure per episode")
+        }
+        $$$LOGINFO("[ObsService.PrintResult] Patient Id: "_key_", Number of Failure: "_failedByEpisodeIdArr(key))
+        set key = $Order(failedByEpisodeIdArr(key))
+        set cnt = cnt + 1
+    }
+
+    $$$LOGINFO("[ObsService.PrintResult] Total number of Episode with failed obsveration creation: "_cnt)
+	$$$LOGINFO("[ObsService.PrintResult] Total number of Success: "_totalSuccess_", Total number of Failure: "_totalFailure)
+}
+
+Method GetLocation(Output locationObjList As %ListOfObjects) [ Private ]
+{
+	//Retrieve the location list for the creation of a new episode
+	$$$LOGINFO("[EpisodeService.GetLocation] Retrive the location list.")
+    set sc = ##class(TrakCareService).GetLocation(,1,..#locationTypeId,..PageSize,, .locationObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[EpisodeService.GetLocation] Failed to get Locations.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
+}
+
 // core component of runWithRety, do various business service calls using the list of requests 
 
 Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
@@ -224,15 +275,17 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
     set numOfLoop = requestObjList.Count()
     $$$LOGINFO("[ObsService.Run] Number of requests: "_numOfLoop)
 
-    //obtain generated vo objects
+    //obtain obs vo list, it is empty if this is not a retry run 
     set obsVoObjList = obsOutput.ObsVoObjList
 
     //initialize lists to store responses
-    set obsIdList = ##class(%ListOfDataTypes).%New()
     if '$Data(obsVoObjList) {
 		set obsVoObjList =  ##class(%ListOfObjects).%New()
 	}
+    
+    set obsIdList = ##class(%ListOfDataTypes).%New()
 
+    //prepare for rerun 
     set numOfFailed = 0 
     set failedObsRequestObjList = ##class(%ListOfObjects).%New()
 
@@ -266,14 +319,15 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
             $$$LOGERROR("[ObsService.Run] Failed to create an observation. Error(Ex): "_ex.DisplayString())
         }
         
+        //if error occurs
         if isSuccess '= 1{
             do failedObsRequestObjList.Insert(request)
             set numOfFailed = numOfFailed + 1
         }
     }
 
-    //combine the id list if this run is a retry run
-    //assign a new list if this run is not a retry run
+    //Update the obsIdList in obsOutput
+    //combine the id list if this run is a retry run; assign a new list if this run is not a retry run
     if (obsOutput.ObsIdList '= ""){
         for cnt = 1:1:obsIdList.Count(){
             do obsOutput.ObsIdList.Insert(obsIdList.GetAt(cnt))
@@ -286,6 +340,7 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
     //Reset the input for retry
     set obsInput.RequestObjList = failedObsRequestObjList
 
+    //Update the ObsVoList in the output object 
     set obsOutput.ObsVoObjList = obsVoObjList
 
     $$$LOGINFO("[ObsService.Run] Number of failed trails is "_numOfFailed)
