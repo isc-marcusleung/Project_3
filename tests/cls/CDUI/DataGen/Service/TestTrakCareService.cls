@@ -6,7 +6,7 @@ Class CDUI.DataGen.Service.TestTrakCareService Extends (%UnitTest.TestCase, Base
 Method TestGetARCAuxilInsurType() As %Status
 {
     #dim status, sc as %Status = $$$OK
-    set sc = ##class(TrakCareService).GetARCAuxilInsurType(,,,.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetARCAuxilInsurType(,,,.results)
     set status = $$$AssertStatusOK(sc,"Get Insurance List")
     
     if $$$ISOK(status)
@@ -27,7 +27,7 @@ Method TestGetARCAuxilInsurType() As %Status
 Method TestGetARCItmMast() As %Status
 {
     #dim status, sc as %Status = $$$OK
-    set sc = ##class(TrakCareService).GetARCItmMast(,,,.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetARCItmMast(,,,.results)
     set status = $$$AssertStatusOK(sc,"Get Order Item List")
     
     if $$$ISOK(status)
@@ -48,7 +48,7 @@ Method TestGetARCItmMast() As %Status
 Method TestGetLocation() As %Status
 {
     #dim status, sc as %Status = $$$OK
-    set sc = ##class(TrakCareService).GetLocation(,,,,,.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetLocation(,,,,,.results)
     set status = $$$AssertStatusOK(sc,"Get Location List")
     
     if $$$ISOK(status)
@@ -69,7 +69,7 @@ Method TestGetLocation() As %Status
 Method TestGetLocationServices() As %Status
 {
     #dim status, sc as %Status = $$$OK
-    set sc = ##class(TrakCareService).GetLocationServices(,.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetLocationServices(,.results)
     set status = $$$AssertStatusOK(sc,"Get Location Service List")
     
     if $$$ISOK(status)
@@ -101,7 +101,7 @@ Method TestGetSlots() As %Status
 {
     #dim sc, status as %Status = $$$OK
 
-    set sc = ##class(TrakCareService).GetLocationServices(,.locServObjList)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetLocationServices(,.locServObjList)
     set status = $$$AssertStatusOK(sc,"Get Location Services List")
 
     // Get random service id
@@ -109,7 +109,7 @@ Method TestGetSlots() As %Status
     set servItem = locServObjList.GetAt(randServIndex)
     set servId = servItem.RowID
 
-    set sc = ##class(TrakCareService).GetSlots(241,servId,,,.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetSlots(241,servId,,,.results)
     set status = $$$AssertStatusOK(sc,"Get Slots List")
 
     if $$$ISOK(status)
@@ -130,7 +130,7 @@ Method TestGetCareProvider() As %Status
 {
     #dim sc, status as %Status = $$$OK
 
-    set sc = ##class(TrakCareService).GetCareProvider(.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetCareProvider(.results)
     set status = $$$AssertStatusOK(sc,"Get Care Provider List")
 
     if $$$ISOK(status)
@@ -151,7 +151,7 @@ Method TestGetOrderByCat() As %Status
     #dim sc, status as %Status = $$$OK
 
     set category = "Radiology"
-    set sc = ##class(TrakCareService).GetOrderByCat(10,category,.results)
+    set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetOrderByCat(10,category,.results)
     set status = $$$AssertStatusOK(sc,"Get Order Items List by Category Radiology")
 
     if $$$ISOK(status)
