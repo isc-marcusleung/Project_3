@@ -10,7 +10,6 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
         set diff = MaxNumOfAppt - MinNumOfAppt
         set totalSuccess = 0
         set totalFailure = 0
-        set failedByPatientIdArr = []
         for i=1:1:PatientVoObjList.Count(){
             // Set random row number for the API call to get slots
             set Rows = ##class(PUtil).Integer(1,20)
@@ -29,7 +28,7 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
             }
         }
 
-        do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+        do ..PrintResult(.failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
 Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef slotsObjList As %ListOfObjects, Output numOfSuccess As %Integer) [ Private ]
@@ -104,13 +103,12 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
         set totalSuccess = totalSuccess + numOfSuccess
         set numOfFailure = NumOfApptPerPatient - numOfSuccess
         set totalFailure = totalFailure + numOfFailure
-        set failedByPatientIdArr = []
 
         if (numOfFailure > 0) {
             set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
         }
     }
-    do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+    do ..PrintResult(.failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
 Method GetServiceIdByRandom() As %Integer [ Private ]
@@ -147,7 +145,7 @@ Method GetSlotList(ServId As %Integer, Rows As %Integer, Output SlotsObjList As 
     }
 }
 
-Method PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+Method PrintResult(ByRef failedByPatientIdArr, totalSuccess As %Integer, totalFailure As %Integer) [ Private ]
 {
     set cnt = 0
     set key = $Order(failedByPatientIdArr(""))

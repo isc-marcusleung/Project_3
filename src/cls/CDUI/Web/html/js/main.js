@@ -216,12 +216,11 @@ $(document).ready(function(){
 			if (this.value === 'Y') {
 				 refreshInterval = setInterval(function () {
 					refreshJobList();
-				},5000);
+				},3000);
 			} else {
 				clearInterval(refreshInterval);
 			}
     });
-	
 });	
 
 function refreshCheckAll(){
@@ -403,6 +402,7 @@ function enableInputElements(isEnablePatientInput, isEnableAppointmentInput, isE
 		enableInputElement('noOfOrder');
 		enableInputElement('noOfOrderFrom');
 		enableInputElement('noOfOrderTo');
+		enableSelectElement('orderCategory');
 	}
 	if (isEnableObservationInput) {
 		enableInputElement('noOfObservation');
@@ -430,6 +430,7 @@ function disableInputElements(isDisablePatientInput, isDisableAppointmentInput, 
 		disableInputElement('noOfOrder');
 		disableInputElement('noOfOrderFrom');
 		disableInputElement('noOfOrderTo');
+		disableSelectElement('orderCategory');
 	}
 	if (isDisableObservationInput) {
 		disableInputElement('noOfObservation');
@@ -437,6 +438,20 @@ function disableInputElements(isDisablePatientInput, isDisableAppointmentInput, 
 		disableInputElement('noOfObservationTo');
 	}
 }
+
+function enableSelectElement(id){
+	var el = $('#'+id);
+	el.prop( "disabled", false );
+	el.removeClass("bg-secondary");
+}
+
+
+function disableSelectElement(id){
+	var el = $('#'+id);
+	el.prop( "disabled", true );
+	el.addClass("bg-secondary");
+}
+
 
 function disableInputElement(id){
 	var el = $('#'+id);
@@ -551,6 +566,8 @@ function addJob(){
 		var numOfAppointmentPerPatient = $('#noOfAppointment').val();
 		var numOfObservationPerEpisode = $('#noOfObservation').val();
 		
+		var orderCategory = $('#orderCategory').val();
+		
 		var noOfAppointmentFrom = $('#noOfAppointmentFrom').val()
 		var noOfAppointmentTo = $('#noOfAppointmentTo').val()
 		var noOfEpisodeFrom = $('#noOfEpisodeFrom').val()
@@ -596,6 +613,8 @@ function addJob(){
 		if (noOfAppointmentTo != "") {formData.append('maxNumOfAppointmentPerPatient', noOfAppointmentTo);}
 		if (noOfObservationFrom != "") {formData.append('minNumOfObservationPerEpisode', noOfObservationFrom);}
 		if (noOfObservationTo != "") {formData.append('maxNumOfObservationPerEpisode', noOfObservationTo);}
+		
+		if (orderCategory != "") {formData.append('orderCat', orderCategory);}
 		
 		//validate the input
 		if (numOfPatient == null || numOfPatient < 1){
@@ -719,6 +738,7 @@ function reset(){
 	disableInputElement('noOfEpisode');
 	disableInputElement('noOfAppointment');
 	disableInputElement('noOfOrder');
+	disableSelectElement('orderCategory');
 	disableInputElement('noOfObservation');
 
 	$('#appointmentRange').val('N')
@@ -747,8 +767,8 @@ function reset(){
 	
 	$('#checkAll').prop("checked", false);
 
-	$('#autoRefresh').val('N');
-	$('#autoRefresh').prop("checked", false);
+	$('#autoRefresh').val('Y');
+	$('#autoRefresh').prop("checked", true);
 }
 
 function convertDateFormat(dateStr){

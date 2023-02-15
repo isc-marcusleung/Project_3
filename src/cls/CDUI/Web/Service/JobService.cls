@@ -21,6 +21,8 @@ Parameter StatusInProgress = "In Progress";
 
 Parameter StatusTerminated = "Terminated";
 
+Parameter StatusCompletedWithError = "Completed With Error";
+
 Parameter StatusCompleted = "Completed";
 
 Parameter StatusError = "Error";
@@ -54,6 +56,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         $$$LOGINFO("[JobService.InitGlobalVariable] Finished initializing global variable.")
    
     } catch exception {
+        do LOG^%ETN
         if locked {
             Lock -^DataGen.Job
         }
@@ -92,6 +95,7 @@ ClassMethod GetTicketForJob() As %Integer
         TCOMMIT
         return result
     } Catch exception {
+        do LOG^%ETN
         if locked {
             Lock -(^DataGen.Job("info","maxProcess"),^DataGen.Job("info","noOfCurrentProcess"))
         }
@@ -122,6 +126,7 @@ ClassMethod RemoveTicketForJob()
         $$$LOGINFO("[JobService.GetTicketForJob] Finished removing a ticket. noOfCurrentProcess: "_noOfCurrentProcess)
 
     } Catch exception {
+        do LOG^%ETN
         if locked {
             Lock -^DataGen.Job("info","noOfCurrentProcess")
         }
@@ -160,6 +165,7 @@ ClassMethod GetNextId() As %Integer [ Private ]
         return id
      
       } catch exception {
+        do LOG^%ETN
         if locked {
             Lock -IdGeneratorLock
         }
@@ -200,6 +206,7 @@ ClassMethod AddJob() As %Integer
         TCOMMIT
         $$$LOGINFO("[JobService.AddJob] Finished adding a new job. Job Id: "_id)
     } Catch exception {
+        do LOG^%ETN
         if locked {
             Lock -^DataGen.Job("info","size")
         }
@@ -236,6 +243,7 @@ ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, comple
         $$$LOGINFO("[JobService.UpdateJob] Finished updating a job. Job Id: "_id)
        
     } Catch exception {
+        do LOG^%ETN
         if locked {
             Lock -^DataGen.Job("item", id)
         }
@@ -270,10 +278,10 @@ ClassMethod TerminateJob(id As %Integer)
         Lock -^DataGen.Job("item",id)
         TCOMMIT
         $$$LOGINFO("[JobService.TerminateJob] Finished terminating a job. Job Id: "_id)
-        return 1
     } Catch exception {
+        do LOG^%ETN
         if locked {
-            Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
+            Lock -^DataGen.Job("item",id)
         }
         TROLLBACK 
         Throw exception
@@ -302,7 +310,7 @@ ClassMethod DeleteJob(id As %Integer)
         }
 
         //If the job is not terminated, terminate it before remove it.
-         do ..TerminateJobItem(id)
+        do ..TerminateJobItem(id)
 
         //Remove the job from global variable
         do ..RemoveJobItem(id)
@@ -314,6 +322,7 @@ ClassMethod DeleteJob(id As %Integer)
         $$$LOGINFO("[JobService.DeleteJob] Finished deleting a job. Job Id: "_id)
         
     } Catch exception {
+        do LOG^%ETN
         if locked {
             Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
         }
@@ -331,8 +340,9 @@ ClassMethod FinishJob(id As %Integer)
 ClassMethod ErrorJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.ErrorJob] Update to Error. Job Id: "_id)
-    do ..TerminateJob(id)
+    //do ..TerminateJob(id)
     do ..UpdateJob(id, , ..#StatusError, )
+    do ..RemoveTicketForJob()
 }
 
 ClassMethod RemoveJobItem(id As %Integer) [ Private ]
@@ -348,17 +358,18 @@ ClassMethod RemoveJobItem(id As %Integer) [ Private ]
 
 ClassMethod TerminateJobItem(id As %Integer) [ Private ]
 {
+  
     set status = ^DataGen.Job("item",id, "status")
     $$$LOGINFO("[JobService.TerminateJobItem] Before Job termination, Job Id: "_id_", Job status: "_status)
-
-    if ((status = ..#StatusCreate) || (status = ..#StatusInProgress)){  
+   
+    if ((status = ..#StatusCreate) || (status = ..#StatusInProgress)){    
         if (status = ..#StatusInProgress){  
             do $SYSTEM.Process.Terminate(^DataGen.Job("item",id, "pid"))
-         }
+        }
         set ^DataGen.Job("item",id, "status") =  ..#StatusTerminated
         set ^DataGen.Job("item",id, "lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)  
     }
-
+        
     $$$LOGINFO("[JobService.TerminateJobItem] After Job termination, Job Id: "_id_", Job status: "_^DataGen.Job("item",id, "status"))
 }
 
@@ -388,11 +399,11 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
     WHILE (key'="") {
         set jobVo = ##class(CDUI.Web.Vo.JobVo).%New()
         set jobVo.id = key
-        set jobVo.pid = ^DataGen.Job("item", key, "pid") 
-        set jobVo.status = ^DataGen.Job("item", key, "status")  
-        set jobVo.createDateTime = ^DataGen.Job("item", key, "createDateTime")  
-        set jobVo.completeDateTime = ^DataGen.Job("item", key, "completeDateTime")  
-        set jobVo.lastUpdateDateTime = ^DataGen.Job("item", key, "lastUpdateDateTime")  
+        set jobVo.pid = $Get(^DataGen.Job("item", key, "pid"),"")
+        set jobVo.status = $Get(^DataGen.Job("item", key, "status"),"")  
+        set jobVo.createDateTime = $Get(^DataGen.Job("item", key, "createDateTime") ,"")  
+        set jobVo.completeDateTime = $Get(^DataGen.Job("item", key, "completeDateTime")  ,"") 
+        set jobVo.lastUpdateDateTime =$Get(^DataGen.Job("item", key, "lastUpdateDateTime")  ,"") 
         do results.Insert(jobVo)
 
         if (counter >= count) {

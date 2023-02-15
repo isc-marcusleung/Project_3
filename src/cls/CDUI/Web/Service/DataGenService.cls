@@ -3,11 +3,11 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.DataGenService)
 Class CDUI.Web.Service.DataGenService Extends Ens.Util.IOLogger [ ProcedureBlock ]
 {
 
-ClassMethod processRequest(request As CDUI.Web.Request.CreateJobRequest, jobId As %Integer)
+ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 {
-    //TODO marcus to implement it
     //update process id and status to ^DataGen
     try{
+        set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstanceFromStringParamValues(requestParamValues)
         set pid = $SYSTEM.SYS.ProcessID()
         set status = ##class(JobService).#StatusInProgress
         do ##class(JobService).UpdateJob(jobId, pid, status,)
@@ -24,54 +24,66 @@ ClassMethod processRequest(request As CDUI.Web.Request.CreateJobRequest, jobId A
         if (isProcessByBatch && 'isValidNoOfPatientPerBatch){
             $$$LOGERROR("[DataGenService.prcoessRequest] Setting is incorrect. isProcessByBatch: "_isProcessByBatch_", noOfPatientPerBatch: "_noOfPatientPerBatch )
         }
-
         if (isProcessByBatch && isValidNoOfPatientPerBatch && (noOfPatient > noOfPatientPerBatch)){
             //Do it by batches
             set noOfBatch = ##class(%SYSTEM.SQL.Functions).CEILING(noOfPatient / noOfPatientPerBatch) 
-
+            //TODO marcus to implement it
         } else {
             //Do it by single  
-            do ..doProcess(request.NumOfPatient, request, jobId)
+            do ..doProcess(request.NumOfPatient, request, jobId, .patientVoObjList)
         }
         do ##class(JobService).FinishJob(jobId)
     } catch ex {
-        do ##class(JobService).ErrorJob(jobId)
         do LOG^%ETN
+        do ##class(JobService).ErrorJob(jobId)
         $$$LOGERROR("[DataGenService.prcoessRequest] Failed to process a job. Job id: "_jobId_", pid: "_pid)
         $$$LOGERROR(ex)
         throw ex
     }
 }
 
-ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJobRequest, jobId As %Integer) [ Private ]
+ClassMethod validateResult()
 {
-    kill PatientVoObjList
+    //TODO marucs to validate the result, if it is not all successful, then set the status to StatusCompletedWithError
+}
 
+ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJobRequest, jobId As %Integer, Output PatientVoObjList As %ListOfObjects) [ Private ]
+{
     set patientService = ##class(PatientService).%New()
 	do patientService.NewPatient(noOfPatient, .PatientVoObjList)
 
     if (req.isEpisode){
-        set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode..."
+        set episodeService = ##class(EpisodeService).%New()
         do episodeService.NewEpisode(req.NumOfEpisodePerPatient, PatientVoObjList)
     } elseif(req.isEpisodeRange) {
-        set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode by random range..."
+        set episodeService = ##class(EpisodeService).%New()
         do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList)
     }
 
     if (req.isAppointment){
-        set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
-        do apptService.NewAppt(req.NumOfApptPerPatient, PatientVoObjList)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating apponitment..."
+        set apptService = ##class(ApptService).%New()
+        do apptService.NewAppt(req.NumOfAppointmentPerPatient, PatientVoObjList)
     } elseif(req.isAppointmentRange) {
-        set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating appointment by random range..."
+        set apptService = ##class(ApptService).%New()
         do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, PatientVoObjList)
     }
 
     if (req.isOrder){
-        set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
-        do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating order..."
+        set orderService = ##class(OrderService).%New()
+        for i=1:1:PatientVoObjList.Count(){
+            do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList)
+        }
     } elseif(req.isOrderRange) {
-        set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
-        do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating order by random range..."
+        set orderService = ##class(OrderService).%New()
+        for i=1:1:PatientVoObjList.Count(){
+            do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList)
+        }
     }
 
     if (req.isObservation){

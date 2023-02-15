@@ -21,7 +21,40 @@ XData ProductionDefinition
   <Item Name="CDUI.DataGen.Process.MsgRouter.REST" Category="" ClassName="EnsLib.MsgRouter.RoutingEngine" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
     <Setting Target="Host" Name="BusinessRuleName">CDUI.DataGen.Process.MsgRouter.RESTRoutingRule</Setting>
     <Setting Target="Host" Name="ForceSyncSend">1</Setting>
-    <Setting Target="Host" Name="ResponseFrom">CDUI.DataGen.Operation.REST.Location</Setting>
+    <Setting Target="Host" Name="ResponseFrom">CDUI.DataGen.Operation.REST.ARCAuxilInsurType,CDUI.DataGen.Operation.REST.ARCItmMast,CDUI.DataGen.Operation.REST.Episode,CDUI.DataGen.Operation.REST.Patient,CDUI.DataGen.Operation.REST.Location,CDUI.DataGen.Operation.REST.Observation</Setting>
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.Episode" Category="" ClassName="CDUI.DataGen.Operation.REST.Episode" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="SSLCheckServerIdentity">0</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/PAAdm</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.Patient" Category="" ClassName="CDUI.DataGen.Operation.REST.Patient" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="SSLCheckServerIdentity">0</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/PAPerson</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.ARCItmMast" Category="" ClassName="CDUI.DataGen.Operation.REST.ARCItmMast" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.ARCAuxilInsurType" Category="" ClassName="CDUI.DataGen.Operation.REST.ARCAuxilInsurType" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="SSLCheckServerIdentity">0</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/ARCAuxilInsurType</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.Observation" Category="" ClassName="CDUI.DataGen.Operation.REST.Observation" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="true" Schedule="">
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/MRObservations</Setting>
   </Item>
 </Production>
 }

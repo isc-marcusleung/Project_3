@@ -820,12 +820,12 @@ ClassMethod mCreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %Stri
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateOrderByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects)
+ClassMethod mCreateOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects)
 {
 	set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
 	set OrderCat = OrderCat
 	for i=1:1:PatientVoObjList.Count(){
-		do orderService.NewOrderByRange(MinNumOfAppt, MaxNumOfAppt, OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList)
+		do orderService.NewOrderByRange(MinNumOfOrder, MaxNumOfOrder, OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList)
 	}
 	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
@@ -867,6 +867,23 @@ ClassMethod mCreateAppointmentByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt
 		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
 	}
 	$$$LOGINFO("================================ [End] ================================")
+}
+
+ClassMethod mCreateObs(NumOfObsPerEpisode As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects)
+{
+    set obsService = ##class(CDUI.DataGen.DataGenService.ObsService).%New()
+	for i=1:1:PatientVoObjList.Count(){
+		do obsService.NewObs(NumOfObsPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList)
+	}
+    
+	w !!!!
+    for cnt = 1:1:PatientVoObjList.Count(){
+        if (cnt = 1){
+            $$$LOGINFO("================================ [Start] ================================")
+        }
+        $$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+    }
+    $$$LOGINFO("================================ [End] ================================")
 }
 
 }
