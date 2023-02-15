@@ -7,8 +7,8 @@ XData MessageMap
   <MapItem MessageType="CDUI.DataGen.Request.NewEpisode">
     <Method>createNewEpisode</Method>
   </MapItem>
-  <MapItem MessageType="CDUI.DataGen.Request.GetEpisodeById">
-    <Method>getEpisodeById</Method>
+  <MapItem MessageType="CDUI.DataGen.Request.GetEpisodeById2">
+    <Method>getEpisodeById2</Method>
   </MapItem>
 </MapItems>
 }
@@ -19,7 +19,7 @@ Method createNewEpisode(Request As CDUI.DataGen.Request.NewEpisode, Output Respo
 	quit sc
 }
 
-Method getEpisodeById(Request As CDUI.DataGen.Request.GetEpisodeById, Output Response As Ens.StringResponse) As %Status
+Method getEpisodeById2(Request As CDUI.DataGen.Request.GetEpisodeById, Output Response As Ens.StringResponse) As %Status
 {
   set sc = ..httpGet(Request, .Response)
   quit sc

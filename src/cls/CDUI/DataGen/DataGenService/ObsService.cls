@@ -18,7 +18,7 @@ Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.Da
     //Insert the obsveration vo created back to respective episode vo
     set EpisodeVo.ObsObjList = obsOutput.ObsVoObjList
     set obsIdList = obsOutput.ObsIdList
-    set numOfSuccess = obsOutput.Count()
+    set numOfSuccess = obsIdList.Count()
     set numOfFailure = NumOfObsPerEpisode - numOfSuccess
     if numOfSuccess '= 0 {
         $$$LOGINFO("[ObsService.NewObsPerEpisode] episode Id: "_EpisodeVo.ID_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(obsIdList,))
@@ -156,7 +156,7 @@ ClassMethod UpdateMradm(ByRef episodeVo As CDUI.DataGen.vo.EpisodeVo)
     //call the API to get episode by id, name of the property in request has to match API requirement!
     try{
         set request = ##class(CDUI.DataGen.Request.GetEpisodeById2).%New()
-        set request.EpisodeId = episodeVo.ID
+        set request.EpisodeIDs = episodeVo.ID
 
         set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
 		set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
