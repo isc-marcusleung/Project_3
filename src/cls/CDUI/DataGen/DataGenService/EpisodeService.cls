@@ -61,6 +61,9 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
 
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of episode per patient: "_NumOfEpisodePerPatient)
+
+    //Initialize the log file
+	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Episode Creation")
     
     do ..GetLocation(.locationObjList)
 
@@ -146,6 +149,7 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
             if $$$ISOK(sc)
             {	
                 $$$LOGINFO("[EpisodeService.Run] Response body: "_response.StringValue)
+                $$$LOGINFO("[EpisodeService.Run] Response time: "_response.ResponseTime)
                 set json = {}.%FromJSON(response.StringValue)
                 if (json.ERROR = ""){ 
                     //No error then store the record to episodeVoObjList

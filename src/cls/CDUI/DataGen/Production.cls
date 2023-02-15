@@ -23,6 +23,32 @@ XData ProductionDefinition
     <Setting Target="Host" Name="ForceSyncSend">1</Setting>
     <Setting Target="Host" Name="ResponseFrom">CDUI.DataGen.Operation.REST.Location</Setting>
   </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.Episode" Category="" ClassName="CDUI.DataGen.Operation.REST.Episode" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="SSLCheckServerIdentity">0</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/PAAdm</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.Patient" Category="" ClassName="CDUI.DataGen.Operation.REST.Patient" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="SSLCheckServerIdentity">0</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/PAPerson</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.ARCItmMast" Category="" ClassName="CDUI.DataGen.Operation.REST.ARCItmMast" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+  </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.ARCAuxilInsurType" Category="" ClassName="CDUI.DataGen.Operation.REST.ARCAuxilInsurType" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials">auadm</Setting>
+    <Setting Target="Adapter" Name="HTTPPort">52773</Setting>
+    <Setting Target="Adapter" Name="HTTPServer">auxxmiscprj.iscinternal.com</Setting>
+    <Setting Target="Adapter" Name="SSLCheckServerIdentity">0</Setting>
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test-hmfsys/api/ARCAuxilInsurType</Setting>
+    <Setting Target="Host" Name="ArchiveIO">1</Setting>
+  </Item>
 </Production>
 }
 

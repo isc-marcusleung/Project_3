@@ -10,7 +10,7 @@ XData MessageMap
 </MapItems>
 }
 
-Method createNewOrder(Request As CDUI.DataGen.Request.NewOrder, Output Response As Ens.StringResponse) As %Status
+Method createNewOrder(Request As CDUI.DataGen.Request.NewOrder, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
 {
 	set sc = ..httpPut(Request, .Response)
 	quit sc

@@ -9,16 +9,15 @@ Parameter DataReadBuffer As INTEGER = 32768;
 
 Method setupCredential()
 {
-    if '$isobject(..Adapter.%CredentialsObj) 
-    {
-        do ..Adapter.CredentialsSet(..Adapter.Credentials)
-    }
-    set ..Adapter.HttpHeaders("TUSERNAME") = ..Adapter.%CredentialsObj.Username
-    set ..Adapter.HttpHeaders("TPASSWORD") = ..Adapter.%CredentialsObj.PasswordGet()
+	set ..Adapter.Credentials = ""
+    #; set ..Adapter.HttpHeaders("TUSERNAME") = ..Adapter.%CredentialsObj.Username
+    #; set ..Adapter.HttpHeaders("TPASSWORD") = ..Adapter.%CredentialsObj.PasswordGet()
+	set ..Adapter.HttpHeaders("TUSERNAME") = "auadm"
+    set ..Adapter.HttpHeaders("TPASSWORD") = "pass"
     set ..Adapter.HttpHeaders("TENCRYPTED") = 0
 }
 
-Method httpGet(Request As Ens.Request, Output Response As Ens.StringResponse) As %Status
+Method httpGet(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
 {
     #dim sc as %Status = $$$OK
 	#dim UrlParams, json, value as %String = ""
@@ -37,7 +36,13 @@ Method httpGet(Request As Ens.Request, Output Response As Ens.StringResponse) As
 
 		set URL = ..Adapter.URL_UrlParams
 		$$$LOGINFO(URL)
+
+		//Calculate response time of the API call
+		set t1 = $zdatetime($ZTIMESTAMP,3,1,3)
 		set sc = ..Adapter.GetURL(URL,.HttpResponse)
+		set t2 = $zdatetime($ZTIMESTAMP,3,1,3)
+		&sql(SELECT {fn TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND,:t1,:t2)} into :ResponseTime )
+
 		if $$$ISERR(sc) return sc
 		if $isobject(HttpResponse)
 		{
@@ -48,8 +53,10 @@ Method httpGet(Request As Ens.Request, Output Response As Ens.StringResponse) As
 			{
 				set value = value_HttpResponse.Data.Read(..#DataReadBuffer)
 			}
-			set Response = ##class(Ens.StringResponse).%New()
+
+			set Response = ##class(CDUI.DataGen.DataGenService.Custom.StringResponse).%New()
 			set Response.StringValue = value
+			set Response.ResponseTime = ResponseTime
 		}
 	} 
 	catch ex 
@@ -60,20 +67,30 @@ Method httpGet(Request As Ens.Request, Output Response As Ens.StringResponse) As
 	quit sc
 }
 
-Method httpPut(Request As Ens.Request, Output Response As Ens.StringResponse) As %Status
+Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
 {
     #dim sc as %Status = $$$OK
 	#dim UrlParams, json, value as %String = ""
 	#dim ex As %Exception.AbstractException
 	try 
 	{
-		set sc = Request.%JSONExportToString(.body)
+		//Log request body
+		do ##class(CDUI.DataGen.ExportLog).LogRequest(Request.SerialisedGet())
 
+		set sc = Request.%JSONExportToString(.body)
 		do ..setupCredential()
-        
 		set URL = ..Adapter.URL
 		$$$LOGINFO(URL)
+
+		//Calculate response time of the API call
+		set t1 = $zdatetime($ZTIMESTAMP,3,1,3)
 		set sc = ..Adapter.PutURL(URL,.HttpResponse,,.body)
+		set t2 = $zdatetime($ZTIMESTAMP,3,1,3)
+		&sql(SELECT {fn TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND,:t1,:t2)} into :ResponseTime )
+
+		//Log response time 
+		do ##class(CDUI.DataGen.ExportLog).LogRespondTime(ResponseTime)
+
 		if $$$ISERR(sc) return sc
 		if $isobject(HttpResponse)
 		{
@@ -84,8 +101,17 @@ Method httpPut(Request As Ens.Request, Output Response As Ens.StringResponse) As
 			{
 				set value = value_HttpResponse.Data.Read(..#DataReadBuffer)
 			}
-			set Response = ##class(Ens.StringResponse).%New()
+
+			//Log response body 
+			do ##class(CDUI.DataGen.ExportLog).LogResponse(value)
+			
+			//Log HTTPResponse status code and status line 
+			do ##class(CDUI.DataGen.ExportLog).LogStatus(HttpResponse.StatusCode,HttpResponse.StatusLine)
+
+			// Update the properties in the response object
+			set Response = ##class(CDUI.DataGen.DataGenService.Custom.StringResponse).%New()
 			set Response.StringValue = value
+			set Response.ResponseTime = ResponseTime
 		}
 	} 
 	catch ex 

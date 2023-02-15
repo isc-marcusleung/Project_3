@@ -21,6 +21,9 @@ Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 	set patientInput.NumOfPatient = NumOfPatient
 	set patientInput.InsurTypeObjList = insurTypeObjList
 
+	//Initialize the log file
+	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Patient Creation")
+
 	do ..RunWithRetry(patientInput, patientOutput,)
 	
 	set patientIdList = patientOutput.PatientIdList
@@ -50,6 +53,9 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		{
 			$$$LOGINFO("[PatientService.Run] Initialize patient request")
 			do ..InitPatientRequestByRandom(insurTypeObjList,.request,.randInsurTypeIndex)
+			
+			#; //Record request body in the log file
+			#; do ##class(CDUI.DataGen.ExportLog).LogRequest(request.SerialisedGet())
 			//TODO Marcus add PAPMIMedicare
 
 			$$$LOGINFO("[PatientService.Run] Request body: "_request.SerialisedGet())
@@ -59,11 +65,17 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 			if $$$ISOK(sc)
 			{
 				$$$LOGINFO("[PatientService.Run] Response body: "_response.StringValue)
+				$$$LOGINFO("[PatientService.Run] Response Time in ms: "_response.ResponseTime)
+				
+				#; // Record response time in the log file
+				#; do ##class(CDUI.DataGen.ExportLog).LogRespondTime(response.ResponseTime)
+				
 				set json = {}.%FromJSON(response.StringValue)
 				if (json.ERROR = ""){
 					//No error then create an patientVo
 					do patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,json.ID)) 
 					do patientIdList.Insert(json.ID)
+
 				} else {
 					$$$LOGERROR("[PatientService.Run] Failed to create a patient. Error(JSON): "_json.ERROR)
 					// if it matches, remove the invalid insurance record from the list

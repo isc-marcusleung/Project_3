@@ -10,7 +10,7 @@ XData MessageMap
 </MapItems>
 }
 
-Method createNewObservation(Request As CDUI.DataGen.Request.NewObservation, Output Response As Ens.StringResponse) As %Status
+Method createNewObservation(Request As CDUI.DataGen.Request.NewObservation, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
 {
 	set sc = ..httpPut(Request, .Response)
 	quit sc
