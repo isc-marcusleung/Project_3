@@ -1,15 +1,23 @@
 Class CDUI.DataGen.Request.NewOrder Extends (Ens.Request, %JSON.Adaptor)
 {
 
-Property Item As %String;
+Property DoctorID As %String;
+
+Property AuthDoctorID As %String;
 
 Property EpisodeID As %String;
+
+Property Item As %String;
+
+Property OECPRDesc As %String;
+
+Property OEORIDepProcNotes As %String [ InitialExpression = "comments" ];
 
 Property OEORISttDat As %String;
 
 Property OEORISttTim As %String;
 
-Property TOVERRIDE As %String [ InitialExpression = 1 ];
+Property PatientID As %String;
 
 Method SerialisedGet() As %RawString
 {
@@ -35,6 +43,21 @@ Storage Default
 </Value>
 <Value name="5">
 <Value>TOVERRIDE</Value>
+</Value>
+<Value name="6">
+<Value>DoctorID</Value>
+</Value>
+<Value name="7">
+<Value>AuthDoctorID</Value>
+</Value>
+<Value name="8">
+<Value>OECPRDesc</Value>
+</Value>
+<Value name="9">
+<Value>OEORIDepProcNotes</Value>
+</Value>
+<Value name="10">
+<Value>PatientID</Value>
 </Value>
 </Data>
 <DefaultData>NewOrderDefaultData</DefaultData>

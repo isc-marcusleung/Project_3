@@ -3,74 +3,117 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.EpisodeService Extends BaseService
 {
 
-Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output EpisodeVoObjList As %ListOfObjects)
+Parameter minAdmDate = "1/1/1970";
+
+Parameter locationTypeId = "E";
+
+Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects)
 {
-	set locationTypeId = "E" // TODO Marcus make it constant / enum
-	set minAdmDate = "1/1/1970"
+        do ..GetLocation(.locationObjList)
+        set diff = MaxNumOfEpisode - MinNumOfEpisode
+        set totalSuccess = 0
+        set totalFailure = 0
+        set failedByPatientIdArr = []
+        for i=1:1:PatientVoObjList.Count(){
+            set ranNum = ##class(PUtil).Random(diff) + MinNumOfEpisode
+            do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), .locationObjList, .numOfSuccess)
+            set numOfFailure = ranNum - numOfSuccess
+            set totalSuccess = totalSuccess + numOfSuccess
+            set totalFailure = totalFailure + numOfFailure
+
+            if (numOfFailure > 0) {
+                set failedByPatientIdArr(PatientVoObjList.GetAt(i).PatientId) = numOfFailure
+            }
+        }
+
+        do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+}
+
+Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer) [ Private ]
+{
+     
+        $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Initialize episode request, patient Id: "_PatientVo.PatientId)
+
+        // generate episode records and insert them to TrakCare via API.
+        $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Create new episodes.")
+        do ..InitEpisodeRequestPerPatientByRandom(..#minAdmDate, locationObjList, NumOfEpisodePerPatient, PatientVo, .episodeInput)
+        set episodeOutput = ##class(CDUI.DataGen.DataGenService.Custom.EpisodeOutput).%New()
+
+        do ..RunWithRetry(episodeInput, episodeOutput,)
+
+        //set the inserted episodeVo back to patient for further use if necessary
+        set PatientVo.EpisodeObjList = episodeOutput.EpisodeVoObjList
+
+        set episodeIdList = episodeOutput.EpisodeIdList
+        set numOfSuccess = episodeIdList.Count()
+        set numOfFailure = NumOfEpisodePerPatient - numOfSuccess
+        if numOfSuccess '= 0 {
+            $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] pateint Id: "_PatientVo.PatientId_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(episodeIdList,))
+        }
+        $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
+}
+
+Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+{
     set totalSuccess = 0
     set totalFailure = 0
     kill failedByPatientIdArr
-
-	//Retrieve the location list for the creation of a new episode
-	$$$LOGINFO("[EpisodeService.NewEpisode] Retrive the location list.")
-    set sc = ##class(TrakCareService).GetLocation(,1,locationTypeId,..PageSize,, .locationObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[EpisodeService.NewEpisode] Failed to get Locations.")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
 
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of episode per patient: "_NumOfEpisodePerPatient)
 
     //Initialize the log file
 	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Episode Creation")
+    
+    do ..GetLocation(.locationObjList)
 
     set numOfLoop = PatientVoObjList.Count()
 
     for cnt=1:1:numOfLoop{
         set patientVo = PatientVoObjList.GetAt(cnt)
-
-        $$$LOGINFO("[EpisodeService.NewEpisode] Initialize episode request, patient Id: "_patientVo.PatientId)
-   
-        // generate episode records and insert them to TrakCare via API.
-        $$$LOGINFO("[EpisodeService.NewEpisode] Create new episodes.")
-        do ..InitEpisodeRequestPerPatientByRandom(minAdmDate, locationObjList, NumOfEpisodePerPatient, patientVo, .episodeInput)
-        set episodeOutput = ##class(CDUI.DataGen.DataGenService.Custom.EpisodeOutput).%New()
-
-        do ..RunWithRetry(episodeInput, episodeOutput,)
-
-        set EpisodeVoObjList = episodeOutput.EpisodeVoObjList
-        //set the inserted episodeVo back to patient for further use if necessary
-        set patientVo.EpisodeObjList = episodeOutput.EpisodeVoObjList
-
-        set episodeIdList = episodeOutput.EpisodeIdList
-        set numOfSuccess = episodeIdList.Count()
+        kill numOfSuccess
+        kill numOfFailure
+        do ..NewEpisodePerPatient(NumOfEpisodePerPatient, patientVo, .locationObjList, .numOfSuccess)
         set numOfFailure = NumOfEpisodePerPatient - numOfSuccess
-
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
+        set failedByPatientIdArr = []
 
         if (numOfFailure > 0) {
             set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
         }
-        
-        $$$LOGINFO("[EpisodeService.NewEpisode] pateint Id: "_patientVo.PatientId_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(episodeIdList,))
-        $$$LOGINFO("[EpisodeService.NewEpisode] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
     }
+
+    do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+}
+
+Method PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+{
     set cnt = 0
     set key = $Order(failedByPatientIdArr(""))
     while (key '= "") {
         if (cnt = 0) {
-            $$$LOGINFO("[EpisodeService.NewEpisode] Failure per patient")
+            $$$LOGINFO("[EpisodeService.PrintResult] Failure per patient")
         }
-        $$$LOGINFO("[EpisodeService.NewEpisode] Patient Id: "_key_", Number of Failure: "_failedByPatientIdArr(key))
+        $$$LOGINFO("[EpisodeService.PrintResult] Patient Id: "_key_", Number of Failure: "_failedByPatientIdArr(key))
         set key = $Order(failedByPatientIdArr(key))
         set cnt = cnt + 1
     }
 
-    $$$LOGINFO("[EpisodeService.NewEpisode] Total number of Patient with failed episode creation: "_cnt)
-	$$$LOGINFO("[EpisodeService.NewEpisode] Total number of Success: "_totalSuccess_", Total number of Failure: "_totalFailure)
+    $$$LOGINFO("[EpisodeService.PrintResult] Total number of Patient with failed episode creation: "_cnt)
+	$$$LOGINFO("[EpisodeService.PrintResult] Total number of Success: "_totalSuccess_", Total number of Failure: "_totalFailure)
+}
+
+Method GetLocation(Output locationObjList As %ListOfObjects) [ Private ]
+{
+	//Retrieve the location list for the creation of a new episode
+	$$$LOGINFO("[EpisodeService.GetLocation] Retrive the location list.")
+    set sc = ##class(TrakCareService).GetLocation(,1,..#locationTypeId,..PageSize,, .locationObjList)
+	if $$$ISERR(sc)
+	{
+		$$$LOGERROR("[EpisodeService.GetLocation] Failed to get Locations.")
+		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
+	}
 }
 
 Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer

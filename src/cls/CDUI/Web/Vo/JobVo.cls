@@ -3,6 +3,8 @@ Class CDUI.Web.Vo.JobVo Extends (%RegisteredObject, %JSON.Adaptor)
 
 Property id As %Integer;
 
+Property pid As %Integer;
+
 Property status As %String;
 
 Property createDateTime As %String;

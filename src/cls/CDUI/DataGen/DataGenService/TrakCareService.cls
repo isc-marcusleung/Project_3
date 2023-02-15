@@ -157,7 +157,7 @@ ClassMethod GetLocationServices(loc As %Integer = "", ByRef ResultObjList) As %S
 		set iterator = json.results.%GetIterator()
 		while iterator.%GetNext(.key,.value)
 		{	
-			set locServices = ##class("CDUI.DataGen.vo.LocationServicesVo").newInstance(value)
+			set locServices = ##class("CDUI.DataGen.vo.LocationServicesVo").newInstance(value, request.loc)
 			do ResultObjList.Insert(locServices)
 			#; write !, value.Order,?30,value.RowID
 		}
@@ -165,7 +165,7 @@ ClassMethod GetLocationServices(loc As %Integer = "", ByRef ResultObjList) As %S
 	quit sc
 }
 
-ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize As %Integer = 50, ByRef ResultObjList) As %Status
+ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize As %Integer = 50, Rows As %Integer = "", ByRef ResultObjList) As %Status
 {
 	$$$LOGINFO("[TrakCareService.Slots] Start retrieving Slots...")
 	set request = ##class(CDUI.DataGen.Request.Slots).%New()
@@ -180,6 +180,9 @@ ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize A
 	}
 	if ServId '= "" {
 		set request.ServId = ServId
+	}
+	if Rows '= "" {
+		set request.Rows = Rows
 	}
 
 	$$$LOGINFO("[TrakCareService.Slots] Request body: "_request.SerialisedGet())
@@ -206,6 +209,132 @@ ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize A
 			}
 			
 		}
+	}
+	quit sc
+}
+
+ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRef ResultObjList) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetOrderByCategory).%New()
+
+	//Set up the request
+	if Count'=""
+	{
+		set request.count = Count
+	}
+	if Category'=""
+	{
+		set request.category = Category
+	}
+
+	$$$LOGINFO("[GetOrderByCat] Request body: "_request.SerialisedGet())
+
+	//Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	//Store the retrieved order categories, order items records to an object list
+	set ResultObjList = ##class(%ListOfObjects).%New()
+	if $$$ISOK(sc)
+	{
+		//$$$LOGINFO("[Get...] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
+			do ResultObjList.Insert(insurType)
+			#; write !, value.ORCATDesc,?30,value.ID
+		}
+	}
+
+	quit sc
+}
+
+ClassMethod GetCareProvider(ByRef Results) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetCareProvider).%New()
+
+	// $$$LOGINFO("[GetCareProvider] Request body: "_request.SerialisedGet())
+
+	// Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	// Store the DoctorID in a ListOfDataTypes
+	set Results = ##class(%ListOfDataTypes).%New()
+
+	if $$$ISOK(sc)
+	{
+		#; $$$LOGINFO("[GetCareProvider] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		set iterator = json.results.%GetIterator()
+		while iterator.%GetNext(.key,.value)
+		{	
+			do Results.Insert(value.DoctorID)
+			#; write !, value.DoctorID
+		}
+	}
+
+	quit sc
+}
+
+ClassMethod GetPatientById(id As %Integer = "", ByRef patRecordList) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetPatientById).%New()
+
+	if id'=""
+	{
+		set request.id = id
+	}
+	// Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	if $$$ISOK(sc)
+	{		
+		#; $$$LOGINFO("[GetPatientById] Response body: "_response.StringValue)
+		set json = {}.%FromJSON(response.StringValue)
+		#; write !, "First name: "_json.PAPERName
+
+		// Change Last Name to Capitalisation instead of Uppercase
+		set lastName = json.PAPERName
+		set lastName = $EXTRACT(json.PAPERName)_$ZCONVERT($EXTRACT(json.PAPERName,2,*),"L")
+
+		set patRecordList = $listbuild(
+			$listbuild("PAPERName",lastName),
+			$listbuild("PAPERName2",json.PAPERName2),
+			$listbuild("CTSEXDesc",json.CTSEXDesc),
+			$listbuild("PAPERDob",json.PAPERDob)
+		)
+	}
+	quit sc
+}
+
+ClassMethod GetEpisodeById(id As %Integer = "", ByRef epRecordList) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetEpisodeById).%New()
+
+	if id'=""
+	{
+		set request.id = id
+	}
+	// Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	if $$$ISOK(sc)
+	{		
+		set json = {}.%FromJSON(response.StringValue)
+
+		set epRecordList = $listbuild(
+			$listbuild("ID",json.ID),
+			$listbuild("PatientID",json.PatientID),
+			$listbuild("PAADMType",json.PAADMType),
+			$listbuild("PAADMAdmDate",json.PAADMAdmDate),
+			$listbuild("PAADMAdmTime",json.PAADMAdmTime),
+			$listbuild("CTLOCDesc",json.CTLOCDesc)
+		)
 	}
 	quit sc
 }

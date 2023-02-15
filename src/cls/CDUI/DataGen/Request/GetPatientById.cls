@@ -1,4 +1,4 @@
-Class CDUI.DataGen.Request.GetEpisodeById Extends (Ens.Request, %JSON.Adaptor)
+Class CDUI.DataGen.Request.GetPatientById Extends (Ens.Request, %JSON.Adaptor)
 {
 
 Property id As %Integer;
@@ -13,13 +13,13 @@ Method SerialisedGet() As %RawString
 
 Storage Default
 {
-<Data name="GetEpisodeByIdDefaultData">
-<Subscript>"GetEpisodeById"</Subscript>
+<Data name="GetPatientByIdDefaultData">
+<Subscript>"GetPatientById"</Subscript>
 <Value name="1">
 <Value>id</Value>
 </Value>
 </Data>
-<DefaultData>GetEpisodeByIdDefaultData</DefaultData>
+<DefaultData>GetPatientByIdDefaultData</DefaultData>
 <Type>%Storage.Persistent</Type>
 }
 
