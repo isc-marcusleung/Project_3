@@ -10,7 +10,6 @@ Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer 
     set diff = MaxNumOfOrder - MinNumOfOrder
     set totalSuccess = 0
     set totalFailure = 0
-    set failedByEpisodeIdArr = []
     for i=1:1:EpisodeVoObjList.Count(){
         set ranNum = ##class(PUtil).Random(diff) + MinNumOfOrder
         do ..NewOrderPerPatient(ranNum, EpisodeVoObjList.GetAt(i), .orderVoObjList, .numOfSuccess)
@@ -23,7 +22,7 @@ Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer 
         }
     }
 
-    do ..PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+    do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
 }
 
 Method NewOrderPerPatient(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer) [ Private ]
@@ -51,8 +50,6 @@ Method NewOrderPerPatient(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As C
 
     set orderIdList = orderOutput.OrderIdList
     set NumOfSuccess = orderIdList.Count()
-
-    set failedByPatientIdArr = []
     set NumOfFailure = NumOfOrderPerEpisode - NumOfSuccess
 
     if NumOfSuccess '= 0 {
@@ -85,7 +82,6 @@ Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, Episo
         
         do ..NewOrderPerPatient(NumOfOrderPerEpisode, episodeItem, .orderVoObjList, .numOfSuccess)
         
-        set failedByEpisodeIdArr = []
         set numOfFailure = NumOfOrderPerEpisode - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
@@ -94,7 +90,7 @@ Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, Episo
             set failedByEpisodeIdArr(episodeId) = numOfFailure
         }
     }
-    do ..PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+    do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
 }
 
 Method GetOrderByCat(Count As %Integer, OrderCat As %String, Output OrderVoObjList As %ListOfObjects) [ Private ]
@@ -110,7 +106,7 @@ Method GetOrderByCat(Count As %Integer, OrderCat As %String, Output OrderVoObjLi
 	}
 }
 
-Method PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+Method PrintResult(ByRef failedByEpisodeIdArr, totalSuccess As %Integer, totalFailure As %Integer) [ Private ]
 {
     set cnt = 0
     set key = $Order(failedByEpisodeIdArr(""))
