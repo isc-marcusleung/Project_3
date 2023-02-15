@@ -68,7 +68,7 @@ ClassMethod AddJob() As %Status
 		set ^DataGen.Log(jobId,"request") = request.SerialisedGet()
 
 		job ##class(DataGenService).processRequest(request.generateStringParamValues(), jobId)
-	//	do ##class(DataGenService).processRequest(request, jobId)
+	//	do ##class(DataGenService).processRequest(request.generateStringParamValues(), jobId)
 		set obj = {
 			"status" : (..#SUCCESS),
 			"jobId" : (jobId)

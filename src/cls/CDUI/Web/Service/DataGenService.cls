@@ -5,9 +5,6 @@ Class CDUI.Web.Service.DataGenService Extends Ens.Util.IOLogger [ ProcedureBlock
 
 ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 {
-
-    k ^DataGen.Log
-    //TODO marcus to implement it
     //update process id and status to ^DataGen
     try{
         set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstanceFromStringParamValues(requestParamValues)
@@ -27,14 +24,13 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
         if (isProcessByBatch && 'isValidNoOfPatientPerBatch){
             $$$LOGERROR("[DataGenService.prcoessRequest] Setting is incorrect. isProcessByBatch: "_isProcessByBatch_", noOfPatientPerBatch: "_noOfPatientPerBatch )
         }
-
         if (isProcessByBatch && isValidNoOfPatientPerBatch && (noOfPatient > noOfPatientPerBatch)){
             //Do it by batches
             set noOfBatch = ##class(%SYSTEM.SQL.Functions).CEILING(noOfPatient / noOfPatientPerBatch) 
-
+            //TODO marcus to implement it
         } else {
             //Do it by single  
-            do ..doProcess(request.NumOfPatient, request, jobId)
+            do ..doProcess(request.NumOfPatient, request, jobId, .patientVoObjList)
         }
         do ##class(JobService).FinishJob(jobId)
     } catch ex {
@@ -46,10 +42,13 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
     }
 }
 
-ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJobRequest, jobId As %Integer) [ Private ]
+ClassMethod validateResult()
 {
-    kill PatientVoObjList
+    //TODO marucs to validate the result, if it is not all successful, then set the status to StatusCompletedWithError
+}
 
+ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJobRequest, jobId As %Integer, Output PatientVoObjList As %ListOfObjects) [ Private ]
+{
     set patientService = ##class(PatientService).%New()
 	do patientService.NewPatient(noOfPatient, .PatientVoObjList)
 
