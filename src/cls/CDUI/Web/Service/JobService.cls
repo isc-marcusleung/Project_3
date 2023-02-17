@@ -278,8 +278,10 @@ ClassMethod TerminateJob(id As %Integer)
         }
 
         do ..TerminateJobItem(id)
-        do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
 
+        if ((status '= ..#StatusCreate)  || (status = ..#StatusInProgress)){
+            do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
+        }
         Lock -^DataGen.Job("item",id)
         TCOMMIT
         $$$LOGINFO("[JobService.TerminateJob] Finished terminating a job. Job Id: "_id)
