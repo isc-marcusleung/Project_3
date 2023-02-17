@@ -1,7 +1,7 @@
 var refreshInterval;
 $(document).ready(function(){
 	
-	reset(); 
+	//reset(); 
 	refreshJobList();
 
 	$('#noOfPatient').keyup(function(){
@@ -216,11 +216,17 @@ $(document).ready(function(){
 			if (this.value === 'Y') {
 				 refreshInterval = setInterval(function () {
 					refreshJobList();
-				},3000);
+				},4000);
 			} else {
 				clearInterval(refreshInterval);
 			}
     });
+	
+	
+	$('#reset').click(function(event){
+		reset();
+
+	});
 });	
 
 function refreshCheckAll(){
@@ -711,7 +717,7 @@ function addJob(){
 			  } else {
 				   showMessage(data.message, 'error')
 			  }
-			  reset();
+			 // reset();
 			  moveToTop();
 			  refreshJobList();
 			 
@@ -767,8 +773,19 @@ function reset(){
 	
 	$('#checkAll').prop("checked", false);
 
-	$('#autoRefresh').val('Y');
-	$('#autoRefresh').prop("checked", true);
+	//$('#autoRefresh').val('Y');
+	//$('#autoRefresh').prop("checked", true);
+	
+
+	if ($('#autoRefresh').val() === 'Y') {
+		refreshInterval = setInterval(function () {
+				refreshJobList();
+		},4000);
+	} else {
+		clearInterval(refreshInterval);
+	}		
+
+			
 }
 
 function convertDateFormat(dateStr){
