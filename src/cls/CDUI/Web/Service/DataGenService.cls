@@ -42,7 +42,7 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
     }
 }
 
-ClassMethod validateResult()
+ClassMethod validateResult() [ Private ]
 {
     //TODO marucs to validate the result, if it is not all successful, then set the status to StatusCompletedWithError
 }
