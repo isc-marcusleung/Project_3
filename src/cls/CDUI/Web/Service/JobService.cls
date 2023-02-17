@@ -45,7 +45,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         if ($Data(^DataGen.Job) = 0){
             set ^DataGen.Job("info","size") = 0
             set ^DataGen.Job("info","nextId") = 1
-            set ^DataGen.Job("info","maxProcess") = 10 //TODO marcus
+            set ^DataGen.Job("info","maxProcess") = 8 //TODO marcus
             set ^DataGen.Job("info","isProcessByBatch") = 1 //0 indicates false, 1 indicates true
             set ^DataGen.Job("info","noOfPatientPerBatch") = 10 
             set ^DataGen.Job("info","noOfCurrentProcess") = 0
@@ -279,7 +279,7 @@ ClassMethod TerminateJob(id As %Integer)
 
         do ..TerminateJobItem(id)
 
-        if ((status '= ..#StatusCreate)  || (status = ..#StatusInProgress)){
+        if ((status = ..#StatusCreate)  || (status = ..#StatusInProgress)){
             do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
         }
         Lock -^DataGen.Job("item",id)
