@@ -2,7 +2,7 @@ var refreshInterval;
 $(document).ready(function(){
 	
 	//reset(); 
-	refreshJobList();
+	getJobList(10,null,null,'Y');
 
 	$('#noOfPatient').keyup(function(){
 		removeWarningBorder('noOfPatient');
@@ -198,10 +198,7 @@ $(document).ready(function(){
 				{   $(this).prop("checked", true);
 				});
         } else {
-			$('#jobList input[type="checkbox"]').each(function() 
-				{   
-					$(this).prop("checked", false);
-				});
+			disableAllJobListCheckBox();
 		}
     });
 	
@@ -217,6 +214,7 @@ $(document).ready(function(){
 				 refreshInterval = setInterval(function () {
 					refreshJobList();
 				},4000);
+				disableAllJobListCheckBox();
 			} else {
 				clearInterval(refreshInterval);
 			}
@@ -227,7 +225,25 @@ $(document).ready(function(){
 		reset();
 
 	});
+	
 });	
+function disableAllJobListCheckBox(){
+	$('#jobList input[type="checkbox"]').each(function() 
+	{   
+		$(this).prop("checked", false);
+	});
+}
+
+	
+function disableAutoRefresh(){
+	  return function(event) { 
+		if ($('#autoRefresh').val() === 'Y') {
+			$('#autoRefresh').val('N');
+			$('#autoRefresh').prop('checked', false)
+			clearInterval(refreshInterval);
+		}
+	};	
+}
 
 function refreshCheckAll(){
 		if ($('#checkAll').is(':checked')) {
@@ -243,8 +259,9 @@ function refreshCheckAll(){
 }
 
 function refreshJobList(){
-	getJobList(10,null,null,'Y');
+	getJobList(10,null,null,'N');
 }
+
 
 function handleAction(fCallback){
 	var numOfDone = 0;
@@ -332,7 +349,7 @@ function reloadTable(href){
 			//do nothing
 		} 
 	});
-	getJobList(count,beforeId,afterId);
+	getJobList(count,beforeId,afterId,'N');
 }
 
 function removeWarningBorder(id){
@@ -473,7 +490,7 @@ function enableInputElement(id){
 }
 
 
-function getJobList(count,beforeId,afterId){
+function getJobList(count,beforeId,afterId, isSetting){
 	
 	//var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
 	//TODO marcus
@@ -499,6 +516,14 @@ function getJobList(count,beforeId,afterId){
 		  } else {
 			   showMessage(data.message, 'error')
 		  }
+		  
+		  if (isSetting) {
+			$('#jobList input[type="checkbox"]').each( 
+				function( index ) {
+					$(this).click(disableAutoRefresh());
+			});
+		  }
+
 	  },
 	  error: function(jqXhr, textStatus, errorMessage) {
 		  showMessage(errorMessage, 'error')
