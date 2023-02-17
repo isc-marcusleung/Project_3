@@ -29,12 +29,6 @@ Method TestNewPatient() As %Status
         set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetPatientById(patientVo.PatientId, .patRecordList)
         set status = $$$AssertStatusOK(sc,"Get Patient Record List")
         set status = $$$ADDSC(status,sc)
-
-        #; do $$$LogMessage("Check DB patient's details...")
-        #; for i=1:1:$LISTLENGTH(patRecordList){
-        #;     set arg = $listget(patRecordList,i)
-        #;     do $$$LogMessage("List item: "_$listget(arg,1)_", value: "_$listget(arg,-1))
-		#; }
         
         set patDetailsList = $listbuild(
             $listbuild("PAPERName",patientVo.PAPERName),

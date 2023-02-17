@@ -33,29 +33,6 @@ Method TestNewEpisode() As %Status
             set status = $$$AssertStatusOK(sc,"Get Episode Record List")
             set status = $$$ADDSC(status,sc)
 
-            #; do $$$LogMessage("Check DB episode's details...")
-            #; for k=1:1:$LISTLENGTH(epRecordList){
-            #;     set arg = $listget(epRecordList,k)
-            #;     do $$$LogMessage("List item: "_$listget(arg,1)_", value: "_$listget(arg,-1))
-            #; }
-
-            set epDetailsList = $listbuild(
-                $listbuild("ID",epVo.ID),
-                $listbuild("PatientID",epVo.PatientID),
-                $listbuild("PAADMType",epVo.PAADMType),
-                $listbuild("PAADMAdmDate",epVo.PAADMAdmDate),
-                $listbuild("PAADMAdmTime",epVo.PAADMAdmTime),
-                $listbuild("CTLOCDesc",epVo.CTLOCDesc)
-		    )
-            #; do $$$LogMessage("Check created episode's details...")
-            #; do $$$LogMessage("ID..."_epVo.ID)
-            #; do $$$LogMessage("Patient..."_epVo.PatientID)
-            #; do $$$LogMessage("Type..."_epVo.PAADMType)
-            #; do $$$LogMessage("Date..."_epVo.PAADMAdmDate)
-            #; do $$$LogMessage("Time..."_epVo.PAADMAdmTime)
-            #; do $$$LogMessage("Loc..."_epVo.CTLOCDesc)
-        
-
             do $$$LogMessage("Check if episode details are the same with database's details for episode Id "_epVo.ID)
             set sc = $$$AssertEquals(epVo.ID,$listget($listget(epRecordList,1),-1))
             set sc = $$$AssertEquals(epVo.PatientID,$listget($listget(epRecordList,2),-1))
@@ -64,11 +41,6 @@ Method TestNewEpisode() As %Status
             set sc = $$$AssertEquals(epVo.PAADMAdmTime,$listget($listget(epRecordList,5),-1))
             set sc = $$$AssertEquals(epVo.CTLOCDesc,$listget($listget(epRecordList,6),-1))
             set status = $$$ADDSC(status,sc)
-
-            #; do $$$LogMessage("Check if episode details are the same with database's details for episode Id "_epVo.ID)
-            #; set sc = $$$AssertTrue($LISTSAME(epRecordList, epDetailsList),"Same details")
-            #; set status = $$$ADDSC(status,sc)
-
         }
 
     }

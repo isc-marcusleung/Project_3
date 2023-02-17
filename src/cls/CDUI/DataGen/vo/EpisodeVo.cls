@@ -13,6 +13,8 @@ Property PAADMAdmTime As %String;
 
 Property CTLOCDesc As %String;
 
+Property ObsObjList As %ListOfObjects;
+
 Property OrderObjList As %ListOfObjects;
 
 Property mradm As %String;
@@ -27,6 +29,7 @@ ClassMethod newInstance(NewEpisodeReq, EpisodeID) As CDUI.DataGen.vo.EpisodeVo
     set obj.PAADMAdmTime = NewEpisodeReq.PAADMAdmTime
     set obj.CTLOCDesc = NewEpisodeReq.CTLOCDesc
     set obj.OrderObjList = ##class(%ListOfObjects).%New()
+    set obj.ObsObjList = ##class(%ListOfObjects).%New()
     set obj.mradm = ""
     return obj
 }

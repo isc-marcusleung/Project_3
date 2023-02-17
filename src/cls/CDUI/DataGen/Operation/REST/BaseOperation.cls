@@ -10,10 +10,8 @@ Parameter DataReadBuffer As INTEGER = 32768;
 Method setupCredential()
 {
 	set ..Adapter.Credentials = ""
-    #; set ..Adapter.HttpHeaders("TUSERNAME") = ..Adapter.%CredentialsObj.Username
-    #; set ..Adapter.HttpHeaders("TPASSWORD") = ..Adapter.%CredentialsObj.PasswordGet()
-	set ..Adapter.HttpHeaders("TUSERNAME") = "auadm"
-    set ..Adapter.HttpHeaders("TPASSWORD") = "pass"
+    set ..Adapter.HttpHeaders("TUSERNAME") = ..Adapter.%CredentialsObj.Username
+    set ..Adapter.HttpHeaders("TPASSWORD") = ..Adapter.%CredentialsObj.PasswordGet()
     set ..Adapter.HttpHeaders("TENCRYPTED") = 0
 }
 
