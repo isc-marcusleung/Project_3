@@ -486,6 +486,18 @@ function disableSelectElement(id){
 	var el = $('#'+id);
 	el.prop( "disabled", true );
 	el.addClass("bg-secondary");
+	el.val('');
+	
+	$('#'+id).each(function(index) 
+	{  
+		if (index == 0) {
+			$(this).prop("checked", true);
+			
+		} else {
+			$(this).prop("checked", false);
+		}
+	});
+
 }
 
 
@@ -627,10 +639,10 @@ function addJob(){
 		var isAppointmentRange =  $('#appointmentRange').val() === 'Y' && noOfAppointmentFrom != "" && noOfAppointmentTo != "";
 		var isObservationRange =  $('#observationRange').val() === 'Y' && noOfObservationFrom != "" && noOfObservationTo != "";
 		
-		var isEpisode = numOfEpisodePerPatient > 1;
-		var isOrder = numOfOrderPerEpisode > 1;
-		var isAppointment = numOfAppointmentPerPatient > 1;
-		var isObservation = numOfObservationPerEpisode > 1;
+		var isEpisode = numOfEpisodePerPatient >= 1;
+		var isOrder = numOfOrderPerEpisode >= 1;
+		var isAppointment = numOfAppointmentPerPatient >= 1;
+		var isObservation = numOfObservationPerEpisode >= 1;
 		
 
 		var formData = new FormData();
