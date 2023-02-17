@@ -277,8 +277,8 @@ function refreshJobList(){
 
 function handleAction(fCallback){
 	var numOfDone = 0;
-	$('#jobList input[type="checkbox"]').each(function() 
-	{   if ($(this).is(":checked")) {
+	$('#jobList input[type="checkbox"]').each(function(index) 
+	{   if ($(this).is(":checked") && (index != 0)) {
 			let id = this.id.split('-')[1]
 			fCallback(id);
 			numOfDone += 1;
@@ -396,12 +396,12 @@ function showMessage(message, type){
 
 	div.innerHTML =
 	'<div id="'+id+'" class="container">\n'+
-		'<div class="alert ' + clazz + ' alert-dismissible fade show position-fixed fixed-top">'+
+		'<div class="alert ' + clazz + ' alert-dismissible fade show sticky-top">'+
 			'<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>'+
 			'<strong>'+prefix+'</strong> '+ message +
 		'</div>'+
 	'</div>'
-	document.body.appendChild(div);
+	$('#alertMsg').append(div);
 	setTimeout(function() {
     $('#'+id).fadeOut('fast');
 	}, 5000); 
@@ -687,7 +687,7 @@ function addJob(){
 			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfEpisodeFrom != "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
+		if (noOfEpisodeFrom!= "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
 			isValid = false;
 			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
@@ -703,7 +703,7 @@ function addJob(){
 			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom != "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
+		if (noOfOrderFrom!= "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
 			isValid = false;
 			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
@@ -719,7 +719,7 @@ function addJob(){
 			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom != "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
+		if (noOfAppointmentFrom!= "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
 			isValid = false;
 			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
 			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
@@ -735,7 +735,7 @@ function addJob(){
 			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}		
 		
-		if (noOfObservationFrom != "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
+		if (noOfObservationFrom!= "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
 			isValid = false;
 			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
 			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")

@@ -269,9 +269,14 @@ ClassMethod TerminateJob(id As %Integer)
         set locked = 1
         if ($Data(^DataGen.Job("item",id))  = 0) { 
             $$$LOGINFO("[JobService.TerminateJob] Job is not found. Job Id: "_id)
-            Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
+            Throw ##class(%Exception.General).%New("RecordNotFoundException",5809,"CDUI.Web.Service.JobService","The record is not found.")
         }
-    
+
+        set status = ^DataGen.Job("item",id, "status")
+        if ((status '= ..#StatusCreate) && (status '= ..#StatusInProgress)){    
+            Throw ##class(%Exception.General).%New("ActionNotValidExcetpion",,"CDUI.Web.Service.JobService","Only Create or In Progress can be terminated. (Job id: "_id_")")
+        }
+
         do ..TerminateJobItem(id)
         do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
 

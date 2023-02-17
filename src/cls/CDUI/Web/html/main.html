@@ -13,6 +13,7 @@
 </head>
 
 <body>
+	<div id="alertMsg"></div>
 	<section>
 		<div class="container mt-5">
 			<div class="text-center">
@@ -84,7 +85,7 @@
 						</div> 
 						<div class="col-12">
 							<label for="noOfAppointment" class="form-label">Number of Appointment per Patient:</label>
-							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfAppointment" min="0" placeholder="optional">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0/,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfAppointment" min="0" placeholder="optional">
 						</div>
 						<div class="col-6 mt-0">
 							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfAppointmentFrom" min="0" placeholder="from">
@@ -98,7 +99,7 @@
 						</div> 
 						<div class="col-12">
 							<label for="noOfEpisode" class="form-label">Number of Episode per Patient:</label>
-							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfEpisode" min="0" placeholder="optional">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0/,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfEpisode" min="0" placeholder="optional">
 						</div>
 						<div class="col-6 mt-0">
 								<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfEpisodeFrom" min="0" placeholder="from">
@@ -122,7 +123,7 @@
 						</div>
 						<div class="col-12">
 							<label for="noOfOrder" class="form-label">Number of Order per Episode:</label>
-							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfOrder" min="0" placeholder="optional">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0/,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfOrder" min="0" placeholder="optional">
 						</div>
 						<div class="col-6 mt-0">
 							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfOrderFrom" min="0" placeholder="from">
@@ -137,7 +138,7 @@
 						</div> 
 						<div class="col-12">
 							<label for="noOfObservation" class="form-label">Number of Observation per Episode:</label>
-							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfObservation" min="0" placeholder="optional">
+							<input disabled type="text" oninput="this.value=this.value.replace(/^0/,'').replace(/[^\d]/,'')" class="form-control bg-secondary" id="noOfObservation" min="0" placeholder="optional">
 						</div>
 						<div class="col-6 mt-0">
 							<input disabled type="text" oninput="this.value=this.value.replace(/^0./,'').replace(/[^\d]/,'')" class="form-control bg-secondary d-none" id="noOfObservationFrom" min="0" placeholder="from">
