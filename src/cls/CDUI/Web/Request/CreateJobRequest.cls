@@ -113,10 +113,10 @@ ClassMethod isRequestValid(request As CDUI.Web.Request.CreateJobRequest) As %Int
     set isOrderValid = (((request.NumOfOrderPerEpisode > 0) && (request.isOrder)) || '(request.isOrder))
     set isAppointmentValid = (((request.NumOfAppointmentPerPatient > 0) && (request.isAppointment)) || '(request.isAppointment))
     set isObservationValid = (((request.NumOfObservationPerEpisode > 0) && (request.isObservation)) || '(request.isObservation))
-    set isEpisodeRangeValid = (((request.MinNumOfEpisodePerPatient > 0 && request.MaxNumOfEpisodePerPatient > 0) && (request.isEpisodeRange)) || '(request.isEpisodeRange))
-    set isOrderRangeValid = (((request.MinNumOfOrderPerEpisode > 0 && request.MaxNumOfOrderPerEpisode > 0) && (request.isOrderRange)) || '(request.isOrderRange))
-    set isAppointmentRangeValid = (((request.MinNumOfAppointmentPerPatient > 0 && request.MaxNumOfAppointmentPerPatient > 0) && (request.isAppointmentRange)) || '(request.isAppointmentRange))
-    set isObservationRangeValid = (((request.MinNumOfObservationPerEpisode > 0 && request.MaxNumOfObservationPerEpisode > 0) && (request.isObservationRange)) || '(request.isObservationRange))
+    set isEpisodeRangeValid = (((request.MinNumOfEpisodePerPatient >= 0 && request.MaxNumOfEpisodePerPatient > 0) && (request.isEpisodeRange)) || '(request.isEpisodeRange))
+    set isOrderRangeValid = (((request.MinNumOfOrderPerEpisode >= 0 && request.MaxNumOfOrderPerEpisode > 0) && (request.isOrderRange)) || '(request.isOrderRange))
+    set isAppointmentRangeValid = (((request.MinNumOfAppointmentPerPatient >= 0 && request.MaxNumOfAppointmentPerPatient > 0) && (request.isAppointmentRange)) || '(request.isAppointmentRange))
+    set isObservationRangeValid = (((request.MinNumOfObservationPerEpisode >= 0 && request.MaxNumOfObservationPerEpisode > 0) && (request.isObservationRange)) || '(request.isObservationRange))
     
     set isOrderCatValid = 1
     if (request.OrderCat =' "") {
@@ -157,8 +157,6 @@ Method generateStringParamValues() As %String
     set result =  result_"^"_..isObservationRange
     set result =  result_"^"_..OrderCat
 
-    s ^marcus(2) = result
- 
     return result
 }
 
@@ -189,9 +187,7 @@ ClassMethod newInstanceFromStringParamValues(paramValues As %String) As CDUI.Web
     set obj.isAppointmentRange = $list(alist, 20)
     set obj.isObservationRange = $list(alist, 21)
     set obj.OrderCat = $list(alist, 22)
-
-    s ^marcus(3) = obj.SerialisedGet()
-
+    
     return obj
 }
 
