@@ -157,11 +157,13 @@ $(document).ready(function(){
 	$('#next .page-link').click(function(event){
 		event.preventDefault();
 		reloadTable(this.href);
+		moveToTop();
 	});
 	
 	$('#previous .page-link').click(function(event){
 		event.preventDefault();
 		reloadTable(this.href);
+		moveToTop();
 	});
 	
 	$('#actionConfirm').click(function(event){
@@ -173,7 +175,10 @@ $(document).ready(function(){
 			if (numOfDone == 0){
 				showMessage("Please select at least one job !!!", "warning");
 			} else {
-				setTimeout(function(){refreshJobList();}, 1000);
+				setTimeout(function(){
+					refreshJobList();
+					$('#checkAll').prop("checked", false);
+				}, 1000);
 			}
 			
 			break;
@@ -182,7 +187,10 @@ $(document).ready(function(){
 			if (numOfDone == 0){
 				showMessage("Please select at least one job !!!", "warning");
 			} else {
-				setTimeout(function(){refreshJobList();}, 1000);
+				setTimeout(function(){
+					refreshJobList();
+					$('#checkAll').prop("checked", false);
+				}, 1000);
 			}
 			
 			break;
@@ -230,11 +238,13 @@ $(document).ready(function(){
 
 function resetAutoRefresh(){
 	if ($('#autoRefresh').val() === 'Y') {
+		$('#autoRefresh').prop("checked",true);
 		clearInterval(refreshInterval);
 		refreshInterval = setInterval(function () {
 				refreshJobList();
-		},4000);
+		},2000);
 	} else {
+		$('#autoRefresh').prop("checked",false);
 		clearInterval(refreshInterval);
 	}		
 }
