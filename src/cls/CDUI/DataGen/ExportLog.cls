@@ -71,4 +71,11 @@ ClassMethod LogRespondTime(RespondTime As %String = "Respond time sample")
     Do logFile.Close()
 }
 
+ClassMethod LogAPI(URL As %String)
+{
+    do ..OpenAndMoveToEnd(.logFile)
+    Do logFile.Write("API is: "_URL)
+    Do logFile.Close()
+}
+
 }

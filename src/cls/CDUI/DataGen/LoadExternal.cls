@@ -382,4 +382,27 @@ ClassMethod LoadExternal(Mode As %String)
     $$$LOGINFO("[LoadExternal] Successfully loaded "_Mode_" data, "_ArraySubmitted_" entries created.")
 }
 
+ClassMethod CleanVS()
+{
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.CHARTEVENTfull)
+    for i = 1:1:numOfRecord {
+        set ObsObj = ##class(CDUI.DataGen.MIMIC.CHARTEVENTfull).%OpenId(i)
+        set ObsObj.Temp = ..ConvertF(ObsObj.Temp)
+        do ObsObj.%Save()
+    }
+}
+
+ClassMethod CleanVS2()
+{
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.CHARTEVENTfull)
+    for i = 1:1:numOfRecord {
+        set ObsObj = ##class(CDUI.DataGen.MIMIC.CHARTEVENTfull).%OpenId(i)
+        if ObsObj.Temp < 0 {
+            set ObsObj.Temp = ""
+        }
+        
+        do ObsObj.%Save()
+    }
+}
+
 }

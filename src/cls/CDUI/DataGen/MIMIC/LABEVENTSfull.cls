@@ -11,7 +11,7 @@ Property SpecimenId As %Integer;
 
 Property ItemId As %Integer;
 
-Property OrderProviderId As %Integer;
+Property OrderProviderId As %String;
 
 Property Charttime As %String;
 
