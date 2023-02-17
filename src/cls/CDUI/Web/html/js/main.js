@@ -1,7 +1,7 @@
 var refreshInterval;
 $(document).ready(function(){
 	
-	//reset(); 
+	reset(); 
 	getJobList(10,null,null,'Y');
 	resetAutoRefresh();
 
