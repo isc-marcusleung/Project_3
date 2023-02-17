@@ -45,7 +45,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         if ($Data(^DataGen.Job) = 0){
             set ^DataGen.Job("info","size") = 0
             set ^DataGen.Job("info","nextId") = 1
-            set ^DataGen.Job("info","maxProcess") = 100 //TODO marcus
+            set ^DataGen.Job("info","maxProcess") = 10 //TODO marcus
             set ^DataGen.Job("info","isProcessByBatch") = 1 //0 indicates false, 1 indicates true
             set ^DataGen.Job("info","noOfPatientPerBatch") = 10 
             set ^DataGen.Job("info","noOfCurrentProcess") = 0
@@ -335,6 +335,7 @@ ClassMethod FinishJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.FinishJob] Update to Completed. Job Id: "_id)
     do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7))
+    do ..RemoveTicketForJob()
 }
 
 ClassMethod ErrorJob(id As %Integer)
