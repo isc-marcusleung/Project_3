@@ -3,6 +3,7 @@ $(document).ready(function(){
 	
 	//reset(); 
 	getJobList(10,null,null,'Y');
+	resetAutoRefresh();
 
 	$('#noOfPatient').keyup(function(){
 		removeWarningBorder('noOfPatient');
@@ -213,7 +214,7 @@ $(document).ready(function(){
 			if (this.value === 'Y') {
 				 refreshInterval = setInterval(function () {
 					refreshJobList();
-				},4000);
+				},2000);
 				disableAllJobListCheckBox();
 			} else {
 				clearInterval(refreshInterval);
@@ -227,6 +228,18 @@ $(document).ready(function(){
 	});
 	
 });	
+
+function resetAutoRefresh(){
+	if ($('#autoRefresh').val() === 'Y') {
+		clearInterval(refreshInterval);
+		refreshInterval = setInterval(function () {
+				refreshJobList();
+		},4000);
+	} else {
+		clearInterval(refreshInterval);
+	}		
+}
+
 function disableAllJobListCheckBox(){
 	$('#jobList input[type="checkbox"]').each(function() 
 	{   
@@ -801,16 +814,8 @@ function reset(){
 	//$('#autoRefresh').val('Y');
 	//$('#autoRefresh').prop("checked", true);
 	
+	resetAutoRefresh();
 
-	if ($('#autoRefresh').val() === 'Y') {
-		refreshInterval = setInterval(function () {
-				refreshJobList();
-		},4000);
-	} else {
-		clearInterval(refreshInterval);
-	}		
-
-			
 }
 
 function convertDateFormat(dateStr){
