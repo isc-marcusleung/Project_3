@@ -6,99 +6,101 @@ Method TestNewAppt()
     #dim status, sc as %Status = $$$OK
 	#dim val as %String = ""
 
-    set input = 2
-    set tExpected = 2
+    set input = 1
+    set tExpected = 1
     do ..CreatePatientVo(.patientVoObjList)
-    do ##class(CDUI.DataGen.DataGenService.ApptService).NewAppt(input, .patientVoObjList)
+
+	set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
+    do apptService.NewAppt(input, .patientVoObjList)
+
+	// Set apptItemList for testing if time clashes
+	set apptItemList = ##class(%ListOfObjects).%New()
 
     for cnt=1:1:patientVoObjList.Count() {
+		
         set patientVo = patientVoObjList.GetAt(cnt)
         set apptVo = patientVo.ApptObjList
-        set val = apptVo.Count()
-        set status = $$$AssertEquals(val, tExpected,"Correct number of appointments created")
+        set NumOfAppt = apptVo.Count()
+
+		do $$$LogMessage("Check number of appointments created for patient ID "_patientVo.PatientId_" is: "_NumOfAppt)
+        set sc = $$$AssertEquals(tExpected, NumOfAppt,"Correct number of appointments created")
+		set status = $$$ADDSC(status,sc)
+
+		do $$$LogMessage("Check if appointments are in database")
+		for i=1:1:NumOfAppt{
+			set apptItem = apptVo.GetAt(i)
+			do apptItemList.Insert(apptItem)
+			
+			do $$$LogMessage("Check if appt ID: "_apptItem.ID_", date: "_apptItem.Date_", time: "_apptItem.StartTime_" is in database")
+			set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetApptById(apptItem.ID, .apptRecordList)
+            set status = $$$AssertStatusOK(sc,"Get Appt Record List")
+            set status = $$$ADDSC(status,sc)
+
+			do $$$LogMessage("Check if patients details are the same with database's details for appt Id: "_apptItem.ID)
+			set sc = $$$AssertEquals(patientVo.PatientId,$listget($listget(apptRecordList,1),-1))
+            set sc = $$$AssertEquals(apptItem.Date,$listget($listget(apptRecordList,2),-1))
+            set sc = $$$AssertEquals(apptItem.StartTime,$listget($listget(apptRecordList,3),-1))
+			set status = $$$ADDSC(status,sc)
+		}
+
     }
     quit status
 }
 
 /// Set up patients for test.
-ClassMethod CreatePatientVo(ByRef patientVoObjList) As %Status
+Method CreatePatientVo(ByRef patientVoObjList) As %Status
 {
-	#; #dim status, sc as %Status = $$$OK
-	#; 
-	set sc = $$$OK
+    #dim status, sc as %Status = $$$OK
+	
+	set patientVoObjList =  ##class(%ListOfObjects).%New()
 
-    set patientVoObjList =  ##class(%ListOfObjects).%New()
-
-	// Patient 1 YAY Day
+	// Patient 1
 	set patient1 =  ##class(%ListOfObjects).%New()
 	set request = ##class(CDUI.DataGen.Request.NewPatient).%New()
-	set status = patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,11754))
-
+	set sc = patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,12265))
+	set status = $$$ADDSC(status,sc)
 	set patient1 = patientVoObjList.GetAt(1)
 
-    If $$$ISOK(status)
-    {
-        $$$LOGINFO("Patient 1 created.")
-    }
-
-	set sc = $$$ADDSC(sc, status)
-	$$$LOGINFO("Value of sc after p1: "_sc)
-
-	/// Set ApptVoObjList
-	set requestAppt = ##class(CDUI.DataGen.vo.AppointmentVo).%New()
-	set requestAppt.PatientID = "11754"
-	set requestAppt.ID = "350||44164||1"
-	set requestAppt.Date = "03/02/2023"
-	set requestAppt.StartTime = "11:15"
-	set requestAppt.EndTime = "13:45"
-
-	do patient1.ApptObjList.Insert(requestAppt)  
-
-	// Patient 2 JOY Day
+	// Patient 2 
 	set patient2 =  ##class(%ListOfObjects).%New()
 	set request = ##class(CDUI.DataGen.Request.NewPatient).%New()
-	#; do patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,11732))
-    #; 
-    set status = patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,11732))
-
+    set sc = patientVoObjList.Insert(##class(CDUI.DataGen.vo.PatientVo).newInstance(request,12266))
+	set status = $$$ADDSC(status,sc)
 	set patient2 = patientVoObjList.GetAt(2)
 
-	
-	/// Set ApptVoObjList
-	#; set requestAppt = ##class(CDUI.DataGen.vo.AppointmentVo).%New()
-	#; set requestAppt.PatientID = "11732"
-	#; set requestAppt.ID = "350||44157||1"
-	#; set requestAppt.Date = "03/02/2023"
-	#; set requestAppt.StartTime = "09:30"
-	#; set requestAppt.EndTime = "12:00"
-
-	#; do patient2.ApptObjList.Insert(requestAppt)  
-	
-	#; set status = $$$ADDSC(status,sc)
-
-    If $$$ISOK(status)
-    {
-        $$$LOGINFO("Patient 2 created.")
-    }
-
-	set sc = $$$ADDSC(sc, status)
-	$$$LOGINFO("Value of sc after p2: "_sc)
-
-	quit sc
+	quit status
 }
 
-Method TestTwo() As %Status
+ClassMethod CheckTime(apptItemList) As %Status
 {
-    set sc = $$$OK
-    #; do $$$AssertEquals("2", "2", "should be equal")
+	set numOfItem = apptItemList.Count()
+	for i=1:1:numOfItem{
 
-    #; set status = ##class(%ListOfObjects).%New()
-	set status = ##class(CDUI.DataGen.Request.NewPatient).%New()
-	set sc1 = 1 + 1
+		set apptItem = apptItemList.GetAt(i)
+		for j=i+1:1:numOfItem {
+			// if item(i) same with item(j)
+			set sc = ..CheckTwoAppts(apptItem.GetAt(i), apptItem.GetAt(j))
+			set status = $$$ADDSC(status,sc)
+		}
+	}
+}
 
-    set sc = $$$ADDSC(sc, sc1)
+ClassMethod CheckTwoAppts(apptItem1, apptItem2) As %Status
+{
+	#dim status, sc as %Status = $$$OK
 
-    return sc
+	if apptItem1.Date '= apptItem2.Date {
+		set sc = $$$OK
+		set status = $$$ADDSC(status,sc)
+	}
+	// If same date
+	else {
+		if (($tr(apptItem1.StartTime,":","") > $tr(apptItem2.EndTime,":","")) && ($tr(apptItem2.StartTime,":","") < $tr(apptItem1.EndTime,":",""))){
+			set sc = $$$OK
+			set status = $$$ADDSC(status,sc)
+		}
+	}
+	quit status
 }
 
 }

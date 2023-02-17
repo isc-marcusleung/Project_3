@@ -13,4 +13,8 @@ Property ExApptOutput As %ListOfObjects;
 
 Property CurrentTrial As %Integer [ InitialExpression = 0 ];
 
+Property ServIdList As %List;
+
+Property ServId As %String;
+
 }
