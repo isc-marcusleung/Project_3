@@ -414,6 +414,7 @@ function showMessage(message, type){
     $('#'+id).fadeOut('fast');
 	$('#'+id).remove();
 	}, 5000); 
+	moveToTop();
 }
 
 
@@ -686,65 +687,77 @@ function addJob(){
 			$('#noOfPatient').addClass("bg-danger bg-gradient")
 		} 
 		
-		if (noOfEpisodeFrom != "" && noOfEpisodeTo == ""){
+		if ((noOfEpisodeFrom != "" && noOfEpisodeTo == "") || (noOfEpisodeFrom == "0" && noOfEpisodeTo == "0")){
+			console.log(1);
 			isValid = false;
 			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfEpisodeFrom == "" && noOfEpisodeTo != ""){
+			console.log(2);
 			isValid = false;
 			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfEpisodeFrom!= "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
+		if (noOfEpisodeFrom != "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
+			console.log(3);
 			isValid = false;
 			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom != "" && noOfOrderTo == ""){
+		if ((noOfOrderFrom != "" && noOfOrderTo == "") || (noOfOrderFrom == "0" && noOfOrderTo == "0")) {
+			console.log(4);
 			isValid = false;
 			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfOrderFrom == "" && noOfOrderTo != ""){
+			console.log(5);
 			isValid = false;
 			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom!= "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
+		if (noOfOrderFrom != "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
+			console.log(6);
 			isValid = false;
 			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom != "" && noOfAppointmentTo == ""){
+		if ((noOfAppointmentFrom != "" && noOfAppointmentTo == "") || (noOfAppointmentFrom == "0" && noOfAppointmentTo == "0")){
+			console.log(7);
 			isValid = false;
 			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfAppointmentFrom == "" && noOfAppointmentTo != ""){
+			console.log(8);
 			isValid = false;
 			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom!= "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
+		if (noOfAppointmentFrom != "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
+			console.log(9);
 			isValid = false;
 			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
 			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfObservationFrom != "" && noOfObservationTo == ""){
+		if ((noOfObservationFrom != "" && noOfObservationTo == "") || (noOfObservationFrom == "0" && noOfObservationTo == "0")){
+			console.log(10);
 			isValid = false;
 			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfObservationFrom == "" && noOfObservationTo != ""){
+			console.log(11);
 			isValid = false;
 			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}		
 		
-		if (noOfObservationFrom!= "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
+		if (noOfObservationFrom != "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
+			console.log(12);
 			isValid = false;
 			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
 			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
@@ -776,15 +789,13 @@ function addJob(){
 				   showMessage(data.message, 'error')
 			  }
 			 // reset();
-			  moveToTop();
-			  refreshJobList();
-			 
+			 refreshJobList();
 		  },
 		  error: function(jqXhr, textStatus, errorMessage) {
 			  showMessage(errorMessage, 'error')
 		  }
 		});
-		
+
 
 }
 

@@ -30,13 +30,16 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
         $$$LOGERROR("[ApptService.NewApptByRange] Why?")
         set ranNum = ##class(PUtil).Random(diff) + MinNumOfAppt
         $$$LOGINFO("[ApptService.NewApptByRange] Number of appt: "_ranNum)
-        do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), .servIdList, .numOfSuccess)
-        set numOfFailure = ranNum - numOfSuccess
-        set totalSuccess = totalSuccess + numOfSuccess
-        set totalFailure = totalFailure + numOfFailure
 
-        if (numOfFailure > 0) {
-            set failedByPatientIdArr(PatientVoObjList.GetAt(i).PatientId) = numOfFailure
+        if (ranNum > 0){
+            do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), .servIdList, .numOfSuccess)
+            set numOfFailure = ranNum - numOfSuccess
+            set totalSuccess = totalSuccess + numOfSuccess
+            set totalFailure = totalFailure + numOfFailure
+
+            if (numOfFailure > 0) {
+                set failedByPatientIdArr(PatientVoObjList.GetAt(i).PatientId) = numOfFailure
+            }
         }
     }
 
