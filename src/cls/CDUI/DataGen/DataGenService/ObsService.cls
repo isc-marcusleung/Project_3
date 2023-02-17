@@ -5,12 +5,39 @@ Class CDUI.DataGen.DataGenService.ObsService Extends BaseService
 
 Parameter locationTypeId = "E";
 
+// For a single patient, each episode has different numbers of episodes
+
+Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects)
+{
+    do ..GetLocation(.locationObjList)
+    set diff = MaxNumOfObs - MinNumOfObs
+    set totalSuccess = 0
+    set totalFailure = 0
+    set numOfLoop = EpisodeVoObjList.Count()
+    for i = 1:1:numOfLoop{
+        set ranNum = ##class(PUtil).Random(diff) + MinNumOfObs
+        set episodeVo = EpisodeVoObjList.GetAt(i)
+        do ..NewObsPerEpisode(ranNum, episodeVo, .locationObjList, .numOfSuccess)
+        set numOfFailure = ranNum - numOfSuccess
+        set totalSuccess = totalSuccess + numOfSuccess
+        set totalFailure = totalFailure + numOfFailure
+
+        if (numOfFailure>0){
+            set failedByEpisodeIdArr(EpisodeVoObjList.GetAt(i).ID) = numOfFailure
+        }
+
+        do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
+    }
+}
+
+// For a single episode, generate a number of observations 
+
 Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.DataGen.vo.EpisodeVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer)
 {
     $$$LOGINFO("[ObsService.NewObsPerEpisode] Initialize obs request, episode Id: "_EpisodeVo.ID)
 
     //generate obsverations records 
-    $$$LOGINFO("[ObsService.NewObsPerEpisode] Create new obsverations.")
+    $$$LOGINFO("[ObsService.NewObsPerEpisode] Initalize observation requests.")
     do ..InitObsRequest(locationObjList, NumOfObsPerEpisode, EpisodeVo,.obsInput)
     set obsOutput = ##class(CDUI.DataGen.DataGenService.Custom.ObsOutput).%New()
 
@@ -295,7 +322,7 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
         set isSuccess = 0
 
         //test hang
-        HANG 10
+        #; HANG 10
 
         try {
             set sc = ..SendRequest(request,.response)
