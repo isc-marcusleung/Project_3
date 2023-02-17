@@ -368,8 +368,7 @@ function removeWarningBgColor(id){
 	$('#'+id).removeClass("bg-danger bg-gradient")
 }
 function showMessage(message, type){
-	var div = document.createElement("div");
-	
+
 	switch (type) { 
 	case 'info': 
 		var clazz = 'alert-info'
@@ -394,16 +393,16 @@ function showMessage(message, type){
 	
 	let id = 'msg_'+$.now()
 
-	div.innerHTML =
-	'<div id="'+id+'" class="container">\n'+
+	var msg = '<div id="'+id+'" class="container">\n'+
 		'<div class="alert ' + clazz + ' alert-dismissible fade show sticky-top">'+
 			'<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>'+
 			'<strong>'+prefix+'</strong> '+ message +
 		'</div>'+
 	'</div>'
-	$('#alertMsg').append(div);
+	$('#alertMsg').append(msg);
 	setTimeout(function() {
     $('#'+id).fadeOut('fast');
+	$('#'+id).remove();
 	}, 5000); 
 }
 
