@@ -6,7 +6,7 @@ $(document).ready(function(){
 	resetAutoRefresh();
 
 	$('#noOfPatient').keyup(function(){
-		removeWarningBorder('noOfPatient');
+		removeWarningBgColor('noOfPatient');
 		if (this.value === '') {
 			disableInputElements(false,true,true,true,true);
 			return
@@ -24,9 +24,9 @@ $(document).ready(function(){
 	});
 
 	$('#noOfEpisodeFrom').keyup(function(){
-		removeWarningBorder('noOfEpisodeFrom');
-		removeWarningBorder('noOfEpisodeTo');
-		if ($('noOfEpisodeTo').value != '' ){
+		removeWarningBgColor('noOfEpisodeFrom');
+		removeWarningBgColor('noOfEpisodeTo');
+		if ($('#noOfEpisodeTo').value != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
 		}
@@ -35,9 +35,9 @@ $(document).ready(function(){
 			return
 		}
 	});
-	$('noOfEpisodeTo').keyup(function(){
-		removeWarningBorder('noOfEpisodeFrom');
-		removeWarningBorder('noOfEpisodeTo');
+	$('#noOfEpisodeTo').keyup(function(){
+		removeWarningBgColor('noOfEpisodeFrom');
+		removeWarningBgColor('noOfEpisodeTo');
 		if ($('#noOfEpisodeFrom').value != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
@@ -125,28 +125,28 @@ $(document).ready(function(){
 	});
 
 	$('#noOfAppointmentFrom').keyup(function(){
-		removeWarningBorder('noOfAppointmentFrom');
-		removeWarningBorder('noOfAppointmentTo');
+		removeWarningBgColor('noOfAppointmentFrom');
+		removeWarningBgColor('noOfAppointmentTo');
 	});
 	$('#noOfAppointmentTo').keyup(function(){
-		removeWarningBorder('noOfAppointmentFrom');
-		removeWarningBorder('noOfAppointmentTo');
+		removeWarningBgColor('noOfAppointmentFrom');
+		removeWarningBgColor('noOfAppointmentTo');
 	});
 	$('#noOfOrderFrom').keyup(function(){
-		removeWarningBorder('noOfOrderFrom');
-		removeWarningBorder('noOfOrderTo');
+		removeWarningBgColor('noOfOrderFrom');
+		removeWarningBgColor('noOfOrderTo');
 	});
 	$('#noOfOrderTo').keyup(function(){
-		removeWarningBorder('noOfOrderFrom');
-		removeWarningBorder('noOfOrderTo');
+		removeWarningBgColor('noOfOrderFrom');
+		removeWarningBgColor('noOfOrderTo');
 	});
 	$('#noOfObservationFrom').keyup(function(){
-		removeWarningBorder('noOfObservationFrom');
-		removeWarningBorder('noOfObservationTo');
+		removeWarningBgColor('noOfObservationFrom');
+		removeWarningBgColor('noOfObservationTo');
 	});
 	$('#noOfObservationTo').keyup(function(){
-		removeWarningBorder('noOfObservationFrom');
-		removeWarningBorder('noOfObservationTo');
+		removeWarningBgColor('noOfObservationFrom');
+		removeWarningBgColor('noOfObservationTo');
 	});
 	
 	$("form").submit(function (event) {
@@ -224,7 +224,6 @@ $(document).ready(function(){
 	
 	$('#reset').click(function(event){
 		reset();
-
 	});
 	
 });	
@@ -365,8 +364,8 @@ function reloadTable(href){
 	getJobList(count,beforeId,afterId,'N');
 }
 
-function removeWarningBorder(id){
-	$('#'+id).removeClass("border border-danger")
+function removeWarningBgColor(id){
+	$('#'+id).removeClass("bg-danger bg-gradient")
 }
 function showMessage(message, type){
 	var div = document.createElement("div");
@@ -675,71 +674,71 @@ function addJob(){
 		//validate the input
 		if (numOfPatient == null || numOfPatient < 1){
 			isValid = false;
-			$('#noOfPatient').addClass("border border-danger")
+			$('#noOfPatient').addClass("bg-danger bg-gradient")
 		} 
 		
 		if (noOfEpisodeFrom != "" && noOfEpisodeTo == ""){
 			isValid = false;
-			$('#noOfEpisodeTo').addClass("border border-danger")
+			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfEpisodeFrom == "" && noOfEpisodeTo != ""){
 			isValid = false;
-			$('#noOfEpisodeFrom').addClass("border border-danger")
+			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfEpisodeFrom > noOfEpisodeTo){
+		if (noOfEpisodeFrom != "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
 			isValid = false;
-			$('#noOfEpisodeFrom').addClass("border border-danger")
-			$('#noOfEpisodeTo').addClass("border border-danger")
+			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
+			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfOrderFrom != "" && noOfOrderTo == ""){
 			isValid = false;
-			$('#noOfOrderTo').addClass("border border-danger")
+			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfOrderFrom == "" && noOfOrderTo != ""){
 			isValid = false;
-			$('#noOfOrderFrom').addClass("border border-danger")
+			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom > noOfOrderTo){
+		if (noOfOrderFrom != "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
 			isValid = false;
-			$('#noOfOrderFrom').addClass("border border-danger")
-			$('#noOfOrderTo').addClass("border border-danger")
+			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
+			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfAppointmentFrom != "" && noOfAppointmentTo == ""){
 			isValid = false;
-			$('#noOfAppointmentTo').addClass("border border-danger")
+			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfAppointmentFrom == "" && noOfAppointmentTo != ""){
 			isValid = false;
-			$('#noOfAppointmentFrom').addClass("border border-danger")
+			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom > noOfAppointmentTo){
+		if (noOfAppointmentFrom != "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
 			isValid = false;
-			$('#noOfAppointmentTo').addClass("border border-danger")
-			$('#noOfAppointmentFrom').addClass("border border-danger")
+			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
+			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfObservationFrom != "" && noOfObservationTo == ""){
 			isValid = false;
-			$('#noOfObservationTo').addClass("border border-danger")
+			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfObservationFrom == "" && noOfObservationTo != ""){
 			isValid = false;
-			$('#noOfObservationFrom').addClass("border border-danger")
+			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}		
 		
-		if (noOfObservationFrom > noOfObservationTo){
+		if (noOfObservationFrom != "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
 			isValid = false;
-			$('#noOfObservationTo').addClass("border border-danger")
-			$('#noOfObservationFrom').addClass("border border-danger")
+			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
+			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}
 		
 		if (!isValid) {
@@ -799,29 +798,52 @@ function reset(){
 
 	$('#appointmentRange').val('N')
 	$('#appointmentRange').prop("checked", false);
+	disableInputElement('noOfAppointmentFrom');
+	disableInputElement('noOfAppointmentTo');
 	hideInputText('noOfAppointmentFrom');
 	hideInputText('noOfAppointmentTo');
 	unhideInputText('noOfAppointment');
 		
 	$('#episodeRange').val('N');
 	$('#episodeRange').prop("checked", false);
+	disableInputElement('noOfEpisodeFrom');
+	disableInputElement('noOfEpisodeTo');
 	hideInputText('noOfEpisodeFrom');
 	hideInputText('noOfEpisodeTo');
 	unhideInputText('noOfEpisode');
 	
 	$('#orderRange').val('N');
 	$('#orderRange').prop("checked", false);
+	disableInputElement('noOfOrderFrom');
+	disableInputElement('noOfOrderTo');	
 	hideInputText('noOfOrderFrom');
 	hideInputText('noOfOrderTo');
 	unhideInputText('noOfOrder');
 	
 	$('#observationRange').val('N');
 	$('#observationRange').prop("checked", false);
+	disableInputElement('noOfObservationFrom');
+	disableInputElement('noOfObservationTo');		
 	hideInputText('noOfObservationFrom');
 	hideInputText('noOfObservationTo');
 	unhideInputText('noOfObservation');
 	
 	$('#checkAll').prop("checked", false);
+	
+	removeWarningBgColor('noOfPatient');
+	removeWarningBgColor('noOfEpisode');
+	removeWarningBgColor('noOfAppointment');
+	removeWarningBgColor('noOfOrder');
+	removeWarningBgColor('noOfObservation');
+	removeWarningBgColor('noOfAppointmentFrom');
+	removeWarningBgColor('noOfAppointmentTo');
+	removeWarningBgColor('noOfEpisodeFrom');
+	removeWarningBgColor('noOfEpisodeTo');
+	removeWarningBgColor('noOfOrderFrom');
+	removeWarningBgColor('noOfOrderTo');
+	removeWarningBgColor('noOfObservationFrom');
+	removeWarningBgColor('noOfObservationTo');
+	
 
 	//$('#autoRefresh').val('Y');
 	//$('#autoRefresh').prop("checked", true);
