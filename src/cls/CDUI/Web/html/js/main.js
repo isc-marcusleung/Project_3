@@ -26,7 +26,7 @@ $(document).ready(function(){
 	$('#noOfEpisodeFrom').keyup(function(){
 		removeWarningBgColor('noOfEpisodeFrom');
 		removeWarningBgColor('noOfEpisodeTo');
-		if ($('#noOfEpisodeTo').value != '' ){
+		if ((this.value != '') && $('#noOfEpisodeTo').val() != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
 		}
@@ -38,7 +38,7 @@ $(document).ready(function(){
 	$('#noOfEpisodeTo').keyup(function(){
 		removeWarningBgColor('noOfEpisodeFrom');
 		removeWarningBgColor('noOfEpisodeTo');
-		if ($('#noOfEpisodeFrom').value != '' ){
+		if ((this.value != '') && $('#noOfEpisodeFrom').val() != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
 		}
