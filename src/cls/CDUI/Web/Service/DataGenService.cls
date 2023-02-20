@@ -198,9 +198,17 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     }
 
     if (req.isObservation){
- //TODO marcus
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating observation..."
+        set obsService = ##class(ObsService).%New()
+        for i=1:1:PatientVoObjList.Count(){
+            do obsService.NewObs(req.NumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList)
+        }
     } elseif(req.isObservationRange) {
-  //TODO marcus
+        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating observation by random range..."
+        set obsService = ##class(ObsService).%New()
+        for i=1:1:PatientVoObjList.Count(){
+            do obsService.NewObsByRange(req.MinNumOfObservationPerEpisode, req.MaxNumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList)
+        }
     }
 
     //TODO marcus to remove it
