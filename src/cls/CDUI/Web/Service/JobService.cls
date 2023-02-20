@@ -350,6 +350,13 @@ ClassMethod FinishJob(id As %Integer)
     do ..RemoveTicketForJob()
 }
 
+ClassMethod FinishJobWithError(id As %Integer)
+{
+    $$$LOGINFO("[JobService.FinishJobWithError] Update to Completed With Error. Job Id: "_id)
+    do ..UpdateJob(id, , ..#StatusCompletedWithError, $ZDATETIME($HOROLOG,3,7))
+    do ..RemoveTicketForJob()
+}
+
 ClassMethod ErrorJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.ErrorJob] Update to Error. Job Id: "_id)
