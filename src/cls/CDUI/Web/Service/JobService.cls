@@ -274,7 +274,7 @@ ClassMethod TerminateJob(id As %Integer)
 
         set status = ^DataGen.Job("item",id, "status")
         if ((status '= ..#StatusCreate) && (status '= ..#StatusInProgress)){    
-            Throw ##class(%Exception.General).%New("ActionNotValidExcetpion",,"CDUI.Web.Service.JobService","Only Create or In Progress can be terminated. (Job id: "_id_")")
+            Throw ##class(%Exception.General).%New("ActionNotValidException",,"CDUI.Web.Service.JobService","Only Create or In Progress can be terminated. (Job id: "_id_")")
         }
 
         do ..TerminateJobItem(id)
