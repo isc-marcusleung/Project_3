@@ -378,6 +378,7 @@ function reloadTable(href){
 		} 
 	});
 	getJobList(count,beforeId,afterId,'N');
+	$('#checkAll').prop("checked", false);
 }
 
 function removeWarningBgColor(id){
@@ -624,6 +625,7 @@ function buildTable(dataObj){
 	//console.log(previousPage);
 	
 }
+
 
 function addJob(){
 	
