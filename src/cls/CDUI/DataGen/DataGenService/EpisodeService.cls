@@ -15,13 +15,15 @@ Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %In
         set totalFailure = 0
         for i=1:1:PatientVoObjList.Count(){
             set ranNum = ##class(PUtil).Random(diff) + MinNumOfEpisode
-            do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), .locationObjList, .numOfSuccess)
-            set numOfFailure = ranNum - numOfSuccess
-            set totalSuccess = totalSuccess + numOfSuccess
-            set totalFailure = totalFailure + numOfFailure
+            if (ranNum > 0){
+                do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), .locationObjList, .numOfSuccess)
+                set numOfFailure = ranNum - numOfSuccess
+                set totalSuccess = totalSuccess + numOfSuccess
+                set totalFailure = totalFailure + numOfFailure
 
-            if (numOfFailure > 0) {
-                set failedByPatientIdArr(PatientVoObjList.GetAt(i).PatientId) = numOfFailure
+                if (numOfFailure > 0) {
+                    set failedByPatientIdArr(PatientVoObjList.GetAt(i).PatientId) = numOfFailure
+                }
             }
         }
 

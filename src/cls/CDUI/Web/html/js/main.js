@@ -1,11 +1,12 @@
 var refreshInterval;
 $(document).ready(function(){
 	
-	//reset(); 
-	refreshJobList();
+	reset(); 
+	getJobList(10,null,null,'Y');
+	resetAutoRefresh();
 
 	$('#noOfPatient').keyup(function(){
-		removeWarningBorder('noOfPatient');
+		removeWarningBgColor('noOfPatient');
 		if (this.value === '') {
 			disableInputElements(false,true,true,true,true);
 			return
@@ -23,9 +24,9 @@ $(document).ready(function(){
 	});
 
 	$('#noOfEpisodeFrom').keyup(function(){
-		removeWarningBorder('noOfEpisodeFrom');
-		removeWarningBorder('noOfEpisodeTo');
-		if ($('noOfEpisodeTo').value != '' ){
+		removeWarningBgColor('noOfEpisodeFrom');
+		removeWarningBgColor('noOfEpisodeTo');
+		if ((this.value != '') && $('#noOfEpisodeTo').val() != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
 		}
@@ -34,10 +35,10 @@ $(document).ready(function(){
 			return
 		}
 	});
-	$('noOfEpisodeTo').keyup(function(){
-		removeWarningBorder('noOfEpisodeFrom');
-		removeWarningBorder('noOfEpisodeTo');
-		if ($('#noOfEpisodeFrom').value != '' ){
+	$('#noOfEpisodeTo').keyup(function(){
+		removeWarningBgColor('noOfEpisodeFrom');
+		removeWarningBgColor('noOfEpisodeTo');
+		if ((this.value != '') && $('#noOfEpisodeFrom').val() != '' ){
 			enableInputElements(true,true,true,true,true);
 			return
 		}
@@ -124,28 +125,28 @@ $(document).ready(function(){
 	});
 
 	$('#noOfAppointmentFrom').keyup(function(){
-		removeWarningBorder('noOfAppointmentFrom');
-		removeWarningBorder('noOfAppointmentTo');
+		removeWarningBgColor('noOfAppointmentFrom');
+		removeWarningBgColor('noOfAppointmentTo');
 	});
 	$('#noOfAppointmentTo').keyup(function(){
-		removeWarningBorder('noOfAppointmentFrom');
-		removeWarningBorder('noOfAppointmentTo');
+		removeWarningBgColor('noOfAppointmentFrom');
+		removeWarningBgColor('noOfAppointmentTo');
 	});
 	$('#noOfOrderFrom').keyup(function(){
-		removeWarningBorder('noOfOrderFrom');
-		removeWarningBorder('noOfOrderTo');
+		removeWarningBgColor('noOfOrderFrom');
+		removeWarningBgColor('noOfOrderTo');
 	});
 	$('#noOfOrderTo').keyup(function(){
-		removeWarningBorder('noOfOrderFrom');
-		removeWarningBorder('noOfOrderTo');
+		removeWarningBgColor('noOfOrderFrom');
+		removeWarningBgColor('noOfOrderTo');
 	});
 	$('#noOfObservationFrom').keyup(function(){
-		removeWarningBorder('noOfObservationFrom');
-		removeWarningBorder('noOfObservationTo');
+		removeWarningBgColor('noOfObservationFrom');
+		removeWarningBgColor('noOfObservationTo');
 	});
 	$('#noOfObservationTo').keyup(function(){
-		removeWarningBorder('noOfObservationFrom');
-		removeWarningBorder('noOfObservationTo');
+		removeWarningBgColor('noOfObservationFrom');
+		removeWarningBgColor('noOfObservationTo');
 	});
 	
 	$("form").submit(function (event) {
@@ -156,11 +157,13 @@ $(document).ready(function(){
 	$('#next .page-link').click(function(event){
 		event.preventDefault();
 		reloadTable(this.href);
+		moveToTop();
 	});
 	
 	$('#previous .page-link').click(function(event){
 		event.preventDefault();
 		reloadTable(this.href);
+		moveToTop();
 	});
 	
 	$('#actionConfirm').click(function(event){
@@ -172,7 +175,10 @@ $(document).ready(function(){
 			if (numOfDone == 0){
 				showMessage("Please select at least one job !!!", "warning");
 			} else {
-				setTimeout(function(){refreshJobList();}, 1000);
+				setTimeout(function(){
+					refreshJobList();
+					$('#checkAll').prop("checked", false);
+				}, 1000);
 			}
 			
 			break;
@@ -181,7 +187,10 @@ $(document).ready(function(){
 			if (numOfDone == 0){
 				showMessage("Please select at least one job !!!", "warning");
 			} else {
-				setTimeout(function(){refreshJobList();}, 1000);
+				setTimeout(function(){
+					refreshJobList();
+					$('#checkAll').prop("checked", false);
+				}, 1000);
 			}
 			
 			break;
@@ -198,10 +207,7 @@ $(document).ready(function(){
 				{   $(this).prop("checked", true);
 				});
         } else {
-			$('#jobList input[type="checkbox"]').each(function() 
-				{   
-					$(this).prop("checked", false);
-				});
+			disableAllJobListCheckBox();
 		}
     });
 	
@@ -216,7 +222,8 @@ $(document).ready(function(){
 			if (this.value === 'Y') {
 				 refreshInterval = setInterval(function () {
 					refreshJobList();
-				},4000);
+				},2000);
+				disableAllJobListCheckBox();
 			} else {
 				clearInterval(refreshInterval);
 			}
@@ -225,9 +232,40 @@ $(document).ready(function(){
 	
 	$('#reset').click(function(event){
 		reset();
-
 	});
+	
 });	
+
+function resetAutoRefresh(){
+	if ($('#autoRefresh').val() === 'Y') {
+		$('#autoRefresh').prop("checked",true);
+		clearInterval(refreshInterval);
+		refreshInterval = setInterval(function () {
+				refreshJobList();
+		},2000);
+	} else {
+		$('#autoRefresh').prop("checked",false);
+		clearInterval(refreshInterval);
+	}		
+}
+
+function disableAllJobListCheckBox(){
+	$('#jobList input[type="checkbox"]').each(function() 
+	{   
+		$(this).prop("checked", false);
+	});
+}
+
+	
+function disableAutoRefresh(){
+	  return function(event) { 
+		if ($('#autoRefresh').val() === 'Y') {
+			$('#autoRefresh').val('N');
+			$('#autoRefresh').prop('checked', false)
+			clearInterval(refreshInterval);
+		}
+	};	
+}
 
 function refreshCheckAll(){
 		if ($('#checkAll').is(':checked')) {
@@ -243,13 +281,14 @@ function refreshCheckAll(){
 }
 
 function refreshJobList(){
-	getJobList(10,null,null,'Y');
+	getJobList(10,null,null,'N');
 }
+
 
 function handleAction(fCallback){
 	var numOfDone = 0;
-	$('#jobList input[type="checkbox"]').each(function() 
-	{   if ($(this).is(":checked")) {
+	$('#jobList input[type="checkbox"]').each(function(index) 
+	{   if ($(this).is(":checked") && (index != 0)) {
 			let id = this.id.split('-')[1]
 			fCallback(id);
 			numOfDone += 1;
@@ -332,15 +371,14 @@ function reloadTable(href){
 			//do nothing
 		} 
 	});
-	getJobList(count,beforeId,afterId);
+	getJobList(count,beforeId,afterId,'N');
 }
 
-function removeWarningBorder(id){
-	$('#'+id).removeClass("border border-danger")
+function removeWarningBgColor(id){
+	$('#'+id).removeClass("bg-danger bg-gradient")
 }
 function showMessage(message, type){
-	var div = document.createElement("div");
-	
+
 	switch (type) { 
 	case 'info': 
 		var clazz = 'alert-info'
@@ -365,17 +403,18 @@ function showMessage(message, type){
 	
 	let id = 'msg_'+$.now()
 
-	div.innerHTML =
-	'<div id="'+id+'" class="container">\n'+
-		'<div class="alert ' + clazz + ' alert-dismissible fade show position-fixed fixed-top">'+
+	var msg = '<div id="'+id+'" class="container">\n'+
+		'<div class="alert ' + clazz + ' alert-dismissible fade show sticky-top">'+
 			'<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>'+
 			'<strong>'+prefix+'</strong> '+ message +
 		'</div>'+
 	'</div>'
-	document.body.appendChild(div);
+	$('#alertMsg').append(msg);
 	setTimeout(function() {
     $('#'+id).fadeOut('fast');
+	$('#'+id).remove();
 	}, 5000); 
+	moveToTop();
 }
 
 
@@ -456,6 +495,18 @@ function disableSelectElement(id){
 	var el = $('#'+id);
 	el.prop( "disabled", true );
 	el.addClass("bg-secondary");
+	el.val('');
+	
+	$('#'+id).each(function(index) 
+	{  
+		if (index == 0) {
+			$(this).prop("checked", true);
+			
+		} else {
+			$(this).prop("checked", false);
+		}
+	});
+
 }
 
 
@@ -473,7 +524,7 @@ function enableInputElement(id){
 }
 
 
-function getJobList(count,beforeId,afterId){
+function getJobList(count,beforeId,afterId, isSetting){
 	
 	//var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
 	//TODO marcus
@@ -499,6 +550,14 @@ function getJobList(count,beforeId,afterId){
 		  } else {
 			   showMessage(data.message, 'error')
 		  }
+		  
+		  if (isSetting) {
+			$('#jobList input[type="checkbox"]').each( 
+				function( index ) {
+					$(this).click(disableAutoRefresh());
+			});
+		  }
+
 	  },
 	  error: function(jqXhr, textStatus, errorMessage) {
 		  showMessage(errorMessage, 'error')
@@ -589,10 +648,10 @@ function addJob(){
 		var isAppointmentRange =  $('#appointmentRange').val() === 'Y' && noOfAppointmentFrom != "" && noOfAppointmentTo != "";
 		var isObservationRange =  $('#observationRange').val() === 'Y' && noOfObservationFrom != "" && noOfObservationTo != "";
 		
-		var isEpisode = numOfEpisodePerPatient > 1;
-		var isOrder = numOfOrderPerEpisode > 1;
-		var isAppointment = numOfAppointmentPerPatient > 1;
-		var isObservation = numOfObservationPerEpisode > 1;
+		var isEpisode = numOfEpisodePerPatient >= 1;
+		var isOrder = numOfOrderPerEpisode >= 1;
+		var isAppointment = numOfAppointmentPerPatient >= 1;
+		var isObservation = numOfObservationPerEpisode >= 1;
 		
 
 		var formData = new FormData();
@@ -625,71 +684,73 @@ function addJob(){
 		//validate the input
 		if (numOfPatient == null || numOfPatient < 1){
 			isValid = false;
-			$('#noOfPatient').addClass("border border-danger")
+			$('#noOfPatient').addClass("bg-danger bg-gradient")
 		} 
 		
-		if (noOfEpisodeFrom != "" && noOfEpisodeTo == ""){
+		if ((noOfEpisodeFrom != "" && noOfEpisodeTo == "") || (noOfEpisodeFrom == "0" && noOfEpisodeTo == "0")){
+			console.log(1);
 			isValid = false;
-			$('#noOfEpisodeTo').addClass("border border-danger")
+			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfEpisodeFrom == "" && noOfEpisodeTo != ""){
+			console.log(2);
 			isValid = false;
-			$('#noOfEpisodeFrom').addClass("border border-danger")
+			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfEpisodeFrom > noOfEpisodeTo){
+		if (noOfEpisodeFrom != "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
 			isValid = false;
-			$('#noOfEpisodeFrom').addClass("border border-danger")
-			$('#noOfEpisodeTo').addClass("border border-danger")
+			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
+			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom != "" && noOfOrderTo == ""){
+		if ((noOfOrderFrom != "" && noOfOrderTo == "") || (noOfOrderFrom == "0" && noOfOrderTo == "0")) {
 			isValid = false;
-			$('#noOfOrderTo').addClass("border border-danger")
+			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfOrderFrom == "" && noOfOrderTo != ""){
 			isValid = false;
-			$('#noOfOrderFrom').addClass("border border-danger")
+			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom > noOfOrderTo){
+		if (noOfOrderFrom != "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
 			isValid = false;
-			$('#noOfOrderFrom').addClass("border border-danger")
-			$('#noOfOrderTo').addClass("border border-danger")
+			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
+			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom != "" && noOfAppointmentTo == ""){
+		if ((noOfAppointmentFrom != "" && noOfAppointmentTo == "") || (noOfAppointmentFrom == "0" && noOfAppointmentTo == "0")){
 			isValid = false;
-			$('#noOfAppointmentTo').addClass("border border-danger")
+			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfAppointmentFrom == "" && noOfAppointmentTo != ""){
 			isValid = false;
-			$('#noOfAppointmentFrom').addClass("border border-danger")
+			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom > noOfAppointmentTo){
+		if (noOfAppointmentFrom != "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
 			isValid = false;
-			$('#noOfAppointmentTo').addClass("border border-danger")
-			$('#noOfAppointmentFrom').addClass("border border-danger")
+			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
+			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfObservationFrom != "" && noOfObservationTo == ""){
+		if ((noOfObservationFrom != "" && noOfObservationTo == "") || (noOfObservationFrom == "0" && noOfObservationTo == "0")){
 			isValid = false;
-			$('#noOfObservationTo').addClass("border border-danger")
+			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
 		}
 		
 		if (noOfObservationFrom == "" && noOfObservationTo != ""){
 			isValid = false;
-			$('#noOfObservationFrom').addClass("border border-danger")
+			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}		
 		
-		if (noOfObservationFrom > noOfObservationTo){
+		if (noOfObservationFrom != "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
 			isValid = false;
-			$('#noOfObservationTo').addClass("border border-danger")
-			$('#noOfObservationFrom').addClass("border border-danger")
+			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
+			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}
 		
 		if (!isValid) {
@@ -718,15 +779,13 @@ function addJob(){
 				   showMessage(data.message, 'error')
 			  }
 			 // reset();
-			  moveToTop();
-			  refreshJobList();
-			 
+			 refreshJobList();
 		  },
 		  error: function(jqXhr, textStatus, errorMessage) {
 			  showMessage(errorMessage, 'error')
 		  }
 		});
-		
+
 
 }
 
@@ -749,43 +808,58 @@ function reset(){
 
 	$('#appointmentRange').val('N')
 	$('#appointmentRange').prop("checked", false);
+	disableInputElement('noOfAppointmentFrom');
+	disableInputElement('noOfAppointmentTo');
 	hideInputText('noOfAppointmentFrom');
 	hideInputText('noOfAppointmentTo');
 	unhideInputText('noOfAppointment');
 		
 	$('#episodeRange').val('N');
 	$('#episodeRange').prop("checked", false);
+	disableInputElement('noOfEpisodeFrom');
+	disableInputElement('noOfEpisodeTo');
 	hideInputText('noOfEpisodeFrom');
 	hideInputText('noOfEpisodeTo');
 	unhideInputText('noOfEpisode');
 	
 	$('#orderRange').val('N');
 	$('#orderRange').prop("checked", false);
+	disableInputElement('noOfOrderFrom');
+	disableInputElement('noOfOrderTo');	
 	hideInputText('noOfOrderFrom');
 	hideInputText('noOfOrderTo');
 	unhideInputText('noOfOrder');
 	
 	$('#observationRange').val('N');
 	$('#observationRange').prop("checked", false);
+	disableInputElement('noOfObservationFrom');
+	disableInputElement('noOfObservationTo');		
 	hideInputText('noOfObservationFrom');
 	hideInputText('noOfObservationTo');
 	unhideInputText('noOfObservation');
 	
 	$('#checkAll').prop("checked", false);
+	
+	removeWarningBgColor('noOfPatient');
+	removeWarningBgColor('noOfEpisode');
+	removeWarningBgColor('noOfAppointment');
+	removeWarningBgColor('noOfOrder');
+	removeWarningBgColor('noOfObservation');
+	removeWarningBgColor('noOfAppointmentFrom');
+	removeWarningBgColor('noOfAppointmentTo');
+	removeWarningBgColor('noOfEpisodeFrom');
+	removeWarningBgColor('noOfEpisodeTo');
+	removeWarningBgColor('noOfOrderFrom');
+	removeWarningBgColor('noOfOrderTo');
+	removeWarningBgColor('noOfObservationFrom');
+	removeWarningBgColor('noOfObservationTo');
+	
 
 	//$('#autoRefresh').val('Y');
 	//$('#autoRefresh').prop("checked", true);
 	
+	resetAutoRefresh();
 
-	if ($('#autoRefresh').val() === 'Y') {
-		refreshInterval = setInterval(function () {
-				refreshJobList();
-		},4000);
-	} else {
-		clearInterval(refreshInterval);
-	}		
-
-			
 }
 
 function convertDateFormat(dateStr){

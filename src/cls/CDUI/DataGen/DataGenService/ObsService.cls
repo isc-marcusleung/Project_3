@@ -16,16 +16,17 @@ Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, E
     set numOfLoop = EpisodeVoObjList.Count()
     for i = 1:1:numOfLoop{
         set ranNum = ##class(PUtil).Random(diff) + MinNumOfObs
-        set episodeVo = EpisodeVoObjList.GetAt(i)
-        do ..NewObsPerEpisode(ranNum, episodeVo, .locationObjList, .numOfSuccess)
-        set numOfFailure = ranNum - numOfSuccess
-        set totalSuccess = totalSuccess + numOfSuccess
-        set totalFailure = totalFailure + numOfFailure
+        if (ranNum > 0){
+            set episodeVo = EpisodeVoObjList.GetAt(i)
+            do ..NewObsPerEpisode(ranNum, episodeVo, .locationObjList, .numOfSuccess)
+            set numOfFailure = ranNum - numOfSuccess
+            set totalSuccess = totalSuccess + numOfSuccess
+            set totalFailure = totalFailure + numOfFailure
 
-        if (numOfFailure>0){
-            set failedByEpisodeIdArr(EpisodeVoObjList.GetAt(i).ID) = numOfFailure
+            if (numOfFailure>0){
+                set failedByEpisodeIdArr(EpisodeVoObjList.GetAt(i).ID) = numOfFailure
+            }
         }
-
         do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
     }
 }

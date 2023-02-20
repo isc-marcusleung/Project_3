@@ -45,7 +45,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         if ($Data(^DataGen.Job) = 0){
             set ^DataGen.Job("info","size") = 0
             set ^DataGen.Job("info","nextId") = 1
-            set ^DataGen.Job("info","maxProcess") = 100 //TODO marcus
+            set ^DataGen.Job("info","maxProcess") = 8 //TODO marcus
             set ^DataGen.Job("info","isProcessByBatch") = 1 //0 indicates false, 1 indicates true
             set ^DataGen.Job("info","noOfPatientPerBatch") = 10 
             set ^DataGen.Job("info","noOfCurrentProcess") = 0
@@ -269,12 +269,19 @@ ClassMethod TerminateJob(id As %Integer)
         set locked = 1
         if ($Data(^DataGen.Job("item",id))  = 0) { 
             $$$LOGINFO("[JobService.TerminateJob] Job is not found. Job Id: "_id)
-            Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
+            Throw ##class(%Exception.General).%New("RecordNotFoundException",5809,"CDUI.Web.Service.JobService","The record is not found.")
         }
-    
-        do ..TerminateJobItem(id)
-        do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
 
+        set status = ^DataGen.Job("item",id, "status")
+        if ((status '= ..#StatusCreate) && (status '= ..#StatusInProgress)){    
+            Throw ##class(%Exception.General).%New("ActionNotValidException",,"CDUI.Web.Service.JobService","Only Create or In Progress can be terminated. (Job id: "_id_")")
+        }
+
+        do ..TerminateJobItem(id)
+
+        if ((status = ..#StatusCreate)  || (status = ..#StatusInProgress)){
+            do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
+        }
         Lock -^DataGen.Job("item",id)
         TCOMMIT
         $$$LOGINFO("[JobService.TerminateJob] Finished terminating a job. Job Id: "_id)
@@ -335,6 +342,14 @@ ClassMethod FinishJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.FinishJob] Update to Completed. Job Id: "_id)
     do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7))
+    do ..RemoveTicketForJob()
+}
+
+ClassMethod FinishJobWithError(id As %Integer)
+{
+    $$$LOGINFO("[JobService.FinishJobWithError] Update to Completed With Error. Job Id: "_id)
+    do ..UpdateJob(id, , ..#StatusCompletedWithError, $ZDATETIME($HOROLOG,3,7))
+    do ..RemoveTicketForJob()
 }
 
 ClassMethod ErrorJob(id As %Integer)

@@ -12,20 +12,21 @@ Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer 
     set totalFailure = 0
     for i=1:1:EpisodeVoObjList.Count(){
         set ranNum = ##class(PUtil).Random(diff) + MinNumOfOrder
-        do ..NewOrderPerPatient(ranNum, EpisodeVoObjList.GetAt(i), .orderVoObjList, .numOfSuccess)
-        set numOfFailure = ranNum - numOfSuccess
-        set totalSuccess = totalSuccess + numOfSuccess
-        set totalFailure = totalFailure + numOfFailure
+        if (ranNum > 0){
+            do ..NewOrderPerEpisode(ranNum, EpisodeVoObjList.GetAt(i), .orderVoObjList, .numOfSuccess)
+            set numOfFailure = ranNum - numOfSuccess
+            set totalSuccess = totalSuccess + numOfSuccess
+            set totalFailure = totalFailure + numOfFailure
 
-        if (numOfFailure > 0) {
-            set failedByEpisodeIdArr(EpisodeVoObjList.GetAt(i).ID) = numOfFailure
+            if (numOfFailure > 0) {
+                set failedByEpisodeIdArr(EpisodeVoObjList.GetAt(i).ID) = numOfFailure
+            }
         }
     }
-
     do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
 }
 
-Method NewOrderPerPatient(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer) [ Private ]
+Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer) [ Private ]
 {
     // TO DO CN - Any better way? 
     set EpisodeId = EpisodeItem.ID
@@ -80,7 +81,7 @@ Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, Episo
         
         set episodeItem = EpisodeVoObjList.GetAt(i)
         
-        do ..NewOrderPerPatient(NumOfOrderPerEpisode, episodeItem, .orderVoObjList, .numOfSuccess)
+        do ..NewOrderPerEpisode(NumOfOrderPerEpisode, episodeItem, .orderVoObjList, .numOfSuccess)
         
         set numOfFailure = NumOfOrderPerEpisode - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess

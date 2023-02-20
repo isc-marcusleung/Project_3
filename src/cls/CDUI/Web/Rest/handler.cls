@@ -66,8 +66,9 @@ ClassMethod AddJob() As %Status
 		set jobId = ##class(JobService).AddJob()
 	     //TODO marcus to see if i need to remove it
 		set ^DataGen.Log(jobId,"request") = request.SerialisedGet()
-
-		job ##class(DataGenService).processRequest(request.generateStringParamValues(), jobId)
+		set paramValue = request.generateStringParamValues()
+		set ^DataGen.Log(jobId, "reqStr") = paramValue
+		job ##class(DataGenService).processRequest(paramValue, jobId)
 	//	do ##class(DataGenService).processRequest(request.generateStringParamValues(), jobId)
 		set obj = {
 			"status" : (..#SUCCESS),
