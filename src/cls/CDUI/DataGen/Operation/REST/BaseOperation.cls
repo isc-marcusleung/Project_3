@@ -72,22 +72,28 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 	#dim ex As %Exception.AbstractException
 	try 
 	{
-		//Log request body
-		do ##class(CDUI.DataGen.ExportLog).LogRequest(Request.SerialisedGet())
+		//log API info
+		set APILog = ##class(CDUI.DataGen.vo.APILogVo).%New()
+		do ##class(CDUI.DataGen.Utils.CommonUtil).GetCurrentDT(.dateD,.timeD)
+		set APILog.currentDate = dateD
+		set APILog.currentTime = timeD
+		set APILog.processID = $SYSTEM.SYS.ProcessID()
+		set APILog.requestBody = Request.SerialisedGet()
 
 		set sc = Request.%JSONExportToString(.body)
 		do ..setupCredential()
 		set URL = ..Adapter.URL
 		$$$LOGINFO(URL)
 
-		//Calculate response time of the API call
+		//log API info
+		set APILog.APIname = URL
+
+		//Calculate and log response time of the API call
 		set t1 = $zdatetime($ZTIMESTAMP,3,1,3)
 		set sc = ..Adapter.PutURL(URL,.HttpResponse,,.body)
 		set t2 = $zdatetime($ZTIMESTAMP,3,1,3)
 		&sql(SELECT {fn TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND,:t1,:t2)} into :ResponseTime )
-
-		//Log response time 
-		do ##class(CDUI.DataGen.ExportLog).LogRespondTime(ResponseTime)
+		set APILog.responseTime = ResponseTime
 
 		if $$$ISERR(sc) return sc
 		if $isobject(HttpResponse)
@@ -100,12 +106,19 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 				set value = value_HttpResponse.Data.Read(..#DataReadBuffer)
 			}
 
-			//Log response body 
-			do ##class(CDUI.DataGen.ExportLog).LogResponse(value)
-			
-			//Log HTTPResponse status code and status line 
-			do ##class(CDUI.DataGen.ExportLog).LogStatus(HttpResponse.StatusCode,HttpResponse.StatusLine)
+			//Log API info
+			set APILog.responseBody = value
+			set APILog.HTTPResponseStatusCode = HttpResponse.StatusCode
+			set APILog.HTTPResponseStatusLine = HttpResponse.StatusLine
+			do APILog.concatenateProp(.info)
 
+			//check if log file exists
+			set logFileName = ##class(CDUI.DataGen.Common.Constants).#apiLogFileName
+			Set fileExists=##class(%File).Exists(logFileName)
+			if 'fileExists {
+				do ##class(CDUI.DataGen.ExportLog).IntializeAPILog()
+			}
+			do ##class(CDUI.DataGen.ExportLog).AddRowOfLog(logFileName,info)
 			// Update the properties in the response object
 			set Response = ##class(CDUI.DataGen.DataGenService.Custom.StringResponse).%New()
 			set Response.StringValue = value

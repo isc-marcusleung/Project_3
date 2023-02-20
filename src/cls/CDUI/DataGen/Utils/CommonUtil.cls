@@ -26,4 +26,14 @@ ClassMethod convertListOfDataTypeToString(sourceList As %ListOfDataTypes, delimi
     return result
 }
 
+// "17/02/2023","05:58"
+
+ClassMethod GetCurrentDT(Output dateD, Output timeD)
+{
+    SET dateH=$PIECE($HOROLOG,",",1)
+    SET timeH=$PIECE($HOROLOG,",",2)
+    set dateD = $zdate(dateH,4)
+    set timeD = $ztime(timeH,2)
+}
+
 }

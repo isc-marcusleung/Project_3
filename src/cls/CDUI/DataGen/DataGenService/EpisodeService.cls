@@ -61,9 +61,6 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of episode per patient: "_NumOfEpisodePerPatient)
 
-    //Initialize the log file
-	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Episode Creation")
-    
     do ..GetLocation(.locationObjList)
 
     set numOfLoop = PatientVoObjList.Count()

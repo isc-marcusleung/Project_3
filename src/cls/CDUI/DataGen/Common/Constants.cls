@@ -5,9 +5,9 @@ Parameter genders As STRING [ Final ] = "Female,Indeterminate,Male,Other,Unknown
 
 Parameter maxAge As INTEGER [ Final ] = 100;
 
-// Used to initialize log file 
+// location to save the api_log.csv file, cduinterns is a folder in the docker container 
 
-Parameter logFileName As STRING = "/cduinterns/irissys/mgr/user/job_log.txt";
+Parameter apiLogFileName As STRING = "/cduinterns/irissys/csp/user/datagen/log/api_log.csv";
 
 // Used to create obs table and submission array
 

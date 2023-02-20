@@ -65,9 +65,6 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
     //Retrieve the location list for the creation of a new episode
 	$$$LOGINFO("[ObsService.NewObs] Retrive the location list.")
 
-    //Initialize the log file
-	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Observation Creation")
-
     do ..GetLocation(.locationObjList)
 
     set numOfLoop = EpisodeVoObjList.Count()
