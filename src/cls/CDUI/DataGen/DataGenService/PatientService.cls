@@ -1,4 +1,4 @@
-Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base)
+Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base, CDUI.DataGen.DataGenService)
 
 Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
@@ -49,7 +49,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		try 
 		{
 			$$$LOGINFO("[PatientService.Run] Initialize patient request")
-			do ..InitPatientRequestByRandom(insurTypeObjList,.request,.randInsurTypeIndex)
+			do ..InitPatientRequestByRandom(.request,.randInsurTypeIndex)
 			
 			#; //Record request body in the log file
 			#; do ##class(CDUI.DataGen.ExportLog).LogRequest(request.SerialisedGet())
@@ -76,14 +76,18 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 				} else {
 					$$$LOGERROR("[PatientService.Run] Failed to create a patient. Error(JSON): "_json.ERROR)
 					// if it matches, remove the invalid insurance record from the list
-					set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^(INSTDesc|AUXITDesc).*")
+					set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^(INSTDesc|AUXITDesc).*") 
 					if isMatch {
-						do insurTypeObjList.RemoveAt(randInsurTypeIndex)
+						do ##class(ARCAuxilInsurTypeService).RemoveItem(randInsurTypeIndex)
 					}
 					set numOfFailed = numOfFailed + 1
 				}
 			} else {
 				$$$LOGERROR("[PatientService.Run] Failed to create a patient. Error(SC): "_$System.Status.DisplayError(sc))
+				set isMatch =  $MATCH($System.Status.GetErrorCodes(sc), "7201")
+				if isMatch {
+					do ##class(ARCAuxilInsurTypeService).RemoveItem(randInsurTypeIndex)
+				}
 				set numOfFailed = numOfFailed + 1
 			}
 		} 
@@ -112,7 +116,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	quit numOfFailed
 }
 
-Method InitPatientRequestByRandom(insurTypeObjList As %ListOfObjects, ByRef request As CDUI.DataGen.Request.NewPatient, ByRef randInsurTypeIndex As %Integer) [ Private ]
+Method InitPatientRequestByRandom(ByRef request As CDUI.DataGen.Request.NewPatient, Output randInsurTypeIndex As %Integer) [ Private ]
 {
     kill request
     kill randInsurTypeIndex
@@ -130,13 +134,13 @@ Method InitPatientRequestByRandom(insurTypeObjList As %ListOfObjects, ByRef requ
     set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
     set request.PAPERDob = ##class(PUtil).CustomDate(minDateInt, currentDateInt) 
 
-    // Randomly select the insurance record from insurTypeObjList 		
-    if $Data(insurTypeObjList) && (insurTypeObjList.Count() > 0){
-        set randInsurTypeIndex = ##class(PUtil).Random(insurTypeObjList.Count()) + 1
-        set insurType = insurTypeObjList.GetAt(randInsurTypeIndex)
-        set request.INSTDesc = insurType.AUXITInsTypeDR
-        set request.AUXITDesc = insurType.AUXITDesc
-    }
+    // Randomly select the insurance record   
+	do ##class(ARCAuxilInsurTypeService).GetInsurTypeByRandom(.jsonStr, .randInsurTypeIndex)
+	if randInsurTypeIndex '= 0 {
+		set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
+		set request.INSTDesc = dynamicObj.AUXITInsTypeDR
+        set request.AUXITDesc = dynamicObj.AUXITDesc
+	}
 }
 
 }
