@@ -51,7 +51,7 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 
 ClassMethod validateResult(ByRef FailedCaseArr) As %Boolean [ Private ]
 {
-   // If there is any recrod in the array, it indicates there are some failed cases.
+   // If there is any recrod in the array, it indicates there is at least one failed case.
     return $Data(FailedCaseArr) = 0
 }
 
@@ -152,11 +152,19 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
 
 ClassMethod recordFailedCase(ByRef failedByIdArr, Output FailedCaseArr, type As %String, patientId As %String) [ Private ]
 {
+
+    /**
+    "p" indicates failed patient record
+FailedCaseByPatientArr("TotalNumOfFailedPaitent")
+FailedCaseByPatientArr("p", patientId,"NumOfFailedEpisode")
+FailedCaseByPatient("p", patientId,"NumOfFailedAppt")
+FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedOrder")
+FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
+*/
     //record the number of failed case 
     if ($DATA(failedByIdArr) > 0) {
         set key = $Order(failedByIdArr(""))
         while (key '= "") {
-
             if (type = "NumOfFailedEpisode") {
                 set FailedCaseArr("p",key,"NumOfFailedEpisode") = failedByIdArr(key)
             } elseif (type = "NumOfFailedAppt"){
