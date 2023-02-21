@@ -274,7 +274,7 @@ ClassMethod TerminateJob(id As %Integer)
 
         set status = ^DataGen.Job("item",id, "status")
         if ((status '= ..#StatusCreate) && (status '= ..#StatusInProgress)){    
-            Throw ##class(%Exception.General).%New("ActionNotValidException",,"CDUI.Web.Service.JobService","Only Create or In Progress can be terminated. (Job id: "_id_")")
+            Throw ##class(%Exception.General).%New("ActionNotValidException",6215,"CDUI.Web.Service.JobService","Only Create or In Progress can be terminated. (Job id: "_id_")")
         }
 
         do ..TerminateJobItem(id)
@@ -314,6 +314,11 @@ ClassMethod DeleteJob(id As %Integer)
             $$$LOGINFO("[JobService.DeleteJob] Job is not found. Job Id: "_id)
             Lock -(^DataGen.Job("info","size"),^DataGen.Job("item",id))
             Throw ##class(%Exception.General).%New("RecordNotFound",5809,"CDUI.Web.Service.JobService","The record is not found.")
+        }
+        
+        set status = ^DataGen.Job("item",id, "status")
+        if ((status = ..#StatusCreate) || (status = ..#StatusInProgress)){    
+            do ..RemoveTicketForJob()
         }
 
         //If the job is not terminated, terminate it before remove it.
@@ -373,7 +378,6 @@ ClassMethod RemoveJobItem(id As %Integer) [ Private ]
 
 ClassMethod TerminateJobItem(id As %Integer) [ Private ]
 {
-  
     set status = ^DataGen.Job("item",id, "status")
     $$$LOGINFO("[JobService.TerminateJobItem] Before Job termination, Job Id: "_id_", Job status: "_status)
    

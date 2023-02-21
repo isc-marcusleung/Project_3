@@ -21,9 +21,6 @@ Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 	set patientInput.NumOfPatient = NumOfPatient
 	set patientInput.InsurTypeObjList = insurTypeObjList
 
-	//Initialize the log file
-	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Patient Creation")
-
 	do ..RunWithRetry(patientInput, patientOutput,)
 	
 	set patientIdList = patientOutput.PatientIdList

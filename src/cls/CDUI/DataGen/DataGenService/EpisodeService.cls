@@ -7,8 +7,10 @@ Parameter minAdmDate = "1/1/1970";
 
 Parameter locationTypeId = "E";
 
-Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects)
+Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
 {
+       
+        kill failedByPatientIdArr
         do ..GetLocation(.locationObjList)
         set diff = MaxNumOfEpisode - MinNumOfEpisode
         set totalSuccess = 0
@@ -54,7 +56,7 @@ Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As
         $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
 }
 
-Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
 {
     set totalSuccess = 0
     set totalFailure = 0
@@ -63,9 +65,6 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of patient: "_PatientVoObjList.Count())
     $$$LOGINFO("[EpisodeService.NewEpisode] Number of episode per patient: "_NumOfEpisodePerPatient)
 
-    //Initialize the log file
-	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Episode Creation")
-    
     do ..GetLocation(.locationObjList)
 
     set numOfLoop = PatientVoObjList.Count()

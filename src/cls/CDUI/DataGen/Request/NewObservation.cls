@@ -11,7 +11,13 @@ Property ObsDate As %String;
 
 Property ObsTime As %String;
 
+Property OEOREDateExecuted As %String;
+
+Property OEORETimeExecuted As %String;
+
 Property OBSENTRYPatLocDesc As %String;
+
+Property TOVERRIDE As %Boolean;
 
 Property TableItems As list Of CDUI.DataGen.Request.NewObservationItem;
 
@@ -42,6 +48,15 @@ Storage Default
 </Value>
 <Value name="6">
 <Value>OBSENTRYPatLocDesc</Value>
+</Value>
+<Value name="7">
+<Value>OEOREDateExecuted</Value>
+</Value>
+<Value name="8">
+<Value>OEORETimeExecuted</Value>
+</Value>
+<Value name="9">
+<Value>TOVERRIDE</Value>
 </Value>
 </Data>
 <Data name="TableItems">

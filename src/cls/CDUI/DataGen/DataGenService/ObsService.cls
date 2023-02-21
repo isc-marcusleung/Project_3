@@ -7,8 +7,9 @@ Parameter locationTypeId = "E";
 
 // For a single patient, each episode has different numbers of episodes
 
-Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects)
+Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
 {
+    kill failedByEpisodeIdArr
     do ..GetLocation(.locationObjList)
     set diff = MaxNumOfObs - MinNumOfObs
     set totalSuccess = 0
@@ -56,8 +57,9 @@ Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.Da
 
 // Create same number of observations for all episodes
 
-Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects)
+Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
 {
+    kill failedByEpisodeIdArr
     set totalSuccess = 0
     set totalFailure = 0
     $$$LOGINFO("[ObsService.NewObs] Number of episode: "_EpisodeVoObjList.Count())
@@ -65,9 +67,6 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
     
     //Retrieve the location list for the creation of a new episode
 	$$$LOGINFO("[ObsService.NewObs] Retrive the location list.")
-
-    //Initialize the log file
-	do ##class(CDUI.DataGen.ExportLog).LogJob(,"Observation Creation")
 
     do ..GetLocation(.locationObjList)
 
@@ -82,7 +81,6 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
         set numOfFailure = NumOfObsPerEpisode - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
-        set failedByEpisodeIdArr = []
 
         if (numOfFailure > 0) {
             set failedByEpisodeIdArr(episodeVo.ID) = numOfFailure
@@ -100,39 +98,30 @@ Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %
     kill obsInput
     set obsInput = ##class(CDUI.DataGen.DataGenService.Custom.ObsInput).%New()
 
-    do ..GetCurrentDT(.DateD,.TimeD)
     set locationDesc = episodeVo.CTLOCDesc
 
     for cnt = 1:1:NumOfObsPerEpisode{
         do ..UpdateMradm(.episodeVo)
         do ..CheckLocObjList(locationObjList, locationDesc, .locationCode)
-        //update date and time so that each request has different date and time 
-        do ..UpdateDT(.DateD,.TimeD,30)
-        do ..UpdateD(.DateD)
+        //update date and time so that each request has different date and time
+        do ..GetExecDT(cnt,.ExecDateD,.ExecTimeD)
         
         //Randomly select a set of observations 
-        set numOfRecord = 0
-        &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.Observations)
-        set randomNum = $RANDOM(numOfRecord)+1
-        set obsItemSet = ##class(CDUI.DataGen.MIMIC.Observations).%OpenId(randomNum)
+        do ..GetObsItemSet(.obsItemSet)
 
         //packing one request object 
         set request = ##class(CDUI.DataGen.Request.NewObservation).%New()
         set request.PatientID = episodeVo.PatientID
         set request.mradm = episodeVo.mradm
         set request.EpisodeID = episodeVo.ID
-        set request.ObsDate = DateD
-        set request.ObsTime = TimeD
+        set request.ObsDate = ExecDateD
+        set request.ObsTime = ExecTimeD
+        set request.OEOREDateExecuted = ExecDateD
+        set request.OEORETimeExecuted = ExecTimeD
         set request.OBSENTRYPatLocDesc = locationCode
+        set request.TOVERRIDE = 1
 
-        do ..UpdateTableItems(obsItemSet,"VS1", .request)
-        do ..UpdateTableItems(obsItemSet,"VS2", .request)
-        do ..UpdateTableItems(obsItemSet,"VS3", .request)
-        do ..UpdateTableItems(obsItemSet,"VS4", .request)
-        do ..UpdateTableItems(obsItemSet,"VS5", .request)
-        do ..UpdateTableItems(obsItemSet,"VS6", .request)
-        do ..UpdateTableItems(obsItemSet,"HEIGHT", .request)
-        do ..UpdateTableItems(obsItemSet,"WEIGHT", .request)
+        do ..PackObsItemSetToRequest(obsItemSet,.request)
 
         //save the request object to the list 
         do obsInput.RequestObjList.Insert(request)
@@ -140,41 +129,65 @@ Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %
     }
 }
 
-// Get current date and time and convert them to be in the form used to create observations
+// Randomly get a set of observation items 
 
-ClassMethod GetCurrentDT(Output dateR, Output timeR)
+ClassMethod GetObsItemSet(Output obsItemSet)
+{
+    set numOfRecord = 0
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.Observations)
+    set randomNum = $RANDOM(numOfRecord)+1
+    set obsItemSet = ##class(CDUI.DataGen.MIMIC.Observations).%OpenId(randomNum)
+}
+
+// Pack obs item set to request 
+
+ClassMethod PackObsItemSetToRequest(obsItemSet, ByRef request As CDUI.DataGen.Request.NewObservation)
+{
+    do ..UpdateTableItems(obsItemSet,"VS1", .request)
+    do ..UpdateTableItems(obsItemSet,"VS2", .request)
+    do ..UpdateTableItems(obsItemSet,"VS3", .request)
+    do ..UpdateTableItems(obsItemSet,"VS4", .request)
+    do ..UpdateTableItems(obsItemSet,"VS5", .request)
+    do ..UpdateTableItems(obsItemSet,"VS6", .request)
+    do ..UpdateTableItems(obsItemSet,"HEIGHT", .request)
+    do ..UpdateTableItems(obsItemSet,"WEIGHT", .request)
+}
+
+// Get current date and time and convert them to display form
+
+ClassMethod GetCurrentDT(Output dateD, Output timeD)
 {
     SET dateH=$PIECE($HOROLOG,",",1)
     SET timeH=$PIECE($HOROLOG,",",2)
-    set dateR = $zdate(dateH,4)
-    set timeR = $ztime(timeH,2)
+    set dateD = $zdate(dateH,4)
+    set timeD = $ztime(timeH,2)
 }
 
-// update date and time with desired interval 
+// calculate execution data an time from current date and time, exec date and time must be in the past 
 
 // interval is a integer that has a unit minutes 
 
-ClassMethod UpdateDT(ByRef dateR, ByRef timeR, intervalM As %Integer = 30)
+ClassMethod GetExecDT(counter As %Integer, Output ExecDateD, Output ExecTimeD)
 {
-    set dateH = $zdh(dateR,4)
-    set timeH = $zth(timeR,2)
-    set intervalS = intervalM * 60
-    set timeH = timeH + intervalS
-    if timeH > 86399 {
-        set timeH = timeH - 86400
-        set dateH = dateH + 1 
+    do ..GetCurrentDT(.CurrentDateD,.CurrentTimeD)
+    set CurrentDateH = $zdh(CurrentDateD,4)
+    set CurrentTimeH = $zth(CurrentTimeD,2)
+    set intervalInSec = 600
+    set ExecDateH = CurrentDateH - 10
+    set ExecTimeH = CurrentTimeH + (counter * 60) 
+    if ExecTimeH > 86399 {
+        set ExecTimeH = ExecTimeH - 86400
+        set ExecDateH = ExecDateH + 1 
     }
-    set dateR = $zdate(dateH,4)
-    set timeR = $ztime(timeH,2)
+    set ExecDateD = $zdate(ExecDateH,4)
+    set ExecTimeD = $ztime(ExecTimeH,2)
 }
 
-// increase date by one 
-
-ClassMethod UpdateD(ByRef dateR)
+ClassMethod UpdateDateD(DateD As %String, Output NewDateD As %String)
 {
-    set dateH = $zdh(dateR,4)
-    set dateH = dateH+1
-    set dateR = $zdate(dateH,4)
+    set DateH = $zdh(DateD,4)
+    set DateH = DateH - 1
+    set NewDateD = $zdate(DateH,4)
 }
 
 // update the mradm property of EpisodeVo
@@ -322,9 +335,6 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
         $$$LOGINFO("[ObsService.Run] Request: "_request.SerialisedGet())
         set isSuccess = 0
 
-        //test hang
-        #; HANG 10
-
         try {
             set sc = ..SendRequest(request,.response)
             if $$$ISOK(sc){
@@ -337,6 +347,36 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
                 }
                 else {
                     $$$LOGERROR("[ObsService.Run] Failed to create an observation. Error(Json): "_json.ERROR)
+                    set isMatchTimeError = $MATCH(json.ERROR, ".*The time entered already exists.*")
+                    if isMatchTimeError{
+                        $$$LOGINFO("Time Already exist error.")
+                        set DateD = request.OEOREDateExecuted
+                        $$$LOGINFO("DateD: "_DateD)
+                        do ..UpdateDateD(DateD,.NewDateD)
+                        $$$LOGINFO("NewDateD: "_NewDateD)
+                        set request.OEOREDateExecuted = NewDateD
+                        set request.ObsDate = NewDateD
+                        $$$LOGINFO("RequestDateD: "_request.OEOREDateExecuted)
+                    }
+
+                    set isMatchCritAlertError = $MATCH(json.ERROR, ".*The following items are within the Critical range of the Early Warning Scoring System.*")
+                    if isMatchCritAlertError{
+                        $$$LOGINFO("Critical Alert error.")
+                        do ..GetObsItemSet(.obsItemSet)
+                        do ..PackObsItemSetToRequest(obsItemSet, .request)
+                    }
+
+                    set isMatchFrequencyError = $MATCH(json.ERROR, ".*EWS  2 (MODERATE).*")
+                    if isMatchFrequencyError{
+                        $$$LOGINFO("Frequency error.")
+                        set DateD = request.OEOREDateExecuted
+                        do ..UpdateDateD(DateD,.NewDateD)
+                        set request.OEOREDateExecuted = NewDateD
+                        set request.ObsDate = NewDateD
+                    }
+                        
+                    $$$LOGINFO("Frequency error: "_isMatchFrequencyError_" Critical Alert error: "_isMatchCritAlertError_" Time error: "_isMatchTimeError)
+                    $$$LOGINFO("[ObsService.Run] NewRequest: "_request.SerialisedGet())
                 }
             }
             else{

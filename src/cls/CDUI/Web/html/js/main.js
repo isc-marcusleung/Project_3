@@ -165,14 +165,14 @@ $(document).ready(function(){
 		reloadTable(this.href);
 		moveToTop();
 	});
-	
+
 	$('#actionConfirm').click(function(event){
 		var action = $('#actions').val();
 		
 		switch (action) { 
 		case '1': 
-			var numOfDone = handleAction(deleteJob);
-			if (numOfDone == 0){
+			var numOfDone = handleAction(deleteJob,1000);
+			if (numOfDone == "0"){
 				showMessage("Please select at least one job !!!", "warning");
 			} else {
 				setTimeout(function(){
@@ -183,8 +183,8 @@ $(document).ready(function(){
 			
 			break;
 		case '2': 
-			var numOfDone = handleAction(terminateJob); 
-			if (numOfDone == 0){
+			var numOfDone = handleAction(terminateJob,null); 
+			if (numOfDone == "0"){
 				showMessage("Please select at least one job !!!", "warning");
 			} else {
 				setTimeout(function(){
@@ -284,11 +284,19 @@ function refreshJobList(){
 	getJobList(10,null,null,'N');
 }
 
+function sleep(milliseconds) {
+	const date = Date.now();
+	let currentDate = null;
+	do {
+		currentDate = Date.now();
+	} while (currentDate - date < milliseconds);
+}
 
-function handleAction(fCallback){
+function handleAction(fCallback, delayInMs){
 	var numOfDone = 0;
 	$('#jobList input[type="checkbox"]').each(function(index) 
 	{   if ($(this).is(":checked") && (index != 0)) {
+			if (delayInMs != null && delayInMs != '') {sleep(delayInMs);}
 			let id = this.id.split('-')[1]
 			fCallback(id);
 			numOfDone += 1;
@@ -298,9 +306,8 @@ function handleAction(fCallback){
 }
 
 function deleteJob(id){
-		//TODO marcus
+
 		var endpoint = location.protocol + '//' + location.host + '/csp/datagen/web/api/job';
-		//var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
 
 		$.ajax({
 		  url: endpoint + "/"+id,
@@ -322,9 +329,8 @@ function deleteJob(id){
 }
 
 function terminateJob(id){
-		//TODO marcus
-		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
-		var endpoint = 'http://localhost:9094/csp/datagen/web/api/job/terminate';
+	
+		var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
 
 		$.ajax({
 		  url: endpoint + "/"+id,
@@ -372,6 +378,7 @@ function reloadTable(href){
 		} 
 	});
 	getJobList(count,beforeId,afterId,'N');
+	$('#checkAll').prop("checked", false);
 }
 
 function removeWarningBgColor(id){
@@ -525,9 +532,7 @@ function enableInputElement(id){
 
 
 function getJobList(count,beforeId,afterId, isSetting){
-	
-	//var endpoint = 'http://localhost:9094/csp/datagen/web/api/job'
-	//TODO marcus
+
 	var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job';
 	var paramsObj = new URLSearchParams();
    
@@ -605,13 +610,13 @@ function buildTable(dataObj){
 	var host = location.protocol + '//' + location.host;
 	if (typeof nextpage != "undefined" && nextpage != ""){
 		$('#next').removeClass( "disabled" ); 
-		$('#next .page-link').prop('href',host + nextpage ); //todo marcus
+		$('#next .page-link').prop('href',host + nextpage );
 	} else {
 		$('#next').addClass( "disabled");
 	}
 	if (typeof previousPage != "undefined" && previousPage !=""){
 		$('#previous').removeClass( "disabled");
-		$('#previous .page-link').prop('href',host + previousPage );  //todo marcus
+		$('#previous .page-link').prop('href',host + previousPage ); 
 	} else {
 		$('#previous').addClass( "disabled");
 	}
@@ -620,6 +625,7 @@ function buildTable(dataObj){
 	//console.log(previousPage);
 	
 }
+
 
 function addJob(){
 	
@@ -758,12 +764,8 @@ function addJob(){
 			return
 		}
 		
-	
-		
-		//var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/addJob'
-		var endpoint = 'http://localhost:9094/csp/datagen/web/api/addJob'
+		var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/addJob'
 		console.log(formData)
-		
 		
 		$.ajax({
 		  url: endpoint,
@@ -853,10 +855,6 @@ function reset(){
 	removeWarningBgColor('noOfOrderTo');
 	removeWarningBgColor('noOfObservationFrom');
 	removeWarningBgColor('noOfObservationTo');
-	
-
-	//$('#autoRefresh').val('Y');
-	//$('#autoRefresh').prop("checked", true);
 	
 	resetAutoRefresh();
 
