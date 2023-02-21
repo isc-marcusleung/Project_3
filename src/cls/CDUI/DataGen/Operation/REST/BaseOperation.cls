@@ -116,7 +116,7 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 			set logFileName = ##class(CDUI.DataGen.Common.Constants).#apiLogFileName
 			Set fileExists=##class(%File).Exists(logFileName)
 			if 'fileExists {
-				do ##class(CDUI.DataGen.ExportLog).IntializeAPILog()
+				do ##class(CDUI.DataGen.ExportLog).InitializeAPILog()
 			}
 			do ##class(CDUI.DataGen.ExportLog).AddRowOfLog(logFileName,info)
 			// Update the properties in the response object

@@ -17,6 +17,8 @@ Property OEORETimeExecuted As %String;
 
 Property OBSENTRYPatLocDesc As %String;
 
+Property TOVERRIDE As %Boolean;
+
 Property TableItems As list Of CDUI.DataGen.Request.NewObservationItem;
 
 Method SerialisedGet() As %RawString
@@ -52,6 +54,9 @@ Storage Default
 </Value>
 <Value name="8">
 <Value>OEORETimeExecuted</Value>
+</Value>
+<Value name="9">
+<Value>TOVERRIDE</Value>
 </Value>
 </Data>
 <Data name="TableItems">

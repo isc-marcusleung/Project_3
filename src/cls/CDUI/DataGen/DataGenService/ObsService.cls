@@ -119,6 +119,7 @@ Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %
         set request.OEOREDateExecuted = ExecDateD
         set request.OEORETimeExecuted = ExecTimeD
         set request.OBSENTRYPatLocDesc = locationCode
+        set request.TOVERRIDE = 1
 
         do ..PackObsItemSetToRequest(obsItemSet,.request)
 
@@ -358,14 +359,14 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
                         $$$LOGINFO("RequestDateD: "_request.OEOREDateExecuted)
                     }
 
-                    set isMatchCritAlertError = $MATCH(json.ERROR, ".*DW^EWS Critical Alert.*")
+                    set isMatchCritAlertError = $MATCH(json.ERROR, ".*The following items are within the Critical range of the Early Warning Scoring System.*")
                     if isMatchCritAlertError{
                         $$$LOGINFO("Critical Alert error.")
                         do ..GetObsItemSet(.obsItemSet)
                         do ..PackObsItemSetToRequest(obsItemSet, .request)
                     }
 
-                    set isMatchFrequencyError = $MATCH(json.ERROR, ".*DW^EWS Moderate Alert.*")
+                    set isMatchFrequencyError = $MATCH(json.ERROR, ".*EWS  2 (MODERATE).*")
                     if isMatchFrequencyError{
                         $$$LOGINFO("Frequency error.")
                         set DateD = request.OEOREDateExecuted
@@ -373,6 +374,7 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
                         set request.OEOREDateExecuted = NewDateD
                         set request.ObsDate = NewDateD
                     }
+                        
                     $$$LOGINFO("Frequency error: "_isMatchFrequencyError_" Critical Alert error: "_isMatchCritAlertError_" Time error: "_isMatchTimeError)
                     $$$LOGINFO("[ObsService.Run] NewRequest: "_request.SerialisedGet())
                 }
