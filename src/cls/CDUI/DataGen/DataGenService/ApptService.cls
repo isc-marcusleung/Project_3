@@ -3,12 +3,12 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.ApptService Extends BaseService
 {
 
-Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects)
+Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
 {
+    kill failedByPatientIdArr
     set diff = MaxNumOfAppt - MinNumOfAppt
     set totalSuccess = 0
     set totalFailure = 0
-    set failedByPatientIdArr = []
     for i=1:1:PatientVoObjList.Count(){
 
         set servIdList = ##class(%ListOfDataTypes).%New()
@@ -90,7 +90,7 @@ Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.
     $$$LOGINFO("[ApptService.NewApptPerPatient] Success count: "_totalSuccessPerPatient_", Failure count: "_totalFailurePerPatient)
 }
 
-Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
 {
     set totalSuccess = 0
     set totalFailure = 0

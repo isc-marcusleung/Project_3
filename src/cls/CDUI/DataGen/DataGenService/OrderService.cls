@@ -3,8 +3,9 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.OrderService Extends (%RegisteredObject, BaseService)
 {
 
-Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects)
+Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
 {
+    kill failedByEpisodeIdArr
     do ..GetOrderByCat("", OrderCat, .orderVoObjList)
 
     set diff = MaxNumOfOrder - MinNumOfOrder
@@ -60,7 +61,7 @@ Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As C
     $$$LOGINFO("[EpisodeService.NewOrder] Success count: "_NumOfSuccess_", Failure count: "_NumOfFailure)
 }
 
-Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects)
+Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
 {
     set Count = ""
     set OrderCat = OrderCat
