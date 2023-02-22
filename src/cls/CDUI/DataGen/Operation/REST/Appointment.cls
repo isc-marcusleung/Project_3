@@ -12,10 +12,7 @@ XData MessageMap
 
 Method createNewAppointment(Request As CDUI.DataGen.Request.NewAppointment, Output Response As Ens.StringResponse) As %Status
 {
-
-  s ^cn($i(^cn),"before") = Request.SerialisedGet()
-	set sc = ..httpPut(Request, .Response)
-  s ^cn($i(^cn),"after") = Request.SerialisedGet()
+  set sc = ..httpPut(Request, .Response)
   quit sc
 }
 
