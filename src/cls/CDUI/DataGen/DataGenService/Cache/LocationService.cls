@@ -89,7 +89,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         }
 
         TSTART
-        Lock +^DataGen.Cache("InsurType"):..#DefaultTimeout
+        Lock +^DataGen.Cache("Location"):..#DefaultTimeout
 
         if '$TEST {
             $$$LOGINFO("[LocationService.InitGlobalVariable] Failed to initialize global variable.")
