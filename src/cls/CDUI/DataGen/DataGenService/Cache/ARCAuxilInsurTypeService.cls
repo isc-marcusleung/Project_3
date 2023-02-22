@@ -13,21 +13,21 @@ ClassMethod GetInsurTypeByRandom(Output jsonStr, Output index)
     set jsonStr = ""
     set index = 0
     set key = ##class(PUtil).Random(^DataGen.Cache("InsurType","maxIndex")) + 1
-    set result = $Get(^DataGen.Cache("InsurType", key),"")
+    set result = $Get(^DataGen.Cache("InsurType", "r", key),"")
     if result = "" {
         //If it is not found via the index, then get the next item from the cache
-        set key = $Order(^DataGen.Cache("InsurType", key), 1)
+        set key = $Order(^DataGen.Cache("InsurType", "r", key), 1)
         //If it is not found by using the index next to the specified index, then get the preivou item from the cache
         if key = "" {
-            set key = $Order(^DataGen.Cache("InsurType", key), -1)
+            set key = $Order(^DataGen.Cache("InsurType", "r", key), -1)
         }
         //If it is found, return it back
         if key '= "" {
-            set jsonStr = $Get(^DataGen.Cache("InsurType", key),"")
+            set jsonStr = $Get(^DataGen.Cache("InsurType", "r", key),"")
             set index = key
         }
     } else {
-        set jsonStr = $Get(^DataGen.Cache("InsurType", key),"")
+        set jsonStr = $Get(^DataGen.Cache("InsurType", "r", key),"")
         set index = key
     }
 }
@@ -100,7 +100,7 @@ ClassMethod InitGlobalVariable() [ Private ]
             set ^DataGen.Cache("InsurType","createDateTime") = $ZDATETIME($HOROLOG,3,7)
             set ^DataGen.Cache("InsurType","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
             for cnt=1:1:insurTypeObjList.Count(){
-                set ^DataGen.Cache("InsurType",cnt) = insurTypeObjList.GetAt(cnt).SerialisedGet()
+                set ^DataGen.Cache("InsurType","r", cnt) = insurTypeObjList.GetAt(cnt).SerialisedGet()
             }
             
         } else {
@@ -125,7 +125,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
 {
     $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] index: "_index)
 
-    if ($Order(^DataGen.Cache("InsurType",index)) = "") {
+    if ($Order(^DataGen.Cache("InsurType","r", index)) = "") {
         $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] The insurType cache is empty.")
         return -1
     }
@@ -140,7 +140,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
         }
 
         set locked = 1
-        kill ^DataGen.Cache("InsurType", index)
+        kill ^DataGen.Cache("InsurType", "r", index)
         set ^DataGen.Cache("InsurType") = ^DataGen.Cache("InsurType") -1
         set ^DataGen.Cache("InsurType","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
         Lock -^DataGen.Cache("InsurType")

@@ -15,21 +15,21 @@ ClassMethod GetLocationByRandom(Output jsonStr, Output index)
     set jsonStr = ""
     set index = 0
     set key = ##class(PUtil).Random(^DataGen.Cache("Location","maxIndex")) + 1
-    set result = $Get(^DataGen.Cache("Location", key),"")
+    set result = $Get(^DataGen.Cache("Location", "r", key),"")
     if result = "" {
         //If it is not found via the index, then get the next item from the cache
-        set key = $Order(^DataGen.Cache("Location", key), 1)
+        set key = $Order(^DataGen.Cache("Location","r", key), 1)
         //If it is not found by using the index next to the specified index, then get the preivou item from the cache
         if key = "" {
-            set key = $Order(^DataGen.Cache("Location", key), -1)
+            set key = $Order(^DataGen.Cache("Location","r", key), -1)
         }
         //If it is found, return it back
         if key '= "" {
-            set jsonStr = $Get(^DataGen.Cache("Location", key),"")
+            set jsonStr = $Get(^DataGen.Cache("Location", "r", key),"")
             set index = key
         }
     } else {
-        set jsonStr = $Get(^DataGen.Cache("Location", key),"")
+        set jsonStr = $Get(^DataGen.Cache("Location", "r", key),"")
         set index = key
     }
 }
@@ -103,7 +103,7 @@ ClassMethod InitGlobalVariable() [ Private ]
             set ^DataGen.Cache("Location","createDateTime") = $ZDATETIME($HOROLOG,3,7)
             set ^DataGen.Cache("Location","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
             for cnt=1:1:locationObjList.Count(){
-                set ^DataGen.Cache("Location",cnt) = locationObjList.GetAt(cnt).SerialisedGet()
+                set ^DataGen.Cache("Location","r", cnt) = locationObjList.GetAt(cnt).SerialisedGet()
             }
             
         } else {
@@ -128,7 +128,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
 {
     $$$LOGINFO("[LocationService.RemoveItem] index: "_index)
 
-    if ($Order(^DataGen.Cache("Location",index)) = "") {
+    if ($Order(^DataGen.Cache("Location","r", index)) = "") {
         $$$LOGINFO("[LocationService.RemoveItem] The Location cache is empty.")
         return -1
     }
@@ -145,7 +145,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
         }
 
         set locked = 1
-        kill ^DataGen.Cache("Location", index)
+        kill ^DataGen.Cache("Location", "r", index)
         set ^DataGen.Cache("Location") = ^DataGen.Cache("Location") -1
         set ^DataGen.Cache("Location","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
         Lock -^DataGen.Cache("Location")
