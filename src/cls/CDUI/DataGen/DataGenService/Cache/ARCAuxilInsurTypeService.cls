@@ -48,6 +48,7 @@ ClassMethod clearCache()
 
         set locked = 1
         kill ^DataGen.Cache("InsurType")
+        Lock -^DataGen.Cache("InsurType")
         TCOMMIT
         $$$LOGINFO("[ARCAuxilInsurTypeService.clearCache] Finished clearing")
     } Catch exception {
