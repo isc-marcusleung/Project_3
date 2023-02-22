@@ -378,7 +378,7 @@ function reloadTable(href){
 		} 
 	});
 	getJobList(count,beforeId,afterId,'N');
-	$('#checkAll').prop("checked", false);
+	disableAllJobListCheckBox();
 }
 
 function removeWarningBgColor(id){
@@ -705,7 +705,7 @@ function addJob(){
 			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfEpisodeFrom != "" && noOfEpisodeTo != "" && (noOfEpisodeFrom > noOfEpisodeTo)){
+		if (noOfEpisodeFrom != "" && noOfEpisodeTo != "" && (Number(noOfEpisodeFrom) > Number(noOfEpisodeTo))){
 			isValid = false;
 			$('#noOfEpisodeFrom').addClass("bg-danger bg-gradient")
 			$('#noOfEpisodeTo').addClass("bg-danger bg-gradient")
@@ -721,7 +721,7 @@ function addJob(){
 			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfOrderFrom != "" && noOfOrderTo != "" && (noOfOrderFrom > noOfOrderTo)){
+		if (noOfOrderFrom != "" && noOfOrderTo != "" && (Number(noOfOrderFrom) > Number(noOfOrderTo))){
 			isValid = false;
 			$('#noOfOrderFrom').addClass("bg-danger bg-gradient")
 			$('#noOfOrderTo').addClass("bg-danger bg-gradient")
@@ -737,7 +737,7 @@ function addJob(){
 			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
 		}
 		
-		if (noOfAppointmentFrom != "" && noOfAppointmentTo != "" && (noOfAppointmentFrom > noOfAppointmentTo)){
+		if (noOfAppointmentFrom != "" && noOfAppointmentTo != "" && (Number(noOfAppointmentFrom) > Number(noOfAppointmentTo))){
 			isValid = false;
 			$('#noOfAppointmentTo').addClass("bg-danger bg-gradient")
 			$('#noOfAppointmentFrom').addClass("bg-danger bg-gradient")
@@ -753,7 +753,7 @@ function addJob(){
 			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
 		}		
 		
-		if (noOfObservationFrom != "" && noOfObservationTo != "" && (noOfObservationFrom > noOfObservationTo)){
+		if (noOfObservationFrom != "" && noOfObservationTo != "" && (Number(noOfObservationFrom) > Number(noOfObservationTo))){
 			isValid = false;
 			$('#noOfObservationTo').addClass("bg-danger bg-gradient")
 			$('#noOfObservationFrom').addClass("bg-danger bg-gradient")
