@@ -19,6 +19,15 @@ ClassMethod InitializeAPILog()
 
 // Add a row of info in api_log file  
 
+ClassMethod InitializeDebugLog()
+{
+    set logFileName = ##class(Constants).#debugLogFileName
+    set logFile=##class(%File).%New(logFileName)
+    Do logFile.Open("WSN")
+    Do logFile.WriteLine("This is a new job session.") 
+    do logFile.Close()
+}
+
 ClassMethod AddRowOfLog(logFileName As %String, info As %String)
 {
     set logFile=##class(%File).%New(logFileName)

@@ -14,7 +14,6 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
         set servIdList = ##class(%ListOfDataTypes).%New()
 
         //Retrieve the location service list
-        $$$LOGINFO("[ApptService.NewAppt] Retrieve the location service")
         set sc = ##class(TrakCareService).GetLocationServices(,.locServObjList)
         if $$$ISERR(sc)
         {
@@ -111,7 +110,6 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
         set servIdList = ##class(%ListOfDataTypes).%New()
 
         //Retrieve the location service list
-        $$$LOGINFO("[ApptService.NewAppt] Retrieve the location service")
         set sc = ##class(TrakCareService).GetLocationServices(,.locServObjList)
         if $$$ISERR(sc)
         {
@@ -180,8 +178,6 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
     
     set servIdList = apptInput.ServIdList
     set servId = apptInput.ServId
-
-    $$$LOGINFO("[ApptService.Run] Current servId: "_servId)
 
     set currentTrial = apptInput.CurrentTrial
 
@@ -258,10 +254,9 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
     }
 
     // Reset request with new slot
-    if $Data(failedApptRequestObjList){
+    if failedApptRequestObjList.Count() '= 0{
 
         set currentTrial = currentTrial + 1
-        $$$LOGINFO("[ApptService.Run - FailedRequest] Check value of currentTrial "_currentTrial) 
         if (currentTrial '= ..MaxNumOfRetry) {
             do ..ResetForFailedRequest(.slotsIndexList, .slotDetailObjList, .servId, servIdList, .slotsObjList, .failedApptRequestObjList, exApptOutput, .numOfServIdList)
             
@@ -276,11 +271,11 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
     }
 
     if (apptOutput.ApptIdList '= "") {     
-        $$$LOGINFO("[ApptService.Run] Count of ApptIdList before new appt insertion: "_apptOutput.ApptIdList.Count())   
+        #; $$$LOGINFO("[ApptService.Run] Count of ApptIdList before new appt insertion: "_apptOutput.ApptIdList.Count())   
 		for cnt=1:1:apptIdList.Count(){
-            $$$LOGINFO("[ApptService.Run] Insertion: "_apptIdList.GetAt(cnt))
+            #; $$$LOGINFO("[ApptService.Run] Insertion: "_apptIdList.GetAt(cnt))
 			do apptOutput.ApptIdList.Insert(apptIdList.GetAt(cnt))
-            $$$LOGINFO("[ApptService.Run] Count after insertion: "_apptOutput.ApptIdList.Count())
+            #; $$$LOGINFO("[ApptService.Run] Count after insertion: "_apptOutput.ApptIdList.Count())
 		}
 	} else { 
         $$$LOGINFO("[ApptService.Run] Reset: "_apptIdList)
@@ -318,17 +313,20 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
     }
     
     // Get random servId
-    $$$LOGINFO("[ApptService.Init0] Begin - Get random servid & slotsObjList...")
+    $$$LOGINFO("[ApptService.Init] Get random servid & slotsObjList...")
     do ..GetNewServIdAndSlotsList(servIdList, .slotsObjList, .servId)
 
     // Once all slots in all services have run out
     if servIdList.Count() = 0 {
-        $$$LOGINFO("[ApptService.Init0] No more services exists for this location.")
+        $$$LOGINFO("[ApptService.Init] No more services exists for this location.")
+
+        // Reset for output
+        set slotsObjList = ##class(%ListOfObjects).%New()
+        set servId = ""
     } 
 
     // If there are services for this location
     else {
-        $$$LOGINFO("[ApptService.Init0] There are services for this location...")
         // If no appointment exists
         if numOfExAppt = 0 
         {
@@ -345,7 +343,7 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
                     set retry = 0
                 }    
                 else {
-                    $$$LOGINFO("[ApptService.Init1] No slot found so remove servId from servIdList then get new slotsObjList to retry")
+                    $$$LOGINFO("[ApptService.Init1] No more slots found so remove servId from servIdList then get new slotsObjList to retry")
 
                     // Remove servId from list for retry
                     set servIdIndex = servIdList.Find(servId)
@@ -376,17 +374,23 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
                 // Else, meaning no slot that is not different to existing appointments after 8 trials, so get new servId & new slotsObjList for retry
                 else
                 {
-                    $$$LOGINFO("[ApptService.Init2] No slot found so try another slotObjList")
-                    // Remove servId from list for retry
-                    set servIdIndex = servIdList.Find(servId)
-                    do servIdList.RemoveAt(servIdIndex)
+                    if servIdList.Count() '=0 {
+                        $$$LOGINFO("[ApptService.Init2] No more slots found so try another slotObjList")
+                        // Remove servId from list for retry
+                        set servIdIndex = servIdList.Find(servId)
+                        do servIdList.RemoveAt(servIdIndex)
 
-                    do ..GetNewServIdAndSlotsList(servIdList, .slotsObjList, .servId)
-                    set retry = 1
+                        do ..GetNewServIdAndSlotsList(servIdList, .slotsObjList, .servId)
+                        set retry = 1
+                    }
+                    else {
+                        // Else, meaning no servId exists for this location, quit the while loop
+                        set retry = 0
+                    }
                 }
             }     
         }
-
+    
     }
     // Output of this method is 
     set apptInput.RequestObjList = apptTmpList 
@@ -400,10 +404,6 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
     /// Check if there is value in requestObjList
     if (apptInput.RequestObjList '= "") {     
         $$$LOGINFO("[ApptService.Init] Count of requests: "_apptInput.RequestObjList.Count())   
-	}
-    else 
-    { 
-        $$$LOGINFO("[ApptService.Init] No request found")
 	}
 }
 
@@ -537,7 +537,7 @@ Method ResetForFailedRequest(Output slotsIndexList As %ListOfDataTypes, Output s
             $$$LOGINFO("[ApptService.Run.FailedRequest] Get new USRN for new request: "_slot.USRN) 
             do slotsIndexList.Insert(randslotIndex)
             $$$LOGINFO("[ApptService.Run.FailedRequest] Slot index used: "_randslotIndex) 
-            $$$LOGINFO("[ApptService.Run.FailedRequest] Count of slotsIndexList: "_slotsIndexList.Count())
+            #; $$$LOGINFO("[ApptService.Run.FailedRequest] Count of slotsIndexList: "_slotsIndexList.Count())
             set newRequestMade = 1
         }
         else
@@ -569,7 +569,7 @@ Method ResetForFailedRequest(Output slotsIndexList As %ListOfDataTypes, Output s
 
 Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %ListOfObjects, Output servId As %Integer) [ Private ]
 {
-    $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Check 2 - count of servIdList after removal: "_servIdList.Count())
+    #; $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Check 2 - count of servIdList after removal: "_servIdList.Count())
     
     if servIdList.Count() > 0 {
         set ranNum = ##class(PUtil).Random(servIdList.Count()) + 1
@@ -578,7 +578,7 @@ Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %Lis
         set Rows = ##class(PUtil).Integer(1,20)
         // Retrieve the slots list
         do ..GetSlotList(servId, Rows,.slotsObjList)
-        $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] New Serv Id: "_servId) 
+        $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Service Id used: "_servId) 
         $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Count of new slotsObjList: "_slotsObjList.Count())
     }
 }
@@ -587,8 +587,8 @@ Method SetApptRequest(Output request As CDUI.DataGen.Request.NewAppointment, slo
 {
     
     do slotsIndexList.Insert(randslotIndex)
-    $$$LOGINFO("[ApptService.SetApptRequest] slotObjList Count: "_slotsObjList.Count())
-    $$$LOGINFO("[ApptService.SetApptRequest] Try slot index: "_randslotIndex)
+    #; $$$LOGINFO("[ApptService.SetApptRequest] slotObjList Count: "_slotsObjList.Count())
+    #; $$$LOGINFO("[ApptService.SetApptRequest] Try slot index: "_randslotIndex)
 
     // Set up the appointment request 
     $$$LOGINFO("[ApptService.SetApptRequest] Set up request...")
