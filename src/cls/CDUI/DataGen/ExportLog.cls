@@ -7,7 +7,7 @@ Class CDUI.DataGen.ExportLog
 
 // initialize api_log file, add headers 
 
-ClassMethod IntializeAPILog()
+ClassMethod InitializeAPILog()
 {
     set logFileName = ##class(Constants).#apiLogFileName
     set logFile=##class(%File).%New(logFileName)
