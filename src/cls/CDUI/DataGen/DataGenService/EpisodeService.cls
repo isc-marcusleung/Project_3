@@ -7,6 +7,8 @@ Parameter minAdmDate = "1/1/1970";
 
 Parameter locationTypeId = "E";
 
+Parameter maxNoOfTrial = 5;
+
 Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
 {
        
@@ -312,11 +314,24 @@ Method GetPatientIdList(patientVoObjList As %ListOfObjects, Output patientIdList
 Method AssignLocation(request As CDUI.DataGen.Request.NewEpisode, Output index) [ Private ]
 {
     // Randomly select the location record   
-	do ##class(LocationService).GetLocationByRandom(.jsonStr, .index)
-	if index '= 0 {
-		set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
-        set request.CTLOCDesc = dynamicObj.CTLOCDesc
-	}
+    set isRun = 1
+    set cnt = 0
+    //Due to below exception, I added retry for it
+    //%FromJSON+22^%Library.DynamicAbstractObject.1 *%Exception.General Parsing error 3 Line 1 Offset 1
+    while (isRun && (cnt < ..#maxNoOfTrial)){
+        do ##class(LocationService).GetLocationByRandom(.jsonStr, .index)
+        try{    
+            if index '= 0 {
+                set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
+                set request.CTLOCDesc = dynamicObj.CTLOCDesc
+            }
+            set isRun = 0
+        } catch ex {
+            do LOG^%ETN
+            do ##class(LocationService).RemoveItem(index)
+            set cnt = cnt + 1
+        }
+    }
 }
 
 }

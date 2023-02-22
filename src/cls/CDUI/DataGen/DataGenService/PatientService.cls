@@ -3,6 +3,8 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
 
+Parameter maxNoOfTrial = 5;
+
 Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 {
 	// generate patient records and insert them to TrakCare via API.
@@ -124,13 +126,24 @@ Method InitPatientRequestByRandom(ByRef request As CDUI.DataGen.Request.NewPatie
     set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
     set request.PAPERDob = ##class(PUtil).CustomDate(minDateInt, currentDateInt) 
 
-    // Randomly select the insurance record   
-	do ##class(ARCAuxilInsurTypeService).GetInsurTypeByRandom(.jsonStr, .randInsurTypeIndex)
-	if randInsurTypeIndex '= 0 {
-		set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
-		set request.INSTDesc = dynamicObj.AUXITInsTypeDR
-        set request.AUXITDesc = dynamicObj.AUXITDesc
-	}
+	// Randomly select the location record   
+    set isRun = 1
+    set cnt = 0
+    while (isRun && (cnt < ..#maxNoOfTrial)){
+        do ##class(ARCAuxilInsurTypeService).GetInsurTypeByRandom(.jsonStr, .randInsurTypeIndex)
+        try{    
+            if randInsurTypeIndex '= 0 {
+				set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
+				set request.INSTDesc = dynamicObj.AUXITInsTypeDR
+				set request.AUXITDesc = dynamicObj.AUXITDesc
+			}
+            set isRun = 0
+        } catch ex {
+            do LOG^%ETN
+            do ##class(LocationService).RemoveItem(randInsurTypeIndex)
+            set cnt = cnt + 1
+        }
+    }
 }
 
 }
