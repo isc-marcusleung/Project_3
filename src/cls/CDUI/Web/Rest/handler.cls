@@ -137,7 +137,8 @@ ClassMethod SetConfig() As %Status
 
 			if action = 1 {
 				//purge cache
-				kill ^DataGen.Cache
+				do ##class(CDUI.DataGen.DataGenService.Cache.LocationService).clearCache()
+				do ##class(CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService).clearCache()
 				set isValid = 1
 			} elseif action = 2 {
 				//purge log
@@ -145,12 +146,21 @@ ClassMethod SetConfig() As %Status
 				set isValid = 1
 			} elseif action = 3 {
 				//reset all
-				kill ^DataGen.Cache
+				do ##class(CDUI.DataGen.DataGenService.Cache.LocationService).clearCache()
+				do ##class(CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService).clearCache()
 				kill ^DataGen.Log
+
+				SET key=$ORDER(^DataGen.Job("item",""))
+				WHILE (key'="") {
+					SET tmpKey = $ORDER(^DataGen.Job("item",key))  
+					do ##class(JobService).DeleteJob(key)
+					set key = tmpKey
+				}
 				kill ^DataGen.Job
 				set isValid = 1
 			} 
 		}
+
 		if ('isValid || 'isReqBody) {
 			set obj = {
 				"status" : (..#ERROR),
@@ -173,8 +183,6 @@ ClassMethod SetConfig() As %Status
 	write obj.%ToJSON()
 	Quit $$$OK
 }
-
-// TODO marucs to turn it off
 
 Parameter HandleCorsRequest = 0;
 
