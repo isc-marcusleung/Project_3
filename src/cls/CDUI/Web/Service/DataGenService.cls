@@ -60,6 +60,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     kill FailedCaseArr
     
     set patientService = ##class(PatientService).%New()
+    set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating patient..."
 	do patientService.NewPatient(noOfPatient, .PatientVoObjList)
 
     //record the number of failed case
@@ -69,11 +70,11 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     }
 
     if (req.isEpisode){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating episode..."
         set episodeService = ##class(EpisodeService).%New()
         do episodeService.NewEpisode(req.NumOfEpisodePerPatient, PatientVoObjList, .failedByIdArr)
     } elseif(req.isEpisodeRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating episode by random range..."
         set episodeService = ##class(EpisodeService).%New()
         do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList, .failedByIdArr)
     }
@@ -83,11 +84,11 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     kill failedByIdArr
 
     if (req.isAppointment){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating appointment..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating appointment..."
         set apptService = ##class(ApptService).%New()
         do apptService.NewAppt(req.NumOfAppointmentPerPatient, PatientVoObjList, .failedByIdArr)
     } elseif(req.isAppointmentRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating appointment by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating appointment by random range..."
         set apptService = ##class(ApptService).%New()
         do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, PatientVoObjList, .failedByIdArr)
     }
@@ -97,7 +98,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     
     kill failedByIdArr
     if (req.isOrder){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating order..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating order..."
         set orderService = ##class(OrderService).%New()
         for i=1:1:PatientVoObjList.Count(){
             do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
@@ -106,7 +107,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedOrder", PatientVoObjList.GetAt(i).PatientId)
         }
     } elseif(req.isOrderRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating order by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating order by random range..."
         set orderService = ##class(OrderService).%New()
         for i=1:1:PatientVoObjList.Count(){
             do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
@@ -118,7 +119,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
 
     kill failedByIdArr
     if (req.isObservation){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating observation..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating observation..."
         set obsService = ##class(ObsService).%New()
         for i=1:1:PatientVoObjList.Count(){
             do obsService.NewObs(req.NumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
@@ -127,7 +128,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedObs", PatientVoObjList.GetAt(i).PatientId)
         }
     } elseif(req.isObservationRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating observation by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Creating observation by random range..."
         set obsService = ##class(ObsService).%New()
         for i=1:1:PatientVoObjList.Count(){
             do obsService.NewObsByRange(req.MinNumOfObservationPerEpisode, req.MaxNumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
