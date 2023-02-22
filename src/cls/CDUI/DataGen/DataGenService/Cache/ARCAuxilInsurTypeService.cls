@@ -98,7 +98,7 @@ ClassMethod InitGlobalVariable() [ Private ]
             set ^DataGen.Cache("InsurType","maxIndex") = insurTypeObjList.Count()
             set ^DataGen.Cache("InsurType","minIndex") = 1
             set ^DataGen.Cache("InsurType","createDateTime") = $ZDATETIME($HOROLOG,3,7)
-            set ^DataGen.Cache("Location","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
+            set ^DataGen.Cache("InsurType","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
             for cnt=1:1:insurTypeObjList.Count(){
                 set ^DataGen.Cache("InsurType",cnt) = insurTypeObjList.GetAt(cnt).SerialisedGet()
             }
