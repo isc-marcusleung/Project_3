@@ -7,8 +7,9 @@ Parameter locationTypeId = "E";
 
 // For a single patient, each episode has different numbers of episodes
 
-Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects)
+Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
 {
+    kill failedByEpisodeIdArr
     do ..GetLocation(.locationObjList)
     set diff = MaxNumOfObs - MinNumOfObs
     set totalSuccess = 0
@@ -56,8 +57,9 @@ Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.Da
 
 // Create same number of observations for all episodes
 
-Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects)
+Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
 {
+    kill failedByEpisodeIdArr
     set totalSuccess = 0
     set totalFailure = 0
     $$$LOGINFO("[ObsService.NewObs] Number of episode: "_EpisodeVoObjList.Count())
@@ -79,7 +81,6 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
         set numOfFailure = NumOfObsPerEpisode - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
-        set failedByEpisodeIdArr = []
 
         if (numOfFailure > 0) {
             set failedByEpisodeIdArr(episodeVo.ID) = numOfFailure
