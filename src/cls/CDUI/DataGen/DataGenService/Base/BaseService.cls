@@ -7,7 +7,7 @@ Class CDUI.DataGen.DataGenService.Base.BaseService Extends (%RegisteredObject, E
 Property PageSize As %Integer [ InitialExpression = 500 ];
 
 /// Default Max number of retry in the process
-Property MaxNumOfRetry As %Integer [ InitialExpression = 8 ];
+Property MaxNumOfRetry As %Integer [ InitialExpression = 15 ];
 
 Parameter DispatchName = "CDUI.DataGen.Service.Adaptorless";
 
