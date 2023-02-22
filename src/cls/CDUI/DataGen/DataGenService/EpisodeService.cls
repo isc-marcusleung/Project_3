@@ -1,4 +1,4 @@
-Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base, CDUI.DataGen.Enum)
+Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base, CDUI.DataGen.Enum, CDUI.DataGen.DataGenService.Cache)
 
 Class CDUI.DataGen.DataGenService.EpisodeService Extends BaseService
 {
@@ -144,7 +144,7 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
                     // if it matches, remove the invalid insurance record from the list.
                     set isMatch = $MATCH(json.ERROR, ".*does not have a valid entry\^CTLOCDesc.*")
                     if isMatch {
-                        do ##class(CDUI.DataGen.DataGenService.Cache.LocationService).RemoveItem(locationIndexList.GetAt(cnt))
+                        do ##class(LocationService).RemoveItem(locationIndexList.GetAt(cnt))
                         #; set idxOfRemoveLocationObjListArr(locationIndexList.GetAt(cnt)) = ""
                         #; set idxOfRemoveLocationIndexListArr(cnt) = ""
                     }
@@ -312,7 +312,7 @@ Method GetPatientIdList(patientVoObjList As %ListOfObjects, Output patientIdList
 Method AssignLocation(request As CDUI.DataGen.Request.NewEpisode, Output index) [ Private ]
 {
     // Randomly select the location record   
-	do ##class(CDUI.DataGen.DataGenService.Cache.LocationService).GetLocationByRandom(.jsonStr, .index)
+	do ##class(LocationService).GetLocationByRandom(.jsonStr, .index)
 	if index '= 0 {
 		set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
         set request.CTLOCDesc = dynamicObj.CTLOCDesc

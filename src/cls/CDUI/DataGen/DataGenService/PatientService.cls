@@ -1,4 +1,4 @@
-Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base, CDUI.DataGen.DataGenService)
+Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Base, CDUI.DataGen.DataGenService, CDUI.DataGen.DataGenService.Cache)
 
 Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
