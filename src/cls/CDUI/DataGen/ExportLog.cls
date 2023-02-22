@@ -7,7 +7,7 @@ Class CDUI.DataGen.ExportLog
 
 // initialize api_log file, add headers 
 
-ClassMethod IntializeAPILog()
+ClassMethod InitializeAPILog()
 {
     set logFileName = ##class(Constants).#apiLogFileName
     set logFile=##class(%File).%New(logFileName)
@@ -18,6 +18,15 @@ ClassMethod IntializeAPILog()
 }
 
 // Add a row of info in api_log file  
+
+ClassMethod InitializeDebugLog()
+{
+    set logFileName = ##class(Constants).#debugLogFileName
+    set logFile=##class(%File).%New(logFileName)
+    Do logFile.Open("WSN")
+    Do logFile.WriteLine("This is a new job session.") 
+    do logFile.Close()
+}
 
 ClassMethod AddRowOfLog(logFileName As %String, info As %String)
 {
