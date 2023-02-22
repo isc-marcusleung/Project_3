@@ -20,7 +20,7 @@ ClassMethod CreateArray(InfoArray As %ArrayOfDataTypes, Output OutArray As %Arra
     }
 }
 
-// Purpose: Reset the input array
+// Purpose: Reset the input array, keep keys, replace all values with ""
 
 ClassMethod ResetArray(ByRef InputArray As %ArrayOfDataTypes)
 {
@@ -43,11 +43,6 @@ ClassMethod FromListToArray(KeyList, ValueList, Output OutputArray As %ArrayOfDa
         set arrayValue = $list(ValueList,i)
         do OutputArray.SetAt(arrayValue, arrayKey)
     }
-    #; while $LISTNEXT(KeyList,p,value){
-    #;     set arrayKey = value
-    #;     set arrayValue = $list(ValueList,p)
-    #;     do OutputArray.SetAt(arrayValue, arrayKey)
-    #; }
 }
 
 // Purpose: check whether the input array has a value assigned to each key
@@ -66,7 +61,7 @@ ClassMethod IsArrayFull(InputArray As %ArrayOfDataTypes) As %Boolean
     return isFull
 }
 
-// Purpose: check whether the input array key has a value attached to it  
+// Purpose: check whether the key already has a value attached to it in the input array  
 
 ClassMethod IsArrayKeyUsed(key As %String, InputArray As %ArrayOfDataTypes) As %Boolean
 {
@@ -138,9 +133,9 @@ ClassMethod CreateColumnDic(Output ColumnDic)
 
 // create a dictionary containing itemId arrays of different modes
 
-// Unachieved design: read from list of modeoptions, dynamically find the right parameters and construct a itemId dictionary
+// key:Obs    value: an itemId array of observations 
 
-// currently hardcoding 
+// key:FBC    value: an itemId array of FBC results 
 
 ClassMethod CreateItemIdDic(Output ItemIdDic)
 {
@@ -159,7 +154,7 @@ ClassMethod CreateItemIdDic(Output ItemIdDic)
 
 // Dynamically create a persistent class
 
-// Note that if this method is used to update a table, datatype will be updated. New columns will be added but excess columns will not be deleted. 
+// If a table with the same name exists, drop it.
 
 ClassMethod NewPClass(ColumnInfo As %ArrayOfDataTypes, Name As %String = "CDUI.DataGen.MIMIC.TestTable")
 {
@@ -168,12 +163,14 @@ ClassMethod NewPClass(ColumnInfo As %ArrayOfDataTypes, Name As %String = "CDUI.D
         $$$LOGINFO("[NewPClass] Class already exists. Delete and recreate the class.")
         DO $SYSTEM.SQL.Schema.DropTable(Name,1)
     }
+
+    //define class name 
     set clsDef = ##class(%Dictionary.ClassDefinition).%New()
     set clsDef.Name = Name
     set clsDef.Super = "%Persistent"
     $$$LOGINFO("[NewPClass] New persistent class created with "_Name)
 
-    //read column name and data type from ColumnInfo
+    //define property name and property data type from ColumnInfo
     set key = ""
     for {
         set val = ColumnInfo.GetNext(.key)
@@ -184,40 +181,43 @@ ClassMethod NewPClass(ColumnInfo As %ArrayOfDataTypes, Name As %String = "CDUI.D
         do clsDef.Properties.Insert(propDef)
         $$$LOGINFO("[NewPClass] New Property "_ key_" is created with datatype "_val)
     }
+
+    //save and compile the persistent class
     s sc =  clsDef.%Save()
     do $system.OBJ.Compile(Name,"ck")
 }
 
-// Check whether the instance has the wanted itemId, if Yes, return its item name and item value.
+// Check whether the instance(a row from the original table) has the wanted itemId, if Yes, return its item name and item value.
 
-ClassMethod CheckItemId(Instance, ItemIdDic As %ArrayOfDataTypes, Output isNeeded As %Boolean, Output ItemName As %String, Output ItemValue As %Decimal)
+// ItemIdArray has been selected from ItemIdDic 
+
+ClassMethod CheckItemId(Instance, ItemIdArray As %ArrayOfDataTypes, Output isNeeded As %Boolean, Output ItemName As %String, Output ItemValue)
 {
     set itemId = Instance.ItemId
     set ItemValue = Instance.Value
     set isNeeded = 0
     set ItemName = "Not needed item"
 
-    //check the dictionary array, if any key/itemID matches with itemId from the Instance, the item is needed 
+    //loop through the itemID array from the dictionary, if any key/itemID matches with itemId from the Instance, the item is needed 
     set key = ""
     for {
-        set value = ItemIdDic.GetNext(.key)
+        set value = ItemIdArray.GetNext(.key)
         quit:(key = "")
         if key = itemId {
             set isNeeded = 1
-            if 
             set ItemName = value
             quit 
         }
     }
-    #; $$$LOGINFO("[CheckItemId] isNeeded: "_isNeeded_" ItemName: "_ItemName_" ItemValue: "_ItemValue)
 }
 
-// CheckSession, Type:"Obs","Res" 
+// Check the SubjectId, Date and Hour combination of the Instance, compare with the combination in current submission array, to determine whether the current submission array's session has finished. 
 
 // limitation: "instance" must have "SubjectId", "Date" and "Hour" 
 
 ClassMethod CheckSession(Instance, Array As %ArrayOfDataTypes, Output IsCurrentSession As %Boolean)
 {
+    //if current submission array is empty, do not start a new session 
     if Array.GetAt("Date") = ""{
         set IsCurrentSession = 1
     }
@@ -228,7 +228,8 @@ ClassMethod CheckSession(Instance, Array As %ArrayOfDataTypes, Output IsCurrentS
         set date = $EXTRACT(Instance.Charttime,1,10)
         set hour = $EXTRACT(Instance.Charttime,12,13)
         set id = Instance.SubjectId
-        #; $$$LOGINFO("[CheckSession]date: "_date_" hour: "_hour_" id: "_id_" ArrayDate: "_ArrayDate)
+
+        //if any value of date, hour, subjectid does not match, the current session is finished and a new session is about to begin
         if ((id '= ArrayId) || (date '= ArrayDate)  || (hour '= ArrayHour)){
             set IsCurrentSession = 0
         }
@@ -242,28 +243,29 @@ ClassMethod CheckSession(Instance, Array As %ArrayOfDataTypes, Output IsCurrentS
 
 // Check whether the instance should be loaded into the submission array
 
-ClassMethod CheckInstance(Instance, Mode As %String, ItemIdDic As %ArrayOfDataTypes, Array As %ArrayOfDataTypes, Output ItemName As %String, Output ItemValue As %Decimal, Output AddToArray As %Boolean, Output IsNewArray As %Boolean)
+// Check whether the instance contains the needed item, check whether the instance belongs to which session
+
+// !!! item name in the submission array must be the same as name in the Instance(row in the original table)
+
+ClassMethod CheckInstance(Instance, Mode As %String, ItemIdDic As %ArrayOfDataTypes, Array As %ArrayOfDataTypes, Output ItemName As %String, Output ItemValue, Output AddToArray As %Boolean, Output IsNewArray As %Boolean)
 {
-    //Initilize the dictionaries of targetTableColumn and itemId
+    //Find the right ItemId array in the ItemId dictionary
     set ItemIdArray = ItemIdDic.GetAt(Mode)
     set IsNewArray = 0
 
-
     do ..CheckItemId(Instance, ItemIdArray, .isNeeded, .ItemName, .ItemValue)
-    #; $$$LOGINFO("[CheckInstance]isNeeded: "_isNeeded_" ItemValue: "_ItemValue_" ItemName: "_ItemName)
     if isNeeded = 0{
         set AddToArray = 0
     }
 
     do ..CheckSession(Instance, Array, .IsCurrentSession)
-    #; $$$LOGINFO("[CheckInstance]IsCurrentSession: "_IsCurrentSession)
-    //If the ObsObj belongs to the new session
+    //If the item is needed and it belongs to the new session
     if (isNeeded = 1) && (IsCurrentSession = 0){
         set AddToArray = 1
         set IsNewArray = 1
     }
 
-    //if the ObsObj belongs to the current session, check whether there is any duplicated value in the CVsArray
+    //if the item belongs to the current session, check whether the key is used in the current submission array
     if (isNeeded = 1) && (IsCurrentSession = 1){
         if (..IsArrayKeyUsed(ItemName,Array) = 1){
             set AddToArray = 0
@@ -382,27 +384,53 @@ ClassMethod LoadExternal(Mode As %String)
     $$$LOGINFO("[LoadExternal] Successfully loaded "_Mode_" data, "_ArraySubmitted_" entries created.")
 }
 
-ClassMethod CleanVS()
+ClassMethod ConvertTemp()
 {
-    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.CHARTEVENTfull)
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.TriageNew)
     for i = 1:1:numOfRecord {
-        set ObsObj = ##class(CDUI.DataGen.MIMIC.CHARTEVENTfull).%OpenId(i)
-        set ObsObj.Temp = ..ConvertF(ObsObj.Temp)
+        set ObsObj = ##class(CDUI.DataGen.MIMIC.TriageNew).%OpenId(i)
+        if ObsObj.Temp '= ""{
+            set ObsObj.Temp = ..ConvertF(ObsObj.Temp)
+        }
         do ObsObj.%Save()
     }
 }
 
-ClassMethod CleanVS2()
+ClassMethod RemoveInvalid()
 {
-    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.CHARTEVENTfull)
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.TriageNew)
     for i = 1:1:numOfRecord {
-        set ObsObj = ##class(CDUI.DataGen.MIMIC.CHARTEVENTfull).%OpenId(i)
+        set ObsObj = ##class(CDUI.DataGen.MIMIC.TriageNew).%OpenId(i)
         if ObsObj.Temp < 0 {
             set ObsObj.Temp = ""
         }
-        
         do ObsObj.%Save()
     }
+}
+
+ClassMethod RemoveEmptyTriage()
+{
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.TriageOriginal)
+    for i = 1:1:numOfRecord {
+        set ObsObj = ##class(CDUI.DataGen.MIMIC.TriageOriginal).%OpenId(i)
+        if (ObsObj.Temp = "") &&(ObsObj.Respirations = "")&&(ObsObj.HeartRate = "") {
+        }
+        else{
+            do ..InsertToTriageNew(ObsObj)
+        }
+    }
+}
+
+ClassMethod InsertToTriageNew(Instance As CDUI.DataGen.MIMIC.TriageOriginal)
+{
+    set newInstance =  ##class(CDUI.DataGen.MIMIC.TriageNew).%New()
+    set newInstance.Temp = Instance.Temp
+    set newInstance.HeartRate = Instance.HeartRate
+    set newInstance.Respirations = Instance.Respirations
+    set newInstance.O2Sat = Instance.O2Sat
+    set newInstance.SBP = Instance.SBP
+    set newInstance.DBP = Instance.DBP
+    do newInstance.%Save()
 }
 
 }

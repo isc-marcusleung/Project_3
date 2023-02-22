@@ -133,9 +133,9 @@ Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %
 ClassMethod GetObsItemSet(Output obsItemSet)
 {
     set numOfRecord = 0
-    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.Observations)
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.TriageNew)
     set randomNum = $RANDOM(numOfRecord)+1
-    set obsItemSet = ##class(CDUI.DataGen.MIMIC.Observations).%OpenId(randomNum)
+    set obsItemSet = ##class(CDUI.DataGen.MIMIC.TriageNew).%OpenId(randomNum)
 }
 
 // Pack obs item set to request 
@@ -270,8 +270,7 @@ ClassMethod UpdateTableItems(obsItemSet, itemCode As %String, ByRef obsReq As CD
     if itemCode = "VS6"{
         set obsItem.OBSCode = itemCode
         set obsItem.ObsItemID = 825
-        set obsItem.OBSValue = ""
-        //set obsItem.OBSValue = obsItemSet.OS
+        set obsItem.OBSValue = obsItemSet.O2Sat
     }
 
     Do obsReq.TableItems.Insert(obsItem)
