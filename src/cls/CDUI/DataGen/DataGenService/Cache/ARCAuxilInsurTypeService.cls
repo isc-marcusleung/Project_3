@@ -141,7 +141,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
         set locked = 1
         kill ^DataGen.Cache("InsurType", index)
         set ^DataGen.Cache("InsurType") = ^DataGen.Cache("InsurType") -1
-        set ^DataGen.Cache("Location","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
+        set ^DataGen.Cache("InsurType","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
         Lock -^DataGen.Cache("InsurType")
         TCOMMIT
         $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] Finished removing an item. index: "_index)

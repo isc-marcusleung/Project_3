@@ -5,21 +5,12 @@ Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 
 Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 {
-	//Retrieve the ARCAuxilInsurType list for the creation of patient
-	$$$LOGINFO("[PatientService.NewPatient] Retrive the insurance list.")
-	set sc = ##class(TrakCareService).GetARCAuxilInsurType(1, ..PageSize,,.insurTypeObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[PatientService.NewPatient] Failed to get ARCAuxilInsurTypes.")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
 	// generate patient records and insert them to TrakCare via API.
 	$$$LOGINFO("[PatientService.NewPatient] Create new patients.")
 	set patientInput = ##class(CDUI.DataGen.DataGenService.Custom.PatientInput).%New()
 	set patientOutput = ##class(CDUI.DataGen.DataGenService.Custom.PatientOutput).%New()
 
 	set patientInput.NumOfPatient = NumOfPatient
-	set patientInput.InsurTypeObjList = insurTypeObjList
 
 	do ..RunWithRetry(patientInput, patientOutput,)
 	
@@ -34,7 +25,6 @@ Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
 {
 	set numOfLoop = patientInput.NumOfPatient
-	set insurTypeObjList = patientInput.InsurTypeObjList
 	set patientVoObjList = patientOutput.PatientVoObjList
 	set patientIdList = ##class(%ListOfDataTypes).%New()
 
