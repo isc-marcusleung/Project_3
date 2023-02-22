@@ -1,4 +1,4 @@
-Import CDUI.DataGen.Utils
+Import (CDUI.DataGen.Utils, CDUI.DataGen.DataGenService)
 
 Class CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService Extends Ens.Util.IOLogger
 {
@@ -36,20 +36,20 @@ ClassMethod clearCache()
 {
       $$$LOGINFO("[ARCAuxilInsurTypeService.clearCache] Start to clear")
 
-    TSTART
     set locked = 0
     Try {
+        TSTART
         LOCK +^DataGen.Cache("InsurType"):..#DefaultTimeout
 
         if '$TEST {
-            $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] Failed to remove item.")
-            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.DataGen.DataGenService.ARCAuxilInsurTypeService","Failed to get an exclusive lock.")
+            $$$LOGINFO("[ARCAuxilInsurTypeService.clearCache] Failed to remove item.")
+            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService","Failed to get an exclusive lock.")
         }
 
         set locked = 1
         kill ^DataGen.Cache("InsurType")
         TCOMMIT
-        $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] Finished clearing")
+        $$$LOGINFO("[ARCAuxilInsurTypeService.clearCache] Finished clearing")
     } Catch exception {
         do LOG^%ETN
         if locked {
@@ -72,7 +72,7 @@ ClassMethod InitGlobalVariable() [ Private ]
     $$$LOGINFO("[ARCAuxilInsurTypeService.InitGlobalVariable] start initializing global variable.")
     Set locked = 0
     Try {
-        set sc = ##class(CDUI.DataGen.DataGenService.TrakCareService).GetARCAuxilInsurType(1, ..#PageSize,,.insurTypeObjList)
+        set sc = ##class(TrakCareService).GetARCAuxilInsurType(1, ..#PageSize,,.insurTypeObjList)
         if $$$ISERR(sc)
         {
             $$$LOGERROR("[ARCAuxilInsurTypeService.InitGlobalVariable] Failed to get ARCAuxilInsurTypes.")
@@ -89,13 +89,15 @@ ClassMethod InitGlobalVariable() [ Private ]
 
         if '$TEST {
             $$$LOGINFO("[ARCAuxilInsurTypeService.InitGlobalVariable] Failed to initialize global variable.")
-            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.DataGen.DataGenService.ARCAuxilInsurTypeService","Failed to get an exclusive lock.")
+            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService","Failed to get an exclusive lock.")
         }
         set locked = 1
         if ($Data(^DataGen.Cache("InsurType")) = 0){
             set ^DataGen.Cache("InsurType") = insurTypeObjList.Count()
             set ^DataGen.Cache("InsurType","maxIndex") = insurTypeObjList.Count()
             set ^DataGen.Cache("InsurType","minIndex") = 1
+            set ^DataGen.Cache("InsurType","createDateTime") = $ZDATETIME($HOROLOG,3,7)
+            set ^DataGen.Cache("Location","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
             for cnt=1:1:insurTypeObjList.Count(){
                 set ^DataGen.Cache("InsurType",cnt) = insurTypeObjList.GetAt(cnt).SerialisedGet()
             }
@@ -126,28 +128,28 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
         $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] The insurType cache is empty.")
         return -1
     }
-
-    TSTART
     set locked = 0
     Try {
-        LOCK +(^DataGen.Cache("InsurType"),^DataGen.Cache("InsurType", index)):..#DefaultTimeout
+        TSTART
+        LOCK +^DataGen.Cache("InsurType"):..#DefaultTimeout
 
         if '$TEST {
             $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] Failed to remove item.")
-            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.DataGen.DataGenService.ARCAuxilInsurTypeService","Failed to get an exclusive lock.")
+            Throw ##class(%Exception.General).%New("ExclusiveLockException",5372,"CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService","Failed to get an exclusive lock.")
         }
 
         set locked = 1
         kill ^DataGen.Cache("InsurType", index)
         set ^DataGen.Cache("InsurType") = ^DataGen.Cache("InsurType") -1
-        Lock -(^DataGen.Cache("InsurType"),^DataGen.Cache("InsurType", index))
+        set ^DataGen.Cache("Location","lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)
+        Lock -^DataGen.Cache("InsurType")
         TCOMMIT
         $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] Finished removing an item. index: "_index)
         return 1
     } Catch exception {
         do LOG^%ETN
         if locked {
-            Lock -(^DataGen.Cache("InsurType"),^DataGen.Cache("InsurType", index))
+            Lock -^DataGen.Cache("InsurType")
         }
         TROLLBACK 
         Throw exception
