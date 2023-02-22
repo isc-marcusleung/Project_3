@@ -86,7 +86,7 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
             set failedByEpisodeIdArr(episodeVo.ID) = numOfFailure
         }
     }
-    do ..PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+    do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
 }
 
 // initialize obs request for one episode, number of request depends on NumOfObsPerEpisode
@@ -277,7 +277,7 @@ ClassMethod UpdateTableItems(obsItemSet, itemCode As %String, ByRef obsReq As CD
     Do obsReq.TableItems.Insert(obsItem)
 }
 
-Method PrintResult(failedByEpisodeIdArr, totalSuccess, totalFailure)
+Method PrintResult(ByRef failedByEpisodeIdArr, totalSuccess, totalFailure)
 {
     set cnt = 0
     set key = $Order(failedByEpisodeIdArr(""))
