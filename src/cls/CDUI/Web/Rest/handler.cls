@@ -124,9 +124,59 @@ ClassMethod TerminateJob(id As %Integer) As %Status
 	Quit $$$OK
 }
 
+ClassMethod SetConfig() As %Status
+{
+	set isReqBody = %request.Content '= ""
+	set isValid = 0
+	set %response.ContentType = ..#CONTENTTYPEJSON
+
+	try {
+		if (isReqBody) {
+			set dynamicObj = ##class(%DynamicObject).%FromJSON(%request.Content)
+			set action = dynamicObj.action
+
+			if action = 1 {
+				//purge cache
+				kill ^DataGen.Cache
+				set isValid = 1
+			} elseif action = 2 {
+				//purge log
+				kill ^DataGen.Log
+				set isValid = 1
+			} elseif action = 3 {
+				//reset all
+				kill ^DataGen.Cache
+				kill ^DataGen.Log
+				kill ^DataGen.Job
+				set isValid = 1
+			} 
+		}
+		if ('isValid || 'isReqBody) {
+			set obj = {
+				"status" : (..#ERROR),
+				"message" : "Invalid Parameter"
+			}
+    	} else {
+			set obj = {
+				"status" : (..#SUCCESS)
+			}
+		}
+
+	} catch ex {
+		do LOG^%ETN
+		set obj = {
+			"status" : (..#ERROR),
+			"message" : (ex.Name_"("_ex.Code_")"_": "_ex.Data)
+		}
+	}
+
+	write obj.%ToJSON()
+	Quit $$$OK
+}
+
 // TODO marucs to turn it off
 
-Parameter HandleCorsRequest = 1;
+Parameter HandleCorsRequest = 0;
 
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 {
@@ -135,6 +185,7 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/addJob" Method="POST" Call="AddJob"/>
 <Route Url="/job/:id" Method="DELETE" Call="DeleteJob"/>
 <Route Url="/job/terminate/:id" Method="POST" Call="TerminateJob"/>
+<Route Url="/setConfig" Method="POST" Call="SetConfig"/>
 </Routes>
 }
 
