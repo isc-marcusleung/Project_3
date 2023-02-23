@@ -72,12 +72,14 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 	#dim ex As %Exception.AbstractException
 	try 
 	{
+		//obtain jobId from request 
+		set jobId = Request.jobId
+
 		//log API info
 		set APILog = ##class(CDUI.DataGen.vo.APILogVo).%New()
 		do ##class(CDUI.DataGen.Utils.CommonUtil).GetCurrentDT(.dateD,.timeD)
 		set APILog.currentDate = dateD
 		set APILog.currentTime = timeD
-		set APILog.processID = $SYSTEM.SYS.ProcessID()
 		set APILog.requestBody = Request.SerialisedGet()
 
 		set sc = Request.%JSONExportToString(.body)
@@ -95,6 +97,7 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 		&sql(SELECT {fn TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND,:t1,:t2)} into :ResponseTime )
 		set APILog.responseTime = ResponseTime
 
+		
 		if $$$ISERR(sc) return sc
 		if $isobject(HttpResponse)
 		{
@@ -112,18 +115,13 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 			set APILog.HTTPResponseStatusLine = HttpResponse.StatusLine
 			do APILog.concatenateProp(.info)
 
-			//check if log file exists
-			set logFileName = ##class(CDUI.DataGen.Common.Constants).#apiLogFileName
-			Set fileExists=##class(%File).Exists(logFileName)
-			if 'fileExists {
-				do ##class(CDUI.DataGen.ExportLog).InitializeAPILog()
-			}
-			do ##class(CDUI.DataGen.ExportLog).AddRowOfLog(logFileName,info)
 			// Update the properties in the response object
 			set Response = ##class(CDUI.DataGen.DataGenService.Custom.StringResponse).%New()
 			set Response.StringValue = value
 			set Response.ResponseTime = ResponseTime
 		}
+		set counter = $i(^DataGen.APILog("info",jobId))
+		set ^DataGen.APILog("info",jobId,counter) = info
 	} 
 	catch ex 
 	{
