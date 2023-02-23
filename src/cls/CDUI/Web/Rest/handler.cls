@@ -1,4 +1,4 @@
-Import CDUI.Web.Service
+Import (CDUI.Web.Service, CDUI.DataGen.Common)
 
 Class CDUI.Web.Rest.handler Extends %CSP.REST [ ProcedureBlock ]
 {
@@ -129,7 +129,7 @@ ClassMethod SetConfig() As %Status
 	set isReqBody = %request.Content '= ""
 	set isValid = 0
 	set %response.ContentType = ..#CONTENTTYPEJSON
-
+	set errMsg =  "Invalid Parameter"
 	try {
 		if (isReqBody) {
 			set dynamicObj = ##class(%DynamicObject).%FromJSON(%request.Content)
@@ -146,6 +146,18 @@ ClassMethod SetConfig() As %Status
 				kill ^DataGen.APILog
 				set isValid = 1
 			} elseif action = 3 {
+				//Delete All API Log File
+				set dir = ##class(Constants).#baseDir_##class(Constants).#apiLogRelativeDir
+				set DirExist = ##class(%File).DirectoryExists(dir)
+				set isValid = 1
+				if DirExist {
+					set result = ##class(%File).RemoveDirectoryTree(dir)
+					if result = 0 {
+						set isValid = 0
+						set errMsg = "Failed to delete Log files"
+					}
+				} 
+			} elseif action = 4 {
 				//reset all
 				do ##class(CDUI.DataGen.DataGenService.Cache.LocationService).clearCache()
 				do ##class(CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService).clearCache()
@@ -159,13 +171,23 @@ ClassMethod SetConfig() As %Status
 				}
 				kill ^DataGen.Job
 				set isValid = 1
+				
+				set dir = ##class(Constants).#baseDir_##class(Constants).#apiLogRelativeDir
+				set DirExist = ##class(%File).DirectoryExists(dir)
+				if DirExist {
+					set result = ##class(%File).RemoveDirectoryTree(dir)
+					if result = 0 {
+						set isValid = 0
+						set errMsg = "Failed to delete Log files"
+					}
+				} 
 			} 
 		}
 
 		if ('isValid || 'isReqBody) {
 			set obj = {
 				"status" : (..#ERROR),
-				"message" : "Invalid Parameter"
+				"message" : (errMsg)
 			}
     	} else {
 			set obj = {

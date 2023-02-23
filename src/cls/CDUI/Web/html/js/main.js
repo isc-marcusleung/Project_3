@@ -626,7 +626,7 @@ function buildTable(dataObj){
 		if (typeof obj.status != "undefined") {status = obj.status;}
 		if (typeof obj.apiLogRelativeUrl != "undefined") {
 			apiLogRelativeUrl = obj.apiLogRelativeUrl;
-			downloadLink = '<a href="' + apiLogRelativeUrl + '"><i class="bi bi-download"></i></a>';
+			downloadLink = '<a href="' + apiLogRelativeUrl + '" target="_blank"><i class="bi bi-download"></i></a>';
 		}
 		
 		$tbody.append( '<tr>' +
