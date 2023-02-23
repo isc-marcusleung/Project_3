@@ -575,7 +575,7 @@ Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %Lis
         set ranNum = ##class(PUtil).Random(servIdList.Count()) + 1
         // Get a random serviceId
         set servId = servIdList.GetAt(ranNum)
-        set Rows = ##class(PUtil).Integer(1,20)
+        set Rows = ##class(PUtil).Integer(1,10)
         // Retrieve the slots list
         do ..GetSlotList(servId, Rows,.slotsObjList)
         $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Service Id used: "_servId) 
