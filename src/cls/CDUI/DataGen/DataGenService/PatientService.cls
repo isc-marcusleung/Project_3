@@ -3,23 +3,16 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
 
+Parameter maxNoOfTrial = 5;
+
 Method NewPatient(NumOfPatient As %Integer = 1, jobId As %Integer, Output patientVoObjList)
 {
-	//Retrieve the ARCAuxilInsurType list for the creation of patient
-	$$$LOGINFO("[PatientService.NewPatient] Retrive the insurance list.")
-	set sc = ##class(TrakCareService).GetARCAuxilInsurType(1, ..PageSize,,.insurTypeObjList)
-	if $$$ISERR(sc)
-	{
-		$$$LOGERROR("[PatientService.NewPatient] Failed to get ARCAuxilInsurTypes.")
-		Throw ##class(%Exception.StatusException).CreateFromStatus(sc)
-	}
 	// generate patient records and insert them to TrakCare via API.
 	$$$LOGINFO("[PatientService.NewPatient] Create new patients.")
 	set patientInput = ##class(CDUI.DataGen.DataGenService.Custom.PatientInput).%New()
 	set patientOutput = ##class(CDUI.DataGen.DataGenService.Custom.PatientOutput).%New()
 
 	set patientInput.NumOfPatient = NumOfPatient
-	set patientInput.InsurTypeObjList = insurTypeObjList
 
 	//pass jobId to patientInput object 
 	set patientInput.jobId = jobId
@@ -37,7 +30,6 @@ Method NewPatient(NumOfPatient As %Integer = 1, jobId As %Integer, Output patien
 Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput As CDUI.DataGen.DataGenService.Base.Output) As %Integer
 {
 	set numOfLoop = patientInput.NumOfPatient
-	set insurTypeObjList = patientInput.InsurTypeObjList
 	set jobId = patientInput.jobId
 	set patientVoObjList = patientOutput.PatientVoObjList
 	set patientIdList = ##class(%ListOfDataTypes).%New()
@@ -133,13 +125,24 @@ Method InitPatientRequestByRandom(jobId As %Integer, ByRef request As CDUI.DataG
     set minDateInt = currentDateInt - (##class(Constants).#maxAge * 365)
     set request.PAPERDob = ##class(PUtil).CustomDate(minDateInt, currentDateInt) 
 
-    // Randomly select the insurance record   
-	do ##class(ARCAuxilInsurTypeService).GetInsurTypeByRandom(.jsonStr, .randInsurTypeIndex)
-	if randInsurTypeIndex '= 0 {
-		set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
-		set request.INSTDesc = dynamicObj.AUXITInsTypeDR
-        set request.AUXITDesc = dynamicObj.AUXITDesc
-	}
+	// Randomly select the location record   
+    set isRun = 1
+    set cnt = 0
+    while (isRun && (cnt < ..#maxNoOfTrial)){
+        do ##class(ARCAuxilInsurTypeService).GetInsurTypeByRandom(.jsonStr, .randInsurTypeIndex)
+        try{    
+            if randInsurTypeIndex '= 0 {
+				set dynamicObj = ##class(%DynamicAbstractObject).%FromJSON(jsonStr)
+				set request.INSTDesc = dynamicObj.AUXITInsTypeDR
+				set request.AUXITDesc = dynamicObj.AUXITDesc
+			}
+            set isRun = 0
+        } catch ex {
+            do LOG^%ETN
+            do ##class(LocationService).RemoveItem(randInsurTypeIndex)
+            set cnt = cnt + 1
+        }
+    }
 
 	// set jobId
 	set request.jobId = jobId

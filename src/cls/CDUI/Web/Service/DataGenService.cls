@@ -72,7 +72,14 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     kill FailedCaseArr
     
     set patientService = ##class(PatientService).%New()
+
+    set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start patient creation"
+    set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
 	do patientService.NewPatient(noOfPatient, jobId, .PatientVoObjList)
+    set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+    do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+    set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished patient creation, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
+
 
     //record the number of failed case
     set noOfFailedPatient = noOfPatient - PatientVoObjList.Count()
@@ -81,13 +88,21 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     }
 
     if (req.isEpisode){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start episode creation"
         set episodeService = ##class(EpisodeService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do episodeService.NewEpisode(req.NumOfEpisodePerPatient, PatientVoObjList, jobId, .failedByIdArr)
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished episode creation, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     } elseif(req.isEpisodeRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start episode creation by random range"
         set episodeService = ##class(EpisodeService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList, jobId, .failedByIdArr)
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished episode creatio by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
     //record the number of failed case 
     do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedEpisode",)
@@ -95,13 +110,21 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     kill failedByIdArr
 
     if (req.isAppointment){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating appointment..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start appointment creation"
         set apptService = ##class(ApptService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do apptService.NewAppt(req.NumOfAppointmentPerPatient, PatientVoObjList, .failedByIdArr)
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished appointment creation, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     } elseif(req.isAppointmentRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating appointment by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start appointment creation by random range"
         set apptService = ##class(ApptService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, PatientVoObjList, .failedByIdArr)
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished appointment creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
 
     //record the number of failed case 
@@ -109,44 +132,60 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     
     kill failedByIdArr
     if (req.isOrder){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating order..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start order creation"
         set orderService = ##class(OrderService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
             do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
            
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedOrder", PatientVoObjList.GetAt(i).PatientId)
         }
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished order creation, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     } elseif(req.isOrderRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating order by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start order creation by random range"
         set orderService = ##class(OrderService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
             do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
 
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedOrder", PatientVoObjList.GetAt(i).PatientId)
         }
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished order creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
 
     kill failedByIdArr
     if (req.isObservation){
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating observation..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start observation creation"
         set obsService = ##class(ObsService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
             do obsService.NewObs(req.NumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
 
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedObs", PatientVoObjList.GetAt(i).PatientId)
         }
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished observation creation, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     } elseif(req.isObservationRange) {
-        set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating observation by random range..."
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start observation creation by random range"
         set obsService = ##class(ObsService).%New()
+        set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
             do obsService.NewObsByRange(req.MinNumOfObservationPerEpisode, req.MaxNumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
 
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedObs", PatientVoObjList.GetAt(i).PatientId)
         }
+        set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
+        do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished observation creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
 
     //TODO marcus to remove it
@@ -193,33 +232,27 @@ FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
 
 ClassMethod writeFailedCaseToLog(jobId As %Integer, ByRef FailedCaseArr) [ Private ]
 {
-        set cnt = 1
         if ($DATA(FailedCaseArr) > 0) {
             if ($DATA(FailedCaseArr("TotalNumOfFailedPaitent")) > 0){
-                set ^DataGen.Log(jobId,"faultLog",cnt) = "TotalNumOfFailedPaitent: "_FailedCaseArr("TotalNumOfFailedPaitent")
-                set cnt = cnt + 1
+                set ^DataGen.Log(jobId,"faultLog",$i(^DataGen.Log(jobId,"faultLog"))) = "TotalNumOfFailedPaitent: "_FailedCaseArr("TotalNumOfFailedPaitent")
             }
             if (($DATA(FailedCaseArr("p")) > 0) && ($ORDER(FailedCaseArr("p","")) '= "")){
                 set patientId = $Order(FailedCaseArr("p",""))
                 while (patientId '= "") {
                     if ($DATA(FailedCaseArr("p",patientId,"NumOfFailedEpisode")) > 0){
-                        set ^DataGen.Log(jobId,"faultLog",cnt) = "Patient Id: "_patientId_", NumOfFailedEpisode: "_FailedCaseArr("p",patientId,"NumOfFailedEpisode")
-                        set cnt = cnt + 1
+                        set ^DataGen.Log(jobId,"faultLog",$i(^DataGen.Log(jobId,"faultLog"))) = "Patient Id: "_patientId_", NumOfFailedEpisode: "_FailedCaseArr("p",patientId,"NumOfFailedEpisode")
                     }
                     if ($DATA(FailedCaseArr("p",patientId,"NumOfFailedAppt")) > 0){
-                        set ^DataGen.Log(jobId,"faultLog",cnt) = "Patient Id: "_patientId_", NumOfFailedAppt: "_FailedCaseArr("p",patientId,"NumOfFailedAppt")
-                        set cnt = cnt + 1
+                        set ^DataGen.Log(jobId,"faultLog",$i(^DataGen.Log(jobId,"faultLog"))) = "Patient Id: "_patientId_", NumOfFailedAppt: "_FailedCaseArr("p",patientId,"NumOfFailedAppt")
                     }
                     if ($Order(FailedCaseArr("p",patientId,"")) '= "") { 
                            set episodeId = $Order(FailedCaseArr("p",""))
                            while (episodeId '= "") {
                                 if ($DATA(FailedCaseArr("p",patientId, episodeId, "NumOfFailedOrder")) > 0){
-                                    set ^DataGen.Log(jobId,"faultLog",cnt) = "Patient Id: "_patientId_", episode Id: "_episodeId_", NumOfFailedOrder: "_FailedCaseArr("p",patientId,episodeId, "NumOfFailedOrder")
-                                    set cnt = cnt + 1
+                                    set ^DataGen.Log(jobId,"faultLog",$i(^DataGen.Log(jobId,"faultLog"))) = "Patient Id: "_patientId_", episode Id: "_episodeId_", NumOfFailedOrder: "_FailedCaseArr("p",patientId,episodeId, "NumOfFailedOrder")
                                 }
                                 if ($DATA(FailedCaseArr("p",patientId, episodeId, "NumOfFailedObs")) > 0){
-                                    set ^DataGen.Log(jobId,"faultLog",cnt) = "Patient Id: "_patientId_", episode Id: "_episodeId_", NumOfFailedObs: "_FailedCaseArr("p",patientId,episodeId, "NumOfFailedObs")
-                                    set cnt = cnt + 1
+                                    set ^DataGen.Log(jobId,"faultLog",$i(^DataGen.Log(jobId,"faultLog"))) = "Patient Id: "_patientId_", episode Id: "_episodeId_", NumOfFailedObs: "_FailedCaseArr("p",patientId,episodeId, "NumOfFailedObs")
                                 }
                                   set episodeId = $Order(FailedCaseArr("p",patientId,episodeId))
                            }

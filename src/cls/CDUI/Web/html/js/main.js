@@ -149,7 +149,7 @@ $(document).ready(function(){
 		removeWarningBgColor('noOfObservationTo');
 	});
 	
-	$("form").submit(function (event) {
+	$("#jobForm").submit(function (event) {
 		event.preventDefault();
 		addJob();
 	});
@@ -234,7 +234,41 @@ $(document).ready(function(){
 		reset();
 	});
 	
+	$("#configForm").submit(function (event) {
+		event.preventDefault();
+		setConfig();
+	});
 });	
+
+function setConfig(){
+	var value = $("input[name='configRadio']:checked").val();
+	var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/setConfig';
+	
+	var obj = {};
+	obj["action"] = value;
+	var json = JSON.stringify(obj);
+	console.log("json: " + json)
+	$.ajax({
+		  url: endpoint,
+		  data: json,
+		  processData: false,
+		  contentType: false,
+		  dataType: 'json',
+		  type: 'POST',
+		  success: function(data){
+			  if (data.status === 'Success'){
+				   showMessage("Configuration is done", 'success');
+			  } else {
+				   showMessage(data.message, 'error');
+			  }
+			 refreshJobList();
+		  },
+		  error: function(jqXhr, textStatus, errorMessage) {
+			  showMessage(errorMessage, 'error');
+		  }
+	});
+
+}
 
 function resetAutoRefresh(){
 	if ($('#autoRefresh').val() === 'Y') {
@@ -330,7 +364,7 @@ function deleteJob(id){
 
 function terminateJob(id){
 	
-		var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job'
+		var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job/terminate'
 
 		$.ajax({
 		  url: endpoint + "/"+id,
@@ -767,6 +801,7 @@ function addJob(){
 		var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/addJob'
 		console.log(formData)
 		
+		
 		$.ajax({
 		  url: endpoint,
 		  data: formData,
@@ -787,8 +822,7 @@ function addJob(){
 			  showMessage(errorMessage, 'error')
 		  }
 		});
-
-
+		
 }
 
 function moveToTop(){

@@ -12,8 +12,8 @@ XData MessageMap
 
 Method createNewAppointment(Request As CDUI.DataGen.Request.NewAppointment, Output Response As Ens.StringResponse) As %Status
 {
-	set sc = ..httpPut(Request, .Response)
-	quit sc
+  set sc = ..httpPut(Request, .Response)
+  quit sc
 }
 
 }

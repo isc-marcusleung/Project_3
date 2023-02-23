@@ -36,4 +36,13 @@ ClassMethod GetCurrentDT(Output dateD, Output timeD)
     set timeD = $ztime(timeH,2)
 }
 
+ClassMethod GetTimeDiff(datetime1 As %String, datetime2 As %String, Output secDiff, Output minDiff, Output hrDiff, Output dayDiff)
+{
+    set result = $system.SQL.DATEDIFF("s",datetime1,datetime2)
+    set secDiff = result # 60
+    set minDiff = $system.SQL.FLOOR((result / 60 # 60))
+    set hrDiff = $system.SQL.FLOOR((result / 60 / 60 # 24))
+    set dayDiff = $system.SQL.FLOOR((result / 60 / 60 / 24))
+}
+
 }
