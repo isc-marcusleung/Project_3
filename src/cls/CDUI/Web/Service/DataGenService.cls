@@ -33,29 +33,29 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
             do ..doProcess(request.NumOfPatient, request, jobId, .patientVoObjList, .FailedCaseArr)
         }
         set isSuccess = ..validateResult(.FailedCaseArr)
-        if isSuccess = 1 {
-            do ##class(JobService).FinishJob(jobId)
-        }
-        else{
-            do ##class(JobService).FinishJobWithError(jobId)
-        }
-        
+
         //write api log from global
         set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         //remove api log from global after the job is done
         kill ^DataGen.APILog("info",jobId)
+        set apiLogRelativeUrl = ##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName
+        if isSuccess = 1 {
+            do ##class(JobService).FinishJob(jobId, apiLogRelativeUrl)
+        }
+        else{
+            do ##class(JobService).FinishJobWithError(jobId, apiLogRelativeUrl)
+        }
 
-        do ##class(JobService).UpdateJob(jobId,,,,##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName)
         
     } catch ex {
         
         do LOG^%ETN
-        do ##class(JobService).ErrorJob(jobId)
-
+        
         //write api log from global
         set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         kill ^DataGen.APILog("info",jobId)
-        do ##class(JobService).UpdateJob(jobId,,,,##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName)
+
+        do ##class(JobService).ErrorJob(jobId, ##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName)
         
         $$$LOGERROR("[DataGenService.prcoessRequest] Failed to process a job. Job id: "_jobId_", pid: "_pid)
         $$$LOGERROR(ex)

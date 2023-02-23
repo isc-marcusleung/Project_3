@@ -346,25 +346,25 @@ ClassMethod DeleteJob(id As %Integer)
     }
 }
 
-ClassMethod FinishJob(id As %Integer)
+ClassMethod FinishJob(id As %Integer, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.FinishJob] Update to Completed. Job Id: "_id)
-    do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7),)
+    do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7),apiLogRelativeUrl)
     do ..RemoveTicketForJob()
 }
 
-ClassMethod FinishJobWithError(id As %Integer)
+ClassMethod FinishJobWithError(id As %Integer, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.FinishJobWithError] Update to Completed With Error. Job Id: "_id)
-    do ..UpdateJob(id, , ..#StatusCompletedWithError, $ZDATETIME($HOROLOG,3,7),)
+    do ..UpdateJob(id, , ..#StatusCompletedWithError, $ZDATETIME($HOROLOG,3,7),apiLogRelativeUrl)
     do ..RemoveTicketForJob()
 }
 
-ClassMethod ErrorJob(id As %Integer)
+ClassMethod ErrorJob(id As %Integer, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.ErrorJob] Update to Error. Job Id: "_id)
     //do ..TerminateJob(id)
-    do ..UpdateJob(id, , ..#StatusError,,)
+    do ..UpdateJob(id, , ..#StatusError,,apiLogRelativeUrl)
     do ..RemoveTicketForJob()
 }
 
