@@ -10,7 +10,7 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
         set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstanceFromStringParamValues(requestParamValues)
         set pid = $SYSTEM.SYS.ProcessID()
         set status = ##class(JobService).#StatusInProgress
-        do ##class(JobService).UpdateJob(jobId, pid, status,)
+        do ##class(JobService).UpdateJob(jobId, pid, status,,)
 
         //Handle the request
         set isProcessByBatch = ^DataGen.Job("info","isProcessByBatch")
@@ -41,10 +41,11 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
         }
         
         //write api log from global
-        do ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
-
+        set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         //remove api log from global after the job is done
         kill ^DataGen.APILog("info",jobId)
+
+        do ##class(JobService).UpdateJob(jobId,,,,##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName)
         
     } catch ex {
         
@@ -52,8 +53,9 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
         do ##class(JobService).ErrorJob(jobId)
 
         //write api log from global
-        do ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
+        set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         kill ^DataGen.APILog("info",jobId)
+        do ##class(JobService).UpdateJob(jobId,,,,##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName)
         
         $$$LOGERROR("[DataGenService.prcoessRequest] Failed to process a job. Job id: "_jobId_", pid: "_pid)
         $$$LOGERROR(ex)

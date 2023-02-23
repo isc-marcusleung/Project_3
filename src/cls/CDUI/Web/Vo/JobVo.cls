@@ -13,6 +13,8 @@ Property completeDateTime As %String;
 
 Property lastUpdateDateTime As %String;
 
+Property apiLogRelativeUrl As %String;
+
 Method SerialisedGet() As %RawString
 {
 	do ..%JSONExportToString(.json)

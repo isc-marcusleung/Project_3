@@ -5,9 +5,9 @@ Class CDUI.DataGen.ExportLog Extends Ens.Util.IOLogger
 
 // read from the global to log api info
 
-ClassMethod WriteAPILog(jobId As %Integer)
+ClassMethod WriteAPILog(jobId As %Integer) As %String
 {
-    set baseDir = ##class(Constants).#apiLogDir
+    set baseDir = ##class(Constants).#baseDir_##class(Constants).#apiLogRelativeDir
     set DirExist = ##class(%File).DirectoryExists(baseDir)
     if 'DirExist {
         do ##class(%File).CreateDirectory(baseDir, .return)
@@ -16,10 +16,10 @@ ClassMethod WriteAPILog(jobId As %Integer)
     #; do ##class(CDUI.DataGen.Utils.CommonUtil).GetCurrentDT(.dateD,.timeD)
     #; set logFileName = baseDir_"jobID_"_jobId_"_"_dateD_"_"_timeD_".csv"
 
-    set logFileName = baseDir_"jobID_"_jobId_".csv"
+    set logFileName = jobId_"_"_$REPLACE($REPLACE($ZDATETIME($HOROLOG,8,1)," ","_"),":","" )_".csv"
     $$$LOGINFO("baseDir: "_baseDir)
     $$$LOGINFO("logFileName: "_logFileName)
-    set logFile=##class(%File).%New(logFileName)
+    set logFile=##class(%File).%New(baseDir_logFileName)
     Do logFile.Open("WSN")  
     Do logFile.WriteLine("sep = ;")
     Do logFile.WriteLine("date;time;API_name;request_body;response_body;response_time;http_statuscode;http_statusline")
@@ -32,6 +32,7 @@ ClassMethod WriteAPILog(jobId As %Integer)
         Do logFile.WriteLine(info)
     }
     do logFile.Close()
+    return logFileName
 }
 
 // Add a row of info in api_log file  

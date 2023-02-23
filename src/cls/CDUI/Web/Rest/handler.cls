@@ -143,13 +143,14 @@ ClassMethod SetConfig() As %Status
 			} elseif action = 2 {
 				//purge log
 				kill ^DataGen.Log
+				kill ^DataGen.APILog
 				set isValid = 1
 			} elseif action = 3 {
 				//reset all
 				do ##class(CDUI.DataGen.DataGenService.Cache.LocationService).clearCache()
 				do ##class(CDUI.DataGen.DataGenService.Cache.ARCAuxilInsurTypeService).clearCache()
 				kill ^DataGen.Log
-
+				kill ^DataGen.APILog
 				SET key=$ORDER(^DataGen.Job("item",""))
 				WHILE (key'="") {
 					SET tmpKey = $ORDER(^DataGen.Job("item",key))  

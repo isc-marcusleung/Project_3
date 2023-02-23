@@ -198,6 +198,7 @@ ClassMethod AddJob() As %Integer
         set id = ..GetNextId()
         set ^DataGen.Job("item",id,"status") = ..#StatusCreate //Update it in job process
         set ^DataGen.Job("item",id,"pid") = 0 //Update it in job process
+        set ^DataGen.Job("item",id,"apiLogRelativeUrl") = "" //Update it in after the log is created
         set ^DataGen.Job("item",id,"createDateTime") = $ZDATETIME($HOROLOG,3,7)  //e.g. "2023-02-07T06:12:15Z"
         set ^DataGen.Job("item",id,"completeDateTime") = "" //Update it in job process
         set ^DataGen.Job("item",id,"lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)   
@@ -216,7 +217,7 @@ ClassMethod AddJob() As %Integer
     return id
 }
 
-ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, completeDateTime As %String)
+ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, completeDateTime As %String, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.UpdateJob] Start updating a job. Job id: "_id)
     do ..checkSetup()
@@ -234,8 +235,10 @@ ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, comple
         if $Data(status) set ^DataGen.Job("item",id,"status") = status
         if $Data(pid) set ^DataGen.Job("item",id,"pid") = pid
         if $Data(completeDateTime) set ^DataGen.Job("item",id,"completeDateTime") = completeDateTime
+        if $Data(apiLogRelativeUrl) set ^DataGen.Job("item",id,"apiLogRelativeUrl") = apiLogRelativeUrl
 
-        if $Data(status) || $Data(pid) || $Data(completeDateTime) {
+
+        if $Data(status) || $Data(pid) || $Data(completeDateTime) || $Data(apiLogRelativeUrl) {
             set ^DataGen.Job("item",id,"lastUpdateDateTime") = $ZDATETIME($HOROLOG,3,7)  
         }
         Lock -^DataGen.Job("item", id)
@@ -346,14 +349,14 @@ ClassMethod DeleteJob(id As %Integer)
 ClassMethod FinishJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.FinishJob] Update to Completed. Job Id: "_id)
-    do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7))
+    do ..UpdateJob(id, , ..#StatusCompleted, $ZDATETIME($HOROLOG,3,7),)
     do ..RemoveTicketForJob()
 }
 
 ClassMethod FinishJobWithError(id As %Integer)
 {
     $$$LOGINFO("[JobService.FinishJobWithError] Update to Completed With Error. Job Id: "_id)
-    do ..UpdateJob(id, , ..#StatusCompletedWithError, $ZDATETIME($HOROLOG,3,7))
+    do ..UpdateJob(id, , ..#StatusCompletedWithError, $ZDATETIME($HOROLOG,3,7),)
     do ..RemoveTicketForJob()
 }
 
@@ -361,7 +364,7 @@ ClassMethod ErrorJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.ErrorJob] Update to Error. Job Id: "_id)
     //do ..TerminateJob(id)
-    do ..UpdateJob(id, , ..#StatusError, )
+    do ..UpdateJob(id, , ..#StatusError,,)
     do ..RemoveTicketForJob()
 }
 
@@ -423,6 +426,7 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
         set jobVo.createDateTime = $Get(^DataGen.Job("item", key, "createDateTime") ,"")  
         set jobVo.completeDateTime = $Get(^DataGen.Job("item", key, "completeDateTime")  ,"") 
         set jobVo.lastUpdateDateTime =$Get(^DataGen.Job("item", key, "lastUpdateDateTime")  ,"") 
+        set jobVo.apiLogRelativeUrl =$Get(^DataGen.Job("item", key, "apiLogRelativeUrl")  ,"") 
         do results.Insert(jobVo)
 
         if (counter >= count) {

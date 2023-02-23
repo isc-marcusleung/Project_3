@@ -570,10 +570,10 @@ function getJobList(count,beforeId,afterId, isSetting){
 	var endpoint =location.protocol + '//' + location.host + '/csp/datagen/web/api/job';
 	var paramsObj = new URLSearchParams();
    
-	if (count) {paramsObj.append('count', count)}
-	if (beforeId) {paramsObj.append('beforeId', beforeId)}
-	if (afterId) {paramsObj.append('afterId', afterId)}
-	var params = paramsObj.toString()
+	if (count) {paramsObj.append('count', count);}
+	if (beforeId) {paramsObj.append('beforeId', beforeId);}
+	if (afterId) {paramsObj.append('afterId', afterId);}
+	var params = paramsObj.toString();
 	if (params != ''){
 		endpoint = endpoint + "?" + params
 	}
@@ -585,9 +585,9 @@ function getJobList(count,beforeId,afterId, isSetting){
 	  type: 'GET',
 	  success: function(data){
 		  if (data.status === 'Success'){
-			  buildTable(data)
+			  buildTable(data);
 		  } else {
-			   showMessage(data.message, 'error')
+			   showMessage(data.message, 'error');
 		  }
 		  
 		  if (isSetting) {
@@ -599,7 +599,7 @@ function getJobList(count,beforeId,afterId, isSetting){
 
 	  },
 	  error: function(jqXhr, textStatus, errorMessage) {
-		  showMessage(errorMessage, 'error')
+		  showMessage(errorMessage, 'error');
 	  }
 	});
 
@@ -616,23 +616,30 @@ function buildTable(dataObj){
 		var createDateTime = '';
 		var completeDateTime = '';
 		var status = '';
+		var apiLogRelativeUrl = '';
+		var downloadLink = '';
 		
-		if (typeof obj.id != "undefined") {id = obj.id}
-		if (typeof obj.pid != "undefined") {pid = obj.pid}
-		if (typeof obj.createDateTime != "undefined") {createDateTime = convertDateFormat(obj.createDateTime)}
-		if (typeof obj.completeDateTime != "undefined") {completeDateTime = convertDateFormat(obj.completeDateTime)}
-		if (typeof obj.status != "undefined") {status = obj.status}
+		if (typeof obj.id != "undefined") {id = obj.id;}
+		if (typeof obj.pid != "undefined") {pid = obj.pid;}
+		if (typeof obj.createDateTime != "undefined") {createDateTime = convertDateFormat(obj.createDateTime);}
+		if (typeof obj.completeDateTime != "undefined") {completeDateTime = convertDateFormat(obj.completeDateTime);}
+		if (typeof obj.status != "undefined") {status = obj.status;}
+		if (typeof obj.apiLogRelativeUrl != "undefined") {
+			apiLogRelativeUrl = obj.apiLogRelativeUrl;
+			downloadLink = '<a href="' + apiLogRelativeUrl + '"><i class="bi bi-download"></i></a>';
+		}
 		
 		$tbody.append( '<tr>' +
 		'<td class="col-md-1">' + 
 		'<div class="custom-control custom-checkbox">' +
 		'<input type="checkbox" class="custom-control-input" id="check-'+ obj.id +'">'+
 		'</div>' +
-		'<td class="col-md-1">'+ id +'</td>' +
-		'<td class="col-md-2">'+ pid  +'</td>' +
-		'<td class="col-md-3">'+ createDateTime +'</td>' +
-		'<td class="col-md-3">'+ completeDateTime +'</td>' +
-		'<td class="col-md-2">'+ status+'</td>' +
+		'<td class="col-md-1 text-center">'+ id +'</td>' +
+		'<td class="col-md-1 text-center">'+ pid  +'</td>' +
+		'<td class="col-md-3 text-center">'+ createDateTime +'</td>' +
+		'<td class="col-md-3 text-center">'+ completeDateTime +'</td>' +
+		'<td class="col-md-2 text-center">'+ status +'</td>' +
+		'<td class="col-md-1 text-center">'+ downloadLink  + '</td>' +
 		 '</tr>' );
 
    // console.log(obj.id + ", " + obj.status + ", " + obj.createDateTime + ", " + obj.lastUpdateDateTime);
