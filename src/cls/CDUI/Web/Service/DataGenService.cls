@@ -40,9 +40,21 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
             do ##class(JobService).FinishJobWithError(jobId)
         }
         
+        //write api log from global
+        do ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
+
+        //remove api log from global after the job is done
+        kill ^DataGen.APILog("info",jobId)
+        
     } catch ex {
+        
         do LOG^%ETN
         do ##class(JobService).ErrorJob(jobId)
+
+        //write api log from global
+        do ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
+        kill ^DataGen.APILog("info",jobId)
+        
         $$$LOGERROR("[DataGenService.prcoessRequest] Failed to process a job. Job id: "_jobId_", pid: "_pid)
         $$$LOGERROR(ex)
         throw ex
@@ -60,7 +72,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     kill FailedCaseArr
     
     set patientService = ##class(PatientService).%New()
-	do patientService.NewPatient(noOfPatient, .PatientVoObjList)
+	do patientService.NewPatient(noOfPatient, jobId, .PatientVoObjList)
 
     //record the number of failed case
     set noOfFailedPatient = noOfPatient - PatientVoObjList.Count()
@@ -71,11 +83,11 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     if (req.isEpisode){
         set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode..."
         set episodeService = ##class(EpisodeService).%New()
-        do episodeService.NewEpisode(req.NumOfEpisodePerPatient, PatientVoObjList, .failedByIdArr)
+        do episodeService.NewEpisode(req.NumOfEpisodePerPatient, PatientVoObjList, jobId, .failedByIdArr)
     } elseif(req.isEpisodeRange) {
         set ^DataGen.Log(jobId,$i(^DataGen.Log)) = "Creating episode by random range..."
         set episodeService = ##class(EpisodeService).%New()
-        do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList, .failedByIdArr)
+        do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList, jobId, .failedByIdArr)
     }
     //record the number of failed case 
     do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedEpisode",)

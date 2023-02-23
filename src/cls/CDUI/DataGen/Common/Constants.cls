@@ -7,7 +7,9 @@ Parameter maxAge As INTEGER [ Final ] = 100;
 
 // location to save the api_log.csv file, cduinterns is a folder in the docker container 
 
-Parameter apiLogFileName As STRING = "/cduinterns/irissys/csp/user/datagen/log/api_log.csv";
+Parameter apiLogDir As STRING = "/cduinterns/irissys/csp/user/datagen/api_log/";
+
+Parameter debugLogFileName As STRING = "/cduinterns/irissys/csp/user/datagen/log/debug_log.txt";
 
 // Used to create obs table and submission array
 

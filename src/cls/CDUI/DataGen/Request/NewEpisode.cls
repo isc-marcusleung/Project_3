@@ -17,6 +17,8 @@ Property PAADMDischgDate As %String;
 
 Property PAADMDischgTime As %String;
 
+Property jobId As %Integer(%JSONINCLUDE = "INPUTONLY");
+
 Method SerialisedGet() As %RawString
 {
 	do ..%JSONExportToString(.json)
@@ -50,6 +52,9 @@ Storage Default
 </Value>
 <Value name="8">
 <Value>PAADMDischgTime</Value>
+</Value>
+<Value name="9">
+<Value>jobId</Value>
 </Value>
 </Data>
 <DefaultData>NewEpisodeDefaultData</DefaultData>

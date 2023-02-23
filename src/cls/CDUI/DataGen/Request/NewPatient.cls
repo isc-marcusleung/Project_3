@@ -17,6 +17,8 @@ Property INSTDesc As %String;
 
 Property AUXITDesc As %String;
 
+Property jobId As %Integer(%JSONINCLUDE = "INPUTONLY");
+
 Method SerialisedGet() As %RawString
 {
 	do ..%JSONExportToString(.json)
@@ -44,6 +46,12 @@ Storage Default
 </Value>
 <Value name="6">
 <Value>AUXITDesc</Value>
+</Value>
+<Value name="7">
+<Value>JobId</Value>
+</Value>
+<Value name="8">
+<Value>jobId</Value>
 </Value>
 </Data>
 <DefaultData>NewPatientDefaultData</DefaultData>

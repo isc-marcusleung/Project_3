@@ -3,7 +3,7 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.PatientService Extends BaseService
 {
 
-Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
+Method NewPatient(NumOfPatient As %Integer = 1, jobId As %Integer, Output patientVoObjList)
 {
 	//Retrieve the ARCAuxilInsurType list for the creation of patient
 	$$$LOGINFO("[PatientService.NewPatient] Retrive the insurance list.")
@@ -21,6 +21,9 @@ Method NewPatient(NumOfPatient As %Integer = 1, Output patientVoObjList)
 	set patientInput.NumOfPatient = NumOfPatient
 	set patientInput.InsurTypeObjList = insurTypeObjList
 
+	//pass jobId to patientInput object 
+	set patientInput.jobId = jobId
+
 	do ..RunWithRetry(patientInput, patientOutput,)
 	
 	set patientIdList = patientOutput.PatientIdList
@@ -35,6 +38,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 {
 	set numOfLoop = patientInput.NumOfPatient
 	set insurTypeObjList = patientInput.InsurTypeObjList
+	set jobId = patientInput.jobId
 	set patientVoObjList = patientOutput.PatientVoObjList
 	set patientIdList = ##class(%ListOfDataTypes).%New()
 
@@ -49,10 +53,8 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		try 
 		{
 			$$$LOGINFO("[PatientService.Run] Initialize patient request")
-			do ..InitPatientRequestByRandom(.request,.randInsurTypeIndex)
+			do ..InitPatientRequestByRandom(jobId, .request,.randInsurTypeIndex)
 			
-			#; //Record request body in the log file
-			#; do ##class(CDUI.DataGen.ExportLog).LogRequest(request.SerialisedGet())
 			//TODO Marcus add PAPMIMedicare
 
 			$$$LOGINFO("[PatientService.Run] Request body: "_request.SerialisedGet())
@@ -63,9 +65,6 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 			{
 				$$$LOGINFO("[PatientService.Run] Response body: "_response.StringValue)
 				$$$LOGINFO("[PatientService.Run] Response Time in ms: "_response.ResponseTime)
-				
-				#; // Record response time in the log file
-				#; do ##class(CDUI.DataGen.ExportLog).LogRespondTime(response.ResponseTime)
 				
 				set json = {}.%FromJSON(response.StringValue)
 				if (json.ERROR = ""){
@@ -116,13 +115,13 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 	quit numOfFailed
 }
 
-Method InitPatientRequestByRandom(ByRef request As CDUI.DataGen.Request.NewPatient, Output randInsurTypeIndex As %Integer) [ Private ]
+Method InitPatientRequestByRandom(jobId As %Integer, ByRef request As CDUI.DataGen.Request.NewPatient, Output randInsurTypeIndex As %Integer) [ Private ]
 {
     kill request
     kill randInsurTypeIndex
 
     // Set up patient creation request
-    set request = ##class(CDUI.DataGen.Request.NewPatient).%New()
+	set request =  ##class(CDUI.DataGen.Request.NewPatient).%New()
     // Set last name
     set request.PAPERName = ##class(PUtil).LastName()
 
@@ -141,6 +140,9 @@ Method InitPatientRequestByRandom(ByRef request As CDUI.DataGen.Request.NewPatie
 		set request.INSTDesc = dynamicObj.AUXITInsTypeDR
         set request.AUXITDesc = dynamicObj.AUXITDesc
 	}
+
+	// set jobId
+	set request.jobId = jobId
 }
 
 }

@@ -50,7 +50,7 @@ Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.Da
     set numOfSuccess = obsIdList.Count()
     set numOfFailure = NumOfObsPerEpisode - numOfSuccess
     if numOfSuccess '= 0 {
-        $$$LOGINFO("[ObsService.NewObsPerEpisode] episode Id: "_EpisodeVo.ID_", episodeIdList: "_##class(CommonUtil).convertListOfDataTypeToString(obsIdList,))
+        $$$LOGINFO("[ObsService.NewObsPerEpisode] episode Id: "_EpisodeVo.ID_", obsIdList: "_##class(CommonUtil).convertListOfDataTypeToString(obsIdList,))
     }
     $$$LOGINFO("[ObsService.NewObsPerEpisode] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
 }

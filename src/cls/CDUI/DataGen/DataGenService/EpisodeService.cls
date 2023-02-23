@@ -7,7 +7,7 @@ Parameter minAdmDate = "1/1/1970";
 
 Parameter locationTypeId = "E";
 
-Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
+Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer, Output failedByPatientIdArr)
 {
        
         kill failedByPatientIdArr
@@ -17,7 +17,7 @@ Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %In
         for i=1:1:PatientVoObjList.Count(){
             set ranNum = ##class(PUtil).Random(diff) + MinNumOfEpisode
             if (ranNum > 0){
-                do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), .numOfSuccess)
+                do ..NewEpisodePerPatient(ranNum, PatientVoObjList.GetAt(i), jobId, .numOfSuccess)
                 set numOfFailure = ranNum - numOfSuccess
                 set totalSuccess = totalSuccess + numOfSuccess
                 set totalFailure = totalFailure + numOfFailure
@@ -31,14 +31,14 @@ Method NewEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %In
         do ..PrintResult(.failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
-Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef numOfSuccess As %Integer) [ Private ]
+Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, jobId As %Integer, ByRef numOfSuccess As %Integer) [ Private ]
 {
      
         $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Initialize episode request, patient Id: "_PatientVo.PatientId)
 
         // generate episode records and insert them to TrakCare via API.
         $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Create new episodes.")
-        do ..InitEpisodeRequestPerPatientByRandom(..#minAdmDate, NumOfEpisodePerPatient, PatientVo, .episodeInput)
+        do ..InitEpisodeRequestPerPatientByRandom(..#minAdmDate, NumOfEpisodePerPatient, PatientVo, jobId,.episodeInput)
         set episodeOutput = ##class(CDUI.DataGen.DataGenService.Custom.EpisodeOutput).%New()
 
         do ..RunWithRetry(episodeInput, episodeOutput,)
@@ -55,7 +55,7 @@ Method NewEpisodePerPatient(NumOfEpisodePerPatient As %Integer = 1, PatientVo As
         $$$LOGINFO("[EpisodeService.NewEpisodePerPatient] Success count: "_numOfSuccess_", Failure count: "_numOfFailure)
 }
 
-Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
+Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer, Output failedByPatientIdArr)
 {
     set totalSuccess = 0
     set totalFailure = 0
@@ -70,7 +70,7 @@ Method NewEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %L
         set patientVo = PatientVoObjList.GetAt(cnt)
         kill numOfSuccess
         kill numOfFailure
-        do ..NewEpisodePerPatient(NumOfEpisodePerPatient, patientVo, .numOfSuccess)
+        do ..NewEpisodePerPatient(NumOfEpisodePerPatient, patientVo, jobId, .numOfSuccess)
         set numOfFailure = NumOfEpisodePerPatient - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
@@ -191,7 +191,7 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
 	quit numOfFailed
 }
 
-Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodePerPatient As %Integer, patientVo As CDUI.DataGen.vo.PatientVo, Output episodeInput As CDUI.DataGen.DataGenService.Custom.EpisodeInput) [ Private ]
+Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodePerPatient As %Integer, patientVo As CDUI.DataGen.vo.PatientVo, jobId As %Integer, Output episodeInput As CDUI.DataGen.DataGenService.Custom.EpisodeInput) [ Private ]
 {
     kill episodeInput
     kill dateGenArr
@@ -227,6 +227,7 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodeP
 
     for cnt=1:1:numOfEpisodePerPatient {
         set request = ##class(CDUI.DataGen.Request.NewEpisode).%New()
+        set request.jobId = jobId //insert jobId into every single request
         set request.PAADMType = $List(admTypeList, $$$PRand($listlength(admTypeList))+1)
         set request.PAADMVisitStatus = $List(visitStatusList, $$$PRand($listlength(visitStatusList))+1)
 
@@ -274,6 +275,7 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodeP
         set request.PatientID = patientVo.PatientId
         set request.PAADMAdmDate = dateGenArrKey
         set request.PAADMAdmTime = ##class(PUtil).Time(,,2)
+
         set dateGenArrKey = $ORDER(dateGenArr(dateGenArrKey))
 
         //TODO Marcus check if discharge should only be applied to in-patient
