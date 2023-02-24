@@ -3,7 +3,7 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.OrderService Extends (%RegisteredObject, BaseService)
 {
 
-Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
+Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects, jobId As %Integer, Output failedByEpisodeIdArr)
 {
     kill failedByEpisodeIdArr
     do ..GetOrderByCat("", OrderCat, .orderVoObjList)
@@ -14,7 +14,7 @@ Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer 
     for i=1:1:EpisodeVoObjList.Count(){
         set ranNum = ##class(PUtil).Random(diff) + MinNumOfOrder
         if (ranNum > 0){
-            do ..NewOrderPerEpisode(ranNum, EpisodeVoObjList.GetAt(i), .orderVoObjList, .numOfSuccess)
+            do ..NewOrderPerEpisode(ranNum, EpisodeVoObjList.GetAt(i), jobId, .orderVoObjList, .numOfSuccess)
             set numOfFailure = ranNum - numOfSuccess
             set totalSuccess = totalSuccess + numOfSuccess
             set totalFailure = totalFailure + numOfFailure
@@ -27,7 +27,7 @@ Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer 
     do ..PrintResult(.failedByEpisodeIdArr, totalSuccess, totalFailure)
 }
 
-Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer) [ Private ]
+Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, jobId As %Integer, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer) [ Private ]
 {
     // TO DO CN - Any better way? 
     set EpisodeId = EpisodeItem.ID
@@ -41,7 +41,7 @@ Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As C
     $$$LOGINFO("[OrderService.NewOrder] Create new order")
 
     // Run the method to initialise the request body
-    do ..InitOrderRequestByRandom(OrderVoObjList, NumOfOrderPerEpisode, EpisodeId, EpisodeAdmDate, EpisodeAdmTime, PatientID, .orderInput,)
+    do ..InitOrderRequestByRandom(OrderVoObjList, NumOfOrderPerEpisode, EpisodeId, EpisodeAdmDate, EpisodeAdmTime, PatientID, jobId, .orderInput,)
 
     set orderOutput = ##class(CDUI.DataGen.DataGenService.Custom.OrderOutput).%New()
 
@@ -61,7 +61,7 @@ Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As C
     $$$LOGINFO("[EpisodeService.NewOrder] Success count: "_NumOfSuccess_", Failure count: "_NumOfFailure)
 }
 
-Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
+Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, EpisodeVoObjList As %ListOfObjects, jobId As %Integer, Output failedByEpisodeIdArr)
 {
     set Count = ""
     set OrderCat = OrderCat
@@ -82,7 +82,7 @@ Method NewOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, Episo
         
         set episodeItem = EpisodeVoObjList.GetAt(i)
         
-        do ..NewOrderPerEpisode(NumOfOrderPerEpisode, episodeItem, .orderVoObjList, .numOfSuccess)
+        do ..NewOrderPerEpisode(NumOfOrderPerEpisode, episodeItem, jobId, .orderVoObjList, .numOfSuccess)
         
         set numOfFailure = NumOfOrderPerEpisode - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
@@ -269,7 +269,7 @@ Method RemoveItemsInverseFromList(sourceList, ByRef removalIndexArray) [ Private
 
 // Initialise the request for orders
 
-Method InitOrderRequestByRandom(orderObjList As %ListOfObjects, NumOfOrderPerEpisode As %Integer, EpisodeId As %String, EpisodeAdmDate As %String, EpisodeAdmTime As %String, PatientID As %String, Output orderInput As CDUI.DataGen.DataGenService.Custom.OrderInput, Output orderIndexList)
+Method InitOrderRequestByRandom(orderObjList As %ListOfObjects, NumOfOrderPerEpisode As %Integer, EpisodeId As %String, EpisodeAdmDate As %String, EpisodeAdmTime As %String, PatientID As %String, jobId As %Integer, Output orderInput As CDUI.DataGen.DataGenService.Custom.OrderInput, Output orderIndexList)
 {
     kill orderInput
     set orderInput = ##class(CDUI.DataGen.DataGenService.Custom.OrderInput).%New()
@@ -279,6 +279,7 @@ Method InitOrderRequestByRandom(orderObjList As %ListOfObjects, NumOfOrderPerEpi
 
         //Set up Order request
         set request = ##class(CDUI.DataGen.Request.NewOrder).%New()
+        set request.jobId = jobId
 
         // Get a random ordercategory object index 
         set randorderVoObjListListIndex = ($$$PRand(orderObjList.Count()) + 1)

@@ -36,6 +36,7 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
         set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         //remove api log from global after the job is done
         kill ^DataGen.APILog("info",jobId)
+
         set apiLogRelativeUrl = ##class(CDUI.DataGen.Common.Constants).#apiLogRelativeDir_fileName
         if isSuccess = 1 {
             do ##class(JobService).FinishJob(jobId, apiLogRelativeUrl)
@@ -112,7 +113,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start appointment creation"
         set apptService = ##class(ApptService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
-        do apptService.NewAppt(req.NumOfAppointmentPerPatient, PatientVoObjList, .failedByIdArr)
+        do apptService.NewAppt(req.NumOfAppointmentPerPatient, PatientVoObjList, jobId, .failedByIdArr)
         set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished appointment creation, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
@@ -120,7 +121,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start appointment creation by random range"
         set apptService = ##class(ApptService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
-        do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, PatientVoObjList, .failedByIdArr)
+        do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, jobId, PatientVoObjList, .failedByIdArr)
         set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished appointment creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
@@ -135,7 +136,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set orderService = ##class(OrderService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
-            do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
+            do orderService.NewOrder(req.NumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, jobId, .failedByIdArr)
            
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedOrder", PatientVoObjList.GetAt(i).PatientId)
@@ -148,7 +149,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set orderService = ##class(OrderService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
-            do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
+            do orderService.NewOrderByRange(req.MinNumOfOrderPerEpisode, req.MaxNumOfOrderPerEpisode, req.OrderCat, PatientVoObjList.GetAt(i).EpisodeObjList, jobId, .failedByIdArr)
 
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedOrder", PatientVoObjList.GetAt(i).PatientId)
@@ -164,7 +165,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set obsService = ##class(ObsService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
-            do obsService.NewObs(req.NumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
+            do obsService.NewObs(req.NumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, jobId, .failedByIdArr)
 
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedObs", PatientVoObjList.GetAt(i).PatientId)
@@ -177,7 +178,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set obsService = ##class(ObsService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
         for i=1:1:PatientVoObjList.Count(){
-            do obsService.NewObsByRange(req.MinNumOfObservationPerEpisode, req.MaxNumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, .failedByIdArr)
+            do obsService.NewObsByRange(req.MinNumOfObservationPerEpisode, req.MaxNumOfObservationPerEpisode, PatientVoObjList.GetAt(i).EpisodeObjList, jobId, .failedByIdArr)
 
             //record the number of failed case 
             do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedObs", PatientVoObjList.GetAt(i).PatientId)

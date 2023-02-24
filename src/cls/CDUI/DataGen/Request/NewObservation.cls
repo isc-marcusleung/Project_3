@@ -19,6 +19,8 @@ Property OBSENTRYPatLocDesc As %String;
 
 Property TOVERRIDE As %Boolean;
 
+Property jobId As %Integer(%JSONINCLUDE = "INPUTONLY");
+
 Property TableItems As list Of CDUI.DataGen.Request.NewObservationItem;
 
 Method SerialisedGet() As %RawString
@@ -57,6 +59,9 @@ Storage Default
 </Value>
 <Value name="9">
 <Value>TOVERRIDE</Value>
+</Value>
+<Value name="10">
+<Value>jobId</Value>
 </Value>
 </Data>
 <Data name="TableItems">

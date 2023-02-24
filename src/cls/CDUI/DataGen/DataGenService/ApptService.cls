@@ -3,7 +3,7 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.Common, CDUI.DataGen.DataGenService.Bas
 Class CDUI.DataGen.DataGenService.ApptService Extends BaseService
 {
 
-Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
+Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer, Output failedByPatientIdArr)
 {
     kill failedByPatientIdArr
     set diff = MaxNumOfAppt - MinNumOfAppt
@@ -30,7 +30,7 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
         $$$LOGINFO("[ApptService.NewApptByRange] Number of appt: "_ranNum)
 
         if (ranNum > 0){
-            do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), .servIdList, .numOfSuccess)
+            do ..NewApptPerPatient(ranNum, PatientVoObjList.GetAt(i), jobId, .servIdList, .numOfSuccess)
             set numOfFailure = ranNum - numOfSuccess
             set totalSuccess = totalSuccess + numOfSuccess
             set totalFailure = totalFailure + numOfFailure
@@ -44,7 +44,7 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
     do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
-Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, ByRef servIdList, Output totalSuccessPerPatient As %Integer) [ Private ]
+Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, jobId As %Integer, ByRef servIdList, Output totalSuccessPerPatient As %Integer) [ Private ]
 {
     set numOfSuccess = 0
     set numOfFailure = 0
@@ -62,7 +62,7 @@ Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.
         $$$LOGINFO("[ApptService.NewApptPerPatient] Number of existing appointments for patient Id "_PatientVo.PatientId_": "_exApptOutput.Count())
 
         $$$LOGINFO("[ApptService.NewApptPerPatient] Initialising appt requests...")
-        do ..InitApptRequestPerPatientByRandom(servIdList, PatientVo, .apptInput, exApptOutput)
+        do ..InitApptRequestPerPatientByRandom(servIdList, PatientVo, jobId, .apptInput, exApptOutput)
 
         set apptOutput = ##class(CDUI.DataGen.DataGenService.Custom.ApptOutput).%New()
 
@@ -88,7 +88,7 @@ Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.
     $$$LOGINFO("[ApptService.NewApptPerPatient] Success count: "_totalSuccessPerPatient_", Failure count: "_totalFailurePerPatient)
 }
 
-Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, Output failedByPatientIdArr)
+Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer, Output failedByPatientIdArr)
 {
     set totalSuccess = 0
     set totalFailure = 0
@@ -122,7 +122,7 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
             do servIdList.Insert(servItem.RowID) 
         }
 
-        do ..NewApptPerPatient(NumOfApptPerPatient, patientVo, .servIdList, .totalSuccessPerPatient)
+        do ..NewApptPerPatient(NumOfApptPerPatient, patientVo, jobId, .servIdList, .totalSuccessPerPatient)
         
         set totalSuccess = totalSuccess + totalSuccessPerPatient
         set numOfFailure = NumOfApptPerPatient - totalSuccessPerPatient
@@ -299,7 +299,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
 
 // One request each time
 
-Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.vo.PatientVo, Output apptInput As CDUI.DataGen.DataGenService.Custom.ApptInput, exApptOutput As %ListOfObjects) [ Private ]
+Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.vo.PatientVo, jobId As %Integer, Output apptInput As CDUI.DataGen.DataGenService.Custom.ApptInput, exApptOutput As %ListOfObjects) [ Private ]
 {
     kill apptInput
     set apptInput = ##class(CDUI.DataGen.DataGenService.Custom.ApptInput).%New()
@@ -340,7 +340,7 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
                     set slot = slotsObjList.GetAt(randslotIndex)
 
                     // Set up request
-                    do ..SetApptRequest(.request, slotsIndexList, randslotIndex, slotsObjList , patientVo, slot, .apptTmpList,.slotTmpList)
+                    do ..SetApptRequest(.request, jobId, slotsIndexList, randslotIndex, slotsObjList , patientVo, slot, .apptTmpList,.slotTmpList)
                     set retry = 0
                 }    
                 else {
@@ -368,7 +368,7 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
                 // If a slot is found after passing checks with all existing appointments, a request will be made
                 if isSuccess = 1 {
                     // Set up request
-                    do ..SetApptRequest(.request, slotsIndexList, randslotIndex, slotsObjList , patientVo, slot, .apptTmpList,.slotTmpList)
+                    do ..SetApptRequest(.request, jobId, slotsIndexList, randslotIndex, slotsObjList , patientVo, slot, .apptTmpList,.slotTmpList)
                     set retry = 0
                 }
 
@@ -584,7 +584,7 @@ Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %Lis
     }
 }
 
-Method SetApptRequest(Output request As CDUI.DataGen.Request.NewAppointment, slotsIndexList As %List, randslotIndex As %Integer, slotsObjList As %ListOfObjects, patientVo As CDUI.DataGen.vo.PatientVo, slot, Output apptTmpList, Output slotTmpList) [ Private ]
+Method SetApptRequest(Output request As CDUI.DataGen.Request.NewAppointment, jobId As %Integer, slotsIndexList As %List, randslotIndex As %Integer, slotsObjList As %ListOfObjects, patientVo As CDUI.DataGen.vo.PatientVo, slot, Output apptTmpList, Output slotTmpList) [ Private ]
 {
     
     do slotsIndexList.Insert(randslotIndex)
@@ -594,7 +594,7 @@ Method SetApptRequest(Output request As CDUI.DataGen.Request.NewAppointment, slo
     // Set up the appointment request 
     $$$LOGINFO("[ApptService.SetApptRequest] Set up request...")
     set request = ##class(CDUI.DataGen.Request.NewAppointment).%New()
-
+    set request.jobId = jobId
     // Convert string PatientId to integer
     set request.PatientID = patientVo.PatientId + 0
     $$$LOGINFO("[ApptService.SetApptRequest] PatientId: "_request.PatientID)
