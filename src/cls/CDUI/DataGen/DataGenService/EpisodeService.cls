@@ -279,7 +279,6 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodeP
 
         set dateGenArrKey = $ORDER(dateGenArr(dateGenArrKey))
 
-        //TODO Marcus check if discharge should only be applied to in-patient
         if (request.PAADMVisitStatus = statusDischarge)
         {
             //PAADMDischgDate should be after PAADMAdmDate

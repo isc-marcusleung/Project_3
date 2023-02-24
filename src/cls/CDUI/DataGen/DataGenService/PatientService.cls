@@ -44,8 +44,6 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		{
 			$$$LOGINFO("[PatientService.Run] Initialize patient request")
 			do ..InitPatientRequestByRandom(jobId, .request,.randInsurTypeIndex)
-			
-			//TODO Marcus add PAPMIMedicare
 
 			$$$LOGINFO("[PatientService.Run] Request body: "_request.SerialisedGet())
 			

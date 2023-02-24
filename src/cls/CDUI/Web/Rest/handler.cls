@@ -60,16 +60,14 @@ ClassMethod AddJob() As %Status
         write obj.%ToJSON()
 	    Quit $$$OK
     }
-	//TODO marcus to see if i need to catch the exception
-	Try {
 
+	Try {
 		set jobId = ##class(JobService).AddJob()
-	     //TODO marcus to see if i need to remove it
 		set ^DataGen.Log(jobId,"request") = request.SerialisedGet()
 		set paramValue = request.generateStringParamValues()
 		set ^DataGen.Log(jobId, "reqStr") = paramValue
 		job ##class(DataGenService).processRequest(paramValue, jobId)
-	//	do ##class(DataGenService).processRequest(request.generateStringParamValues(), jobId)
+
 		set obj = {
 			"status" : (..#SUCCESS),
 			"jobId" : (jobId)

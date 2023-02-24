@@ -196,7 +196,6 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 					set request.INSTDesc = insurType.AUXITInsTypeDR
 					set request.AUXITDesc = insurType.AUXITDesc
 				}
-				//TODO Marcus add PAPMIMedicare
 
 				$$$LOGINFO("[NewPatient] Request body: "_request.SerialisedGet())
 				
@@ -253,7 +252,7 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList) As %Status
 {
 	set failedCount = 0
-	set locationTypeId = "E" // TODO Marcus make it constant / enum
+	set locationTypeId = "E"
 	set admType = "I,E"
 	set minAdmDate = "1/1/1990"
 	set episodeVoObjList = ##class(%ListOfObjects).%New()
