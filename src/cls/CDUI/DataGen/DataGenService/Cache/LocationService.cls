@@ -54,7 +54,6 @@ ClassMethod clearCache()
         TCOMMIT
         $$$LOGINFO("[LocationService.clearCache] Finished clearing")
     } Catch exception {
-        do LOG^%ETN
         if locked {
             Lock -^DataGen.Cache("Location")
         }
@@ -115,7 +114,6 @@ ClassMethod InitGlobalVariable() [ Private ]
         $$$LOGINFO("[LocationService.InitGlobalVariable] Finished initializing global variable.")
    
     } catch exception {
-        do LOG^%ETN
         if locked {
             Lock -^DataGen.Cache("Location")
         }
@@ -153,7 +151,6 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
         $$$LOGINFO("[LocationService.RemoveItem] Finished removing an item. index: "_index)
         return 1
     } Catch exception {
-        do LOG^%ETN
         if locked {
             Lock -^DataGen.Cache("Location")
         }

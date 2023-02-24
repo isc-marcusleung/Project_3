@@ -44,8 +44,6 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		{
 			$$$LOGINFO("[PatientService.Run] Initialize patient request")
 			do ..InitPatientRequestByRandom(jobId, .request,.randInsurTypeIndex)
-			
-			//TODO Marcus add PAPMIMedicare
 
 			$$$LOGINFO("[PatientService.Run] Request body: "_request.SerialisedGet())
 			
@@ -82,6 +80,8 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		} 
 		catch ex 
 		{	
+			do LOG^%ETN
+			set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = ex.DisplayString()
 			$$$LOGERROR("[PatientService.Run] Failed to create a patient. Error(Ex): "_ex.DisplayString())
 			set numOfFailed = numOfFailed + 1
 		} 

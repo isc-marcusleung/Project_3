@@ -421,7 +421,7 @@ ClassMethod RemoveEmptyTriage()
     }
 }
 
-ClassMethod InsertToTriageNew(Instance As CDUI.DataGen.MIMIC.TriageOriginal)
+ClassMethod InsertToTriageNew(Instance)
 {
     set newInstance =  ##class(CDUI.DataGen.MIMIC.TriageNew).%New()
     set newInstance.Temp = Instance.Temp

@@ -52,7 +52,6 @@ ClassMethod clearCache()
         TCOMMIT
         $$$LOGINFO("[ARCAuxilInsurTypeService.clearCache] Finished clearing")
     } Catch exception {
-        do LOG^%ETN
         if locked {
             Lock -^DataGen.Cache("InsurType")
         }
@@ -112,7 +111,6 @@ ClassMethod InitGlobalVariable() [ Private ]
         $$$LOGINFO("[ARCAuxilInsurTypeService.InitGlobalVariable] Finished initializing global variable.")
    
     } catch exception {
-        do LOG^%ETN
         if locked {
             Lock -^DataGen.Cache("InsurType")
         }
@@ -148,7 +146,6 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
         $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] Finished removing an item. index: "_index)
         return 1
     } Catch exception {
-        do LOG^%ETN
         if locked {
             Lock -^DataGen.Cache("InsurType")
         }

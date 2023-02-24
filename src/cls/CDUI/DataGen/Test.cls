@@ -196,7 +196,6 @@ ClassMethod NewPatient(NumOfPatient As %Integer = 1, ByRef patientIdList)
 					set request.INSTDesc = insurType.AUXITInsTypeDR
 					set request.AUXITDesc = insurType.AUXITDesc
 				}
-				//TODO Marcus add PAPMIMedicare
 
 				$$$LOGINFO("[NewPatient] Request body: "_request.SerialisedGet())
 				
@@ -253,7 +252,7 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 ClassMethod NewEpisode(NumOfEpisode As %Integer = 1, ByRef episodeVoObjList) As %Status
 {
 	set failedCount = 0
-	set locationTypeId = "E" // TODO Marcus make it constant / enum
+	set locationTypeId = "E"
 	set admType = "I,E"
 	set minAdmDate = "1/1/1990"
 	set episodeVoObjList = ##class(%ListOfObjects).%New()
@@ -757,11 +756,13 @@ ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1
 	return sc
 }
 
-ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
+ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, jobId As %Integer, ByRef PatientVoObjList)
 {
+	w !,$$$CurrentClass
+	w !,$$$CurrentMethod
 	kill PatientVoObjList
 	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
-	do patientService.NewPatient(NumOfPatient, .PatientVoObjList)
+	do patientService.NewPatient(NumOfPatient, jobId, .PatientVoObjList)
 	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
 		if (cnt = 1) {
@@ -772,10 +773,10 @@ ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
 	$$$LOGINFO("================================ [End] Patient Id ================================")
 }
 
-ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
-	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList)
+	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList, jobId)
 	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
 		if (cnt = 1) {

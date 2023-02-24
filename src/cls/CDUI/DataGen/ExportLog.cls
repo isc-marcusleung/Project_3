@@ -13,22 +13,16 @@ ClassMethod WriteAPILog(jobId As %Integer) As %String
         do ##class(%File).CreateDirectory(baseDir, .return)
     } 
 
-    #; do ##class(CDUI.DataGen.Utils.CommonUtil).GetCurrentDT(.dateD,.timeD)
-    #; set logFileName = baseDir_"jobID_"_jobId_"_"_dateD_"_"_timeD_".csv"
-
     set logFileName = jobId_"_"_$REPLACE($REPLACE($ZDATETIME($HOROLOG,8,1)," ","_"),":","" )_".csv"
-    $$$LOGINFO("baseDir: "_baseDir)
-    $$$LOGINFO("logFileName: "_logFileName)
     set logFile=##class(%File).%New(baseDir_logFileName)
     Do logFile.Open("WSN")  
     Do logFile.WriteLine("sep = ;")
     Do logFile.WriteLine("date;time;API_name;request_body;response_body;response_time;http_statuscode;http_statusline")
 
-    set cnt = ^DataGen.APILog("info",jobId)
+    set cnt = $Get(^DataGen.APILog("info",jobId),0)
     $$$LOGINFO("cnt: "_cnt)
     for i = 1:1:cnt{
         set info = ^DataGen.APILog("info",jobId,i)
-        $$$LOGINFO("info: "_info)
         Do logFile.WriteLine(info)
     }
     do logFile.Close()
