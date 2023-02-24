@@ -757,11 +757,13 @@ ClassMethod NewResult(ResultType As %String = "Rad", NumOfResult As %Integer = 1
 	return sc
 }
 
-ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
+ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, jobId As %Integer, ByRef PatientVoObjList)
 {
+	w !,$$$CurrentClass
+	w !,$$$CurrentMethod
 	kill PatientVoObjList
 	set patientService = ##class(CDUI.DataGen.DataGenService.PatientService).%New()
-	do patientService.NewPatient(NumOfPatient, .PatientVoObjList)
+	do patientService.NewPatient(NumOfPatient, jobId, .PatientVoObjList)
 	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
 		if (cnt = 1) {
@@ -772,10 +774,10 @@ ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList)
 	$$$LOGINFO("================================ [End] Patient Id ================================")
 }
 
-ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects)
+ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
-	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList)
+	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList, jobId)
 	w !!!!
 	for cnt = 1:1:PatientVoObjList.Count(){
 		if (cnt = 1) {
