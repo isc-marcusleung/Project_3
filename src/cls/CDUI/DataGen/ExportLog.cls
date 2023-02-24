@@ -24,7 +24,7 @@ ClassMethod WriteAPILog(jobId As %Integer) As %String
     Do logFile.WriteLine("sep = ;")
     Do logFile.WriteLine("date;time;API_name;request_body;response_body;response_time;http_statuscode;http_statusline")
 
-    set cnt = ^DataGen.APILog("info",jobId)
+    set cnt = $Get(^DataGen.APILog("info",jobId),0)
     $$$LOGINFO("cnt: "_cnt)
     for i = 1:1:cnt{
         set info = ^DataGen.APILog("info",jobId,i)
