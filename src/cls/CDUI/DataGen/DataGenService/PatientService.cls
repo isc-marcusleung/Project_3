@@ -82,6 +82,7 @@ Method Run(patientInput As CDUI.DataGen.DataGenService.Base.Input, patientOutput
 		} 
 		catch ex 
 		{	
+			do LOG^%ETN
 			$$$LOGERROR("[PatientService.Run] Failed to create a patient. Error(Ex): "_ex.DisplayString())
 			set numOfFailed = numOfFailed + 1
 		} 

@@ -33,11 +33,16 @@ ClassMethod GetARCAuxilInsurType(Active As %Boolean = "", PageSize As %Integer =
 	{
 		//$$$LOGINFO("[GetARCAuxilInsurType] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			set insurType = ##class("CDUI.DataGen.vo.ARCAuxilInsurTypeVo").newInstance(value)
-			do ResultObjList.Insert(insurType)
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				set insurType = ##class("CDUI.DataGen.vo.ARCAuxilInsurTypeVo").newInstance(value)
+				do ResultObjList.Insert(insurType)
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.GetARCAuxilInsurType] Failed to get ARCAuxilInsurType. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
 		}
 	}
 	quit sc
@@ -74,11 +79,16 @@ ClassMethod GetARCItmMast(Active As %Boolean = "", PageSize As %Integer = "", By
 	{
 		//$$$LOGINFO("[GetARCItmMast] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			set insurType = ##class("CDUI.DataGen.vo.ARCItmMasVo").newInstance(value)
-			do ResultObjList.Insert(insurType)
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				set insurType = ##class("CDUI.DataGen.vo.ARCItmMasVo").newInstance(value)
+				do ResultObjList.Insert(insurType)
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.GetARCItmMast] Failed to get ARCItmMast. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
 		}
 	}
 	quit sc
@@ -121,12 +131,16 @@ ClassMethod GetLocation(StartsWith As %String = "", Active As %Boolean = "", Loc
 	{	
 		//$$$LOGINFO("[GetLocation] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			set location = ##class("CDUI.DataGen.vo.LocationVo").newInstance(value)
-			do ResultObjList.Insert(location)
-		}
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				set location = ##class("CDUI.DataGen.vo.LocationVo").newInstance(value)
+				do ResultObjList.Insert(location)
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.GetLocation] Failed to get Location. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)		}
 	}
 	quit sc
 }
@@ -154,12 +168,17 @@ ClassMethod GetLocationServices(loc As %Integer = "", ByRef ResultObjList) As %S
 	{	
 		// $$$LOGINFO("[GetLocationServices] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			set locServices = ##class("CDUI.DataGen.vo.LocationServicesVo").newInstance(value, request.loc)
-			do ResultObjList.Insert(locServices)
-			#; write !, value.Order,?30,value.RowID
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				set locServices = ##class("CDUI.DataGen.vo.LocationServicesVo").newInstance(value, request.loc)
+				do ResultObjList.Insert(locServices)
+				#; write !, value.Order,?30,value.RowID
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.LocationServices] Failed to get LocationServices. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
 		}
 	}
 	quit sc
@@ -197,17 +216,22 @@ ClassMethod GetSlots(LocId As %Integer = "", ServId As %Integer = "", PageSize A
 	{	
 		// $$$LOGINFO("[GetSlots] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			// If the slot has a USRN number, that slot is available and hasn't been used
-			if (value.USRN '= "")
-			{
-				set slot = ##class("CDUI.DataGen.vo.SlotVo").newInstance(value)
-				do ResultObjList.Insert(slot)
-				#; write !, value.Date,?30,value.USRN
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				// If the slot has a USRN number, that slot is available and hasn't been used
+				if (value.USRN '= "")
+				{
+					set slot = ##class("CDUI.DataGen.vo.SlotVo").newInstance(value)
+					do ResultObjList.Insert(slot)
+					#; write !, value.Date,?30,value.USRN
+				}
+				
 			}
-			
+		} else {
+			$$$LOGERROR("[TrakCareService.LocationServices] Failed to get LocationServices. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
 		}
 	}
 	quit sc
@@ -239,12 +263,17 @@ ClassMethod GetOrderByCat(Count As %Integer = "", Category As %String = "", ByRe
 	{
 		//$$$LOGINFO("[Get...] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
-			do ResultObjList.Insert(insurType)
-			#; write !, value.ORCATDesc,?30,value.ID
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				set insurType = ##class(CDUI.DataGen.vo.OrderCatVo).newInstance((value))
+				do ResultObjList.Insert(insurType)
+				#; write !, value.ORCATDesc,?30,value.ID
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.GetOrderByCat] Failed to get OrderByCat. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
 		}
 	}
 
@@ -268,11 +297,16 @@ ClassMethod GetCareProvider(ByRef Results) As %Status
 	{
 		#; $$$LOGINFO("[GetCareProvider] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		set iterator = json.results.%GetIterator()
-		while iterator.%GetNext(.key,.value)
-		{	
-			do Results.Insert(value.DoctorID)
-			#; write !, value.DoctorID
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				do Results.Insert(value.DoctorID)
+				#; write !, value.DoctorID
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.GetCareProvider] Failed to get CareProvider. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
 		}
 	}
 
@@ -295,18 +329,23 @@ ClassMethod GetPatientById(id As %Integer = "", ByRef patRecordList) As %Status
 	{		
 		#; $$$LOGINFO("[GetPatientById] Response body: "_response.StringValue)
 		set json = {}.%FromJSON(response.StringValue)
-		#; write !, "First name: "_json.PAPERName
+		if (json.ERROR = ""){
+			#; write !, "First name: "_json.PAPERName
 
-		// Change Last Name to Capitalisation instead of Uppercase
-		set lastName = json.PAPERName
-		set lastName = $EXTRACT(json.PAPERName)_$ZCONVERT($EXTRACT(json.PAPERName,2,*),"L")
+			// Change Last Name to Capitalisation instead of Uppercase
+			set lastName = json.PAPERName
+			set lastName = $EXTRACT(json.PAPERName)_$ZCONVERT($EXTRACT(json.PAPERName,2,*),"L")
 
-		set patRecordList = $listbuild(
-			$listbuild("PAPERName",lastName),
-			$listbuild("PAPERName2",json.PAPERName2),
-			$listbuild("CTSEXDesc",json.CTSEXDesc),
-			$listbuild("PAPERDob",json.PAPERDob)
-		)
+			set patRecordList = $listbuild(
+				$listbuild("PAPERName",lastName),
+				$listbuild("PAPERName2",json.PAPERName2),
+				$listbuild("CTSEXDesc",json.CTSEXDesc),
+				$listbuild("PAPERDob",json.PAPERDob)
+			)
+		} else {
+			$$$LOGERROR("[TrakCareService.GetPatientById] Failed to get PatientById. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
+		}
 	}
 	quit sc
 }
@@ -326,15 +365,19 @@ ClassMethod GetEpisodeById(id As %Integer = "", ByRef epRecordList) As %Status
 	if $$$ISOK(sc)
 	{		
 		set json = {}.%FromJSON(response.StringValue)
-
-		set epRecordList = $listbuild(
-			$listbuild("ID",json.ID),
-			$listbuild("PatientID",json.PatientID),
-			$listbuild("PAADMType",json.PAADMType),
-			$listbuild("PAADMAdmDate",json.PAADMAdmDate),
-			$listbuild("PAADMAdmTime",json.PAADMAdmTime),
-			$listbuild("CTLOCDesc",json.CTLOCDesc)
-		)
+		if (json.ERROR = ""){
+			set epRecordList = $listbuild(
+				$listbuild("ID",json.ID),
+				$listbuild("PatientID",json.PatientID),
+				$listbuild("PAADMType",json.PAADMType),
+				$listbuild("PAADMAdmDate",json.PAADMAdmDate),
+				$listbuild("PAADMAdmTime",json.PAADMAdmTime),
+				$listbuild("CTLOCDesc",json.CTLOCDesc)
+			)
+		} else {
+			$$$LOGERROR("[TrakCareService.GetEpisodeById] Failed to get EpisodeById. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
+		}
 	}
 	quit sc
 }

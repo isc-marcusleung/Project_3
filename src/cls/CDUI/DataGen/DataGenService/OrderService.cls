@@ -195,6 +195,7 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
         } 
         catch ex 
         {	
+            do LOG^%ETN
             $$$LOGERROR("[OrderService.NewOrder] Failed to create an order. Error(Ex): "_ex.DisplayString())
         }
 

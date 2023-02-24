@@ -235,6 +235,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
         } 
         catch ex 
         {	
+            do LOG^%ETN
             $$$LOGERROR("[ApptService.NewAppt] Failed to create an appointment. Error(Ex): "_ex.DisplayString())
         }
 
