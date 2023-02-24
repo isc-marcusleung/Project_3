@@ -414,7 +414,6 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
     set getJobsForDisplayVo.results = ##class(%ListOfObjects).%New()
     set results = getJobsForDisplayVo.results
 
-    set getJobsForDisplayVo.count = count
     set noOfJob = ^DataGen.Job("info","size")
     set counter = 1
 
@@ -435,6 +434,7 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
         set counter = counter + 1
         SET key = $ORDER(^DataGen.Job("item",key), isForward)  
     }
+    set getJobsForDisplayVo.count = results.Count()
 
     set startId = idPtr
     set endId = idPtr
