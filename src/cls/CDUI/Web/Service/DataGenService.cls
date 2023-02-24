@@ -48,9 +48,8 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 
         
     } catch ex {
-        
         do LOG^%ETN
-        
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = ex.DisplayString()
         //write api log from global
         set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         kill ^DataGen.APILog("info",jobId)
