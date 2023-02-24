@@ -189,7 +189,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
 
     set log = ""
 	for cnt = 1:1:PatientVoObjList.Count(){
-		set log = log_PatientVoObjList.GetAt(cnt).SerialisedGet()
+		set log = PatientVoObjList.GetAt(cnt).SerialisedGet()
         set ^DataGen.Log(jobId,"result", $i(^DataGen.Log(jobId,"result"))) = log
 	}
     do ..writeFailedCaseToLog(jobId, .FailedCaseArr)
