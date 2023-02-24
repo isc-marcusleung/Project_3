@@ -7,7 +7,7 @@ Parameter locationTypeId = "E";
 
 // For a single patient, each episode has different numbers of episodes
 
-Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
+Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, EpisodeVoObjList As %ListOfObjects, jobId As %Integer, Output failedByEpisodeIdArr)
 {
     kill failedByEpisodeIdArr
     do ..GetLocation(.locationObjList)
@@ -19,7 +19,7 @@ Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, E
         set ranNum = ##class(PUtil).Random(diff) + MinNumOfObs
         if (ranNum > 0){
             set episodeVo = EpisodeVoObjList.GetAt(i)
-            do ..NewObsPerEpisode(ranNum, episodeVo, .locationObjList, .numOfSuccess)
+            do ..NewObsPerEpisode(ranNum, episodeVo, .locationObjList, .numOfSuccess, jobId)
             set numOfFailure = ranNum - numOfSuccess
             set totalSuccess = totalSuccess + numOfSuccess
             set totalFailure = totalFailure + numOfFailure
@@ -34,13 +34,13 @@ Method NewObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, E
 
 // For a single episode, generate a number of observations 
 
-Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.DataGen.vo.EpisodeVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer)
+Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.DataGen.vo.EpisodeVo, ByRef locationObjList As %ListOfObjects, ByRef numOfSuccess As %Integer, jobId As %Integer)
 {
     $$$LOGINFO("[ObsService.NewObsPerEpisode] Initialize obs request, episode Id: "_EpisodeVo.ID)
 
     //generate obsverations records 
     $$$LOGINFO("[ObsService.NewObsPerEpisode] Initalize observation requests.")
-    do ..InitObsRequest(locationObjList, NumOfObsPerEpisode, EpisodeVo,.obsInput)
+    do ..InitObsRequest(locationObjList, NumOfObsPerEpisode, EpisodeVo, jobId, .obsInput)
     set obsOutput = ##class(CDUI.DataGen.DataGenService.Custom.ObsOutput).%New()
 
     do ..RunWithRetry(obsInput,obsOutput,)
@@ -57,7 +57,7 @@ Method NewObsPerEpisode(NumOfObsPerEpisode As %Integer = 1, EpisodeVo As CDUI.Da
 
 // Create same number of observations for all episodes
 
-Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects, Output failedByEpisodeIdArr)
+Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObjects, jobId As %Integer, Output failedByEpisodeIdArr)
 {
     kill failedByEpisodeIdArr
     set totalSuccess = 0
@@ -77,7 +77,7 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
         kill numOfFailure
 
         //One to many mapping, for each episode, create multiple observation creation requests and store them in obsInput
-        do ..NewObsPerEpisode(NumOfObsPerEpisode, episodeVo, .locationObjList, .numOfSuccess)
+        do ..NewObsPerEpisode(NumOfObsPerEpisode, episodeVo, .locationObjList, .numOfSuccess, jobId)
         set numOfFailure = NumOfObsPerEpisode - numOfSuccess
         set totalSuccess = totalSuccess + numOfSuccess
         set totalFailure = totalFailure + numOfFailure
@@ -93,7 +93,7 @@ Method NewObs(NumOfObsPerEpisode As %Integer = 1, EpisodeVoObjList As %ListOfObj
 
 // pack a list of request objects for one episode in the ObsInput object 
 
-Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %Integer, episodeVo As CDUI.DataGen.vo.EpisodeVo, Output obsInput As CDUI.DataGen.DataGenService.Custom.ObsInput) [ Private ]
+Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %Integer, episodeVo As CDUI.DataGen.vo.EpisodeVo, jobId As %Integer, Output obsInput As CDUI.DataGen.DataGenService.Custom.ObsInput) [ Private ]
 {
     kill obsInput
     set obsInput = ##class(CDUI.DataGen.DataGenService.Custom.ObsInput).%New()
@@ -111,6 +111,7 @@ Method InitObsRequest(locationObjList As %ListOfObjects, NumOfObsPerEpisode As %
 
         //packing one request object 
         set request = ##class(CDUI.DataGen.Request.NewObservation).%New()
+        set request.jobId = jobId
         set request.PatientID = episodeVo.PatientID
         set request.mradm = episodeVo.mradm
         set request.EpisodeID = episodeVo.ID

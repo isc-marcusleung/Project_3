@@ -7,6 +7,8 @@ Property USRN As %String;
 
 Property UBRN As %String;
 
+Property jobId As %Integer(%JSONINCLUDE = "INPUTONLY");
+
 Method SerialisedGet() As %RawString
 {
 	do ..%JSONExportToString(.json)
@@ -25,6 +27,9 @@ Storage Default
 </Value>
 <Value name="3">
 <Value>UBRN</Value>
+</Value>
+<Value name="4">
+<Value>jobId</Value>
 </Value>
 </Data>
 <DefaultData>NewAppointmentDefaultData</DefaultData>

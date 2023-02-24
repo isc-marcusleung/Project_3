@@ -19,6 +19,8 @@ Property OEORISttTim As %String;
 
 Property PatientID As %String;
 
+Property jobId As %Integer(%JSONINCLUDE = "INPUTONLY");
+
 Method SerialisedGet() As %RawString
 {
 	do ..%JSONExportToString(.json)
@@ -58,6 +60,9 @@ Storage Default
 </Value>
 <Value name="10">
 <Value>PatientID</Value>
+</Value>
+<Value name="11">
+<Value>jobId</Value>
 </Value>
 </Data>
 <DefaultData>NewOrderDefaultData</DefaultData>
