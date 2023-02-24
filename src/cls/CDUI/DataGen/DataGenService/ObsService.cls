@@ -205,7 +205,8 @@ ClassMethod UpdateMradm(ByRef episodeVo As CDUI.DataGen.vo.EpisodeVo)
         set json = {}.%FromJSON(response.StringValue)
     }
     catch ex
-    {
+    {   
+        do LOG^%ETN
         $$$LOGERROR("[UpdateMradm] Failed to get episode info. Error(Ex): "_ex.DisplayString())
     }
     set results = json.results
@@ -383,7 +384,8 @@ Method Run(obsInput As CDUI.DataGen.DataGenService.Base.Input, obsOutput As CDUI
                 $$$LOGERROR("[ObsService.Run] Failed to create an observation. Error(SC): "_$System.Status.DisplayError(sc))
             }
         }
-        catch ex {	
+        catch ex {
+            do LOG^%ETN	
             $$$LOGERROR("[ObsService.Run] Failed to create an observation. Error(Ex): "_ex.DisplayString())
         }
         

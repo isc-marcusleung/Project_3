@@ -235,6 +235,7 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
         } 
         catch ex 
         {	
+            do LOG^%ETN
             $$$LOGERROR("[ApptService.NewAppt] Failed to create an appointment. Error(Ex): "_ex.DisplayString())
         }
 
@@ -575,7 +576,7 @@ Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %Lis
         set ranNum = ##class(PUtil).Random(servIdList.Count()) + 1
         // Get a random serviceId
         set servId = servIdList.GetAt(ranNum)
-        set Rows = 1
+        set Rows = 20
         // Retrieve the slots list
         do ..GetSlotList(servId, Rows,.slotsObjList)
         $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Service Id used: "_servId) 

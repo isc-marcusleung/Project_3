@@ -77,32 +77,7 @@ ClassMethod newInstance(request As %CSP.Request) As CDUI.Web.Request.CreateJobRe
     set obj.isAppointmentRange = $Get(%request.Data("isAppointmentRange",1),default) 
     set obj.isObservationRange = $Get(%request.Data("isObservationRange",1),default)
     set obj.OrderCat = $Get(%request.Data("orderCat",1),default)
-    
-    //TODO marcus to remove it
-    #; k ^marcus
-    #; s ^marcus("NumOfPatient") = obj.NumOfPatient
-    #; s ^marcus("NumOfEpisodePerPatient") = obj.NumOfEpisodePerPatient
-    #; s ^marcus("NumOfOrderPerEpisode") = obj.NumOfOrderPerEpisode
-    #; s ^marcus("NumOfAppointmentPerPatient") = obj.NumOfAppointmentPerPatient
-    #; s ^marcus("NumOfObservationPerEpisode") = obj.NumOfObservationPerEpisode
-    #; s ^marcus("MinNumOfEpisodePerPatient") = obj.MinNumOfEpisodePerPatient
-    #; s ^marcus("MaxNumOfEpisodePerPatient") = obj.MaxNumOfEpisodePerPatient
-    #; s ^marcus("MinNumOfOrderPerEpisode") = obj.MinNumOfOrderPerEpisode
-    #; s ^marcus("MaxNumOfOrderPerEpisode") = obj.MaxNumOfOrderPerEpisode
-    #; s ^marcus("MinNumOfAppointmentPerPatient") = obj.MinNumOfAppointmentPerPatient
-    #; s ^marcus("MaxNumOfAppointmentPerPatient") = obj.MaxNumOfAppointmentPerPatient
-    #; s ^marcus("MinNumOfObservationPerEpisode") = obj.MinNumOfObservationPerEpisode
-    #; s ^marcus("MaxNumOfObservationPerEpisode") = obj.MaxNumOfObservationPerEpisode
-    #; s ^marcus("isEpisode") = obj.isEpisode
-    #; s ^marcus("isOrder") = obj.isOrder
-    #; s ^marcus("isAppointment") = obj.isAppointment
-    #; s ^marcus("isObservation") = obj.isObservation
-    #; s ^marcus("isEpisodeRange") = obj.isEpisodeRange
-    #; s ^marcus("isOrderRange") = obj.isOrderRange
-    #; s ^marcus("isAppointmentRange") = obj.isAppointmentRange
-    #; s ^marcus("isObservationRange") = obj.isObservationRange
-    
-
+ 
     return obj
 }
 
@@ -127,7 +102,6 @@ ClassMethod isRequestValid(request As CDUI.Web.Request.CreateJobRequest) As %Int
   
     $$$LOGINFO("[CreateJobRequest.validateRequest] isAllValid: "_isAllValid)
     $$$LOGINFO("[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid_", isOrderCatValid: "_isOrderCatValid)
-    //TODO marcus to remove it
     set ^DataGen.Log($i(^DataGen.Log),"validate") = "[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid
     return isAllValid
 }

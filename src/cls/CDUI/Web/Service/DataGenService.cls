@@ -16,8 +16,6 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
         set isProcessByBatch = ^DataGen.Job("info","isProcessByBatch")
         set noOfPatientPerBatch = ^DataGen.Job("info","noOfPatientPerBatch") 
     
-    //  set isProcessByBatch = isProcessByBatch = 1
-        set isProcessByBatch = 0 //TODO marcus
         set isValidNoOfPatientPerBatch = noOfPatientPerBatch > 0
         set noOfPatient = request.NumOfPatient
 
@@ -49,10 +47,9 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 
         
     } catch ex {
-        
         do LOG^%ETN
-        
-        //write api log from global, remove it when the job is done
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = ex.DisplayString()
+        //write api log from global
         set fileName = ##class(CDUI.DataGen.ExportLog).WriteAPILog(jobId)
         kill ^DataGen.APILog("info",jobId)
 
@@ -191,16 +188,11 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished observation creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
 
-    //TODO marcus to remove it
-
     set log = ""
 	for cnt = 1:1:PatientVoObjList.Count(){
 		set log = log_PatientVoObjList.GetAt(cnt).SerialisedGet()
+        set ^DataGen.Log(jobId,"result", $i(^DataGen.Log(jobId,"result"))) = log
 	}
-    //TODO marcus to see if i need to remove it
-    set ^DataGen.Log(jobId,"result") = log
-
-
     do ..writeFailedCaseToLog(jobId, .FailedCaseArr)
 }
 

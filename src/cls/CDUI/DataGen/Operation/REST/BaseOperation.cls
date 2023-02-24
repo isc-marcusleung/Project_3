@@ -9,10 +9,14 @@ Parameter DataReadBuffer As INTEGER = 32768;
 
 Method setupCredential()
 {
-	set ..Adapter.Credentials = ""
-    set ..Adapter.HttpHeaders("TUSERNAME") = ..Adapter.%CredentialsObj.Username
-    set ..Adapter.HttpHeaders("TPASSWORD") = ..Adapter.%CredentialsObj.PasswordGet()
-    set ..Adapter.HttpHeaders("TENCRYPTED") = 0
+	if '$isobject(..Adapter.%CredentialsObj) 
+	{
+		do ..Adapter.CredentialsSet(..Adapter.Credentials)
+	}
+	
+	set ..Adapter.HttpHeaders("TUSERNAME") = ..Adapter.%CredentialsObj.Username
+	set ..Adapter.HttpHeaders("TPASSWORD") = ..Adapter.%CredentialsObj.PasswordGet()
+	set ..Adapter.HttpHeaders("TENCRYPTED") = 0
 }
 
 Method httpGet(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenService.Custom.StringResponse) As %Status
