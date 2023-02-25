@@ -344,14 +344,20 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
                     set retry = 0
                 }    
                 else {
-                    $$$LOGINFO("[ApptService.Init1] No more slots found so remove servId from servIdList then get new slotsObjList to retry")
+                    if servIdList.Count() '=0 {
+                        $$$LOGINFO("[ApptService.Init1] No more slots found so remove servId from servIdList then get new slotsObjList to retry")
 
-                    // Remove servId from list for retry
-                    set servIdIndex = servIdList.Find(servId)
-                    do servIdList.RemoveAt(servIdIndex)
+                        // Remove servId from list for retry
+                        set servIdIndex = servIdList.Find(servId)
+                        do servIdList.RemoveAt(servIdIndex)
 
-                    do ..GetNewServIdAndSlotsList(servIdList, .slotsObjList, .servId)
-                    set retry = 1
+                        do ..GetNewServIdAndSlotsList(servIdList, .slotsObjList, .servId)
+                        set retry = 1
+                    }
+                    else {
+                        // Else, meaning no servId exists for this location, quit the while loop
+                        set retry = 0
+                    }
                 }
             }
         }	
