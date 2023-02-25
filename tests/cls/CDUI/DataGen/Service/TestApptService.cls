@@ -71,36 +71,4 @@ Method CreatePatientVo(ByRef patientVoObjList) As %Status
 	quit status
 }
 
-ClassMethod CheckTime(apptItemList) As %Status
-{
-	set numOfItem = apptItemList.Count()
-	for i=1:1:numOfItem{
-
-		set apptItem = apptItemList.GetAt(i)
-		for j=i+1:1:numOfItem {
-			// if item(i) same with item(j)
-			set sc = ..CheckTwoAppts(apptItem.GetAt(i), apptItem.GetAt(j))
-			set status = $$$ADDSC(status,sc)
-		}
-	}
-}
-
-ClassMethod CheckTwoAppts(apptItem1, apptItem2) As %Status
-{
-	#dim status, sc as %Status = $$$OK
-
-	if apptItem1.Date '= apptItem2.Date {
-		set sc = $$$OK
-		set status = $$$ADDSC(status,sc)
-	}
-	// If same date
-	else {
-		if (($tr(apptItem1.StartTime,":","") > $tr(apptItem2.EndTime,":","")) && ($tr(apptItem2.StartTime,":","") < $tr(apptItem1.EndTime,":",""))){
-			set sc = $$$OK
-			set status = $$$ADDSC(status,sc)
-		}
-	}
-	quit status
-}
-
 }
