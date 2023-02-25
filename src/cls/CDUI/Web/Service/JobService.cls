@@ -62,7 +62,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         if ($Data(^DataGen.Job) = 0){
             set ^DataGen.Job("info","size") = 0
             set ^DataGen.Job("info","nextId") = 1
-            set ^DataGen.Job("info","maxProcess") = 8 
+            set ^DataGen.Job("info","maxProcess") = 4 
             set ^DataGen.Job("info","isProcessByBatch") = 0 //0 indicates false, 1 indicates true
             set ^DataGen.Job("info","noOfPatientPerBatch") = 10 
             set ^DataGen.Job("info","noOfCurrentProcess") = 0
