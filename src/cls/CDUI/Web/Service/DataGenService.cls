@@ -198,15 +198,14 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
 
 ClassMethod recordFailedCase(ByRef failedByIdArr, Output FailedCaseArr, type As %String, patientId As %String) [ Private ]
 {
-
-    /**
+    /** 
     "p" indicates failed patient record
-FailedCaseByPatientArr("TotalNumOfFailedPaitent")
-FailedCaseByPatientArr("p", patientId,"NumOfFailedEpisode")
-FailedCaseByPatient("p", patientId,"NumOfFailedAppt")
-FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedOrder")
-FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
-*/
+    FailedCaseByPatientArr("TotalNumOfFailedPaitent")
+    FailedCaseByPatientArr("p", patientId,"NumOfFailedEpisode")
+    FailedCaseByPatient("p", patientId,"NumOfFailedAppt")
+    FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedOrder")
+    FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
+    */
     //record the number of failed case 
     if ($DATA(failedByIdArr) > 0) {
         set key = $Order(failedByIdArr(""))

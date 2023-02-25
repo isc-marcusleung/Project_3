@@ -1,34 +1,51 @@
+/// This class is used to manipulte the gloabl variable ^DataGen.Job
 Class CDUI.Web.Service.JobService Extends Ens.Util.IOLogger [ ProcedureBlock ]
 {
 
-Parameter DefaultTimeout = 5;
-
-// This class is used to manipulte the gloabl variable ^DataGen.Job
-
-/*
+/**
 ^DataGen.Job("info","size")
 ^DataGen.Job("info","nextId")
 ^DataGen.Job("info","maxProcess")
+^DataGen.Job("info","isProcessByBatch")
+^DataGen.Job("info","noOfPatientPerBatch") 
+^DataGen.Job("info","noOfCurrentProcess")
 ^DataGen.Job("item",<id>,"status")
 ^DataGen.Job("item",<id>,"pid")
+^DataGen.Job("item",<id>,"apiLogRelativeUrl")
 ^DataGen.Job("item",<id>,"createDateTime")
 ^DataGen.Job("item",<id>,"completeDateTime")
 ^DataGen.Job("item",<id>,"lastUpdateDateTime")
 */
+
+// default lock time out
+
+Parameter DefaultTimeout = 5;
+
+// Job Status 
+
+/// job is created but a new process has not yet started to handle the request
 Parameter StatusCreate = "Create";
 
+/// a new process has started to handle the request
 Parameter StatusInProgress = "In Progress";
 
+/// When a user manually terminate the process
 Parameter StatusTerminated = "Terminated";
 
+/// When the process can complete but some exception occur during the process
 Parameter StatusCompletedWithError = "Completed With Error";
 
+/// When the process can complete succesfully
 Parameter StatusCompleted = "Completed";
 
+/// When the process cannot be run properly
 Parameter StatusError = "Error";
+
+// Lock for Job ID generation
 
 Parameter IdGeneratorLock = "DataGen.Job.IdGeneratorLock";
 
+/// Initialize ^DataGen.Job. It must be initialized at the beginning
 ClassMethod InitGlobalVariable() [ Private ]
 {
     $$$LOGINFO("[JobService.InitGlobalVariable] start initializing global variable.")
@@ -45,7 +62,7 @@ ClassMethod InitGlobalVariable() [ Private ]
         if ($Data(^DataGen.Job) = 0){
             set ^DataGen.Job("info","size") = 0
             set ^DataGen.Job("info","nextId") = 1
-            set ^DataGen.Job("info","maxProcess") = 8 //TODO marcus
+            set ^DataGen.Job("info","maxProcess") = 8 
             set ^DataGen.Job("info","isProcessByBatch") = 0 //0 indicates false, 1 indicates true
             set ^DataGen.Job("info","noOfPatientPerBatch") = 10 
             set ^DataGen.Job("info","noOfCurrentProcess") = 0
@@ -64,12 +81,13 @@ ClassMethod InitGlobalVariable() [ Private ]
     }
 }
 
-/// Return value
+/// To control the number of concurrent process. Only if it can take a ticket, it can use "do" to create a new process to handle the request.
+/// [Return value]
 /// 0: failed to get a ticket
 /// 1: succeed to get a ticket
 ClassMethod GetTicketForJob() As %Integer
 {
-     $$$LOGINFO("[JobService.GetTicketForJob] Start getting a ticket.")
+    $$$LOGINFO("[JobService.GetTicketForJob] Start getting a ticket.")
     do ..checkSetup()
     TSTART
     set locked = 0
@@ -104,6 +122,7 @@ ClassMethod GetTicketForJob() As %Integer
     }
 }
 
+/// Remove the ticket after the process is ended so it can free up the capacity for other processes.
 ClassMethod RemoveTicketForJob()
 {
      $$$LOGINFO("[JobService.RemoveTicketForJob] Start removing a ticket.")
@@ -135,6 +154,7 @@ ClassMethod RemoveTicketForJob()
     }
 }
 
+/// For checking if the global variable is set up.
 ClassMethod checkSetup() [ Private ]
 {
     if ($Data(^DataGen.Job) = 0){
@@ -142,7 +162,7 @@ ClassMethod checkSetup() [ Private ]
     }
 }
 
-/// Get a unique id for job creation.
+/// Get a unique job id for job creation.
 ClassMethod GetNextId() As %Integer [ Private ]
 {
     $$$LOGINFO("[JobService.GetNextId] Get next Job Id.")
@@ -173,6 +193,9 @@ ClassMethod GetNextId() As %Integer [ Private ]
     }
 }
 
+/// Create a job record
+/// [Return value]
+/// Job Id
 ClassMethod AddJob() As %Integer
 {
     $$$LOGINFO("[JobService.AddJob] Start adding a new job.")
@@ -217,6 +240,13 @@ ClassMethod AddJob() As %Integer
     return id
 }
 
+/// The function is used to update some values in the job record.
+/// [Input Parameter]
+/// id: Job Id
+/// pid: Process Id
+/// status: Job status
+/// completeDateTime: the complete date time of a job (Completed or Completed with Error)
+/// apiLogRelativeUrl: the relative path of Url for downloadingg the api log file
 ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, completeDateTime As %String, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.UpdateJob] Start updating a job. Job id: "_id)
@@ -255,6 +285,9 @@ ClassMethod UpdateJob(id As %Integer, pid As %Integer, status As %String, comple
     }
 }
 
+/// Kill the process of rhe job if it is in status "Create" or "In Progress"
+/// [Input parameter]
+/// id: Job Id
 ClassMethod TerminateJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.TerminateJob] Start terminating a job. Job Id: "_id)
@@ -283,7 +316,7 @@ ClassMethod TerminateJob(id As %Integer)
         do ..TerminateJobItem(id)
 
         if ((status = ..#StatusCreate)  || (status = ..#StatusInProgress)){
-            do ..RemoveTicketForJob() //TODO marcus better verify before removing ticket
+            do ..RemoveTicketForJob() 
         }
         Lock -^DataGen.Job("item",id)
         TCOMMIT
@@ -298,6 +331,9 @@ ClassMethod TerminateJob(id As %Integer)
     }
 }
 
+/// Terminate the job if it is in status "Create" or "In Progress". Also, it deletes the job record from ^DataGen.Job 
+/// [Input parameter]
+/// id: Job Id
 ClassMethod DeleteJob(id As %Integer)
 {
     $$$LOGINFO("[JobService.DeleteJob] Start deleting a job. Job Id: "_id)
@@ -346,6 +382,10 @@ ClassMethod DeleteJob(id As %Integer)
     }
 }
 
+/// Use this function to update the job after it is completed succesfully
+/// [Input parameter]
+/// id: Job Id
+/// apiLogRelativeUrl: the relative path of Url for downloadingg the api log file
 ClassMethod FinishJob(id As %Integer, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.FinishJob] Update to Completed. Job Id: "_id)
@@ -353,6 +393,10 @@ ClassMethod FinishJob(id As %Integer, apiLogRelativeUrl As %String)
     do ..RemoveTicketForJob()
 }
 
+/// Use this function to update the job after it is completed with error
+/// [Input parameter]
+/// id: Job Id
+/// apiLogRelativeUrl: the relative path of Url for downloadingg the api log file
 ClassMethod FinishJobWithError(id As %Integer, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.FinishJobWithError] Update to Completed With Error. Job Id: "_id)
@@ -360,6 +404,10 @@ ClassMethod FinishJobWithError(id As %Integer, apiLogRelativeUrl As %String)
     do ..RemoveTicketForJob()
 }
 
+/// Use this function to update the job after it is error
+/// [Input parameter]
+/// id: Job Id
+/// apiLogRelativeUrl: the relative path of Url for downloadingg the api log file
 ClassMethod ErrorJob(id As %Integer, apiLogRelativeUrl As %String)
 {
     $$$LOGINFO("[JobService.ErrorJob] Update to Error. Job Id: "_id)
@@ -368,6 +416,9 @@ ClassMethod ErrorJob(id As %Integer, apiLogRelativeUrl As %String)
     do ..RemoveTicketForJob()
 }
 
+/// Remove the job record from ^DataGen.Job 
+/// [Input parameter]
+/// id: Job Id
 ClassMethod RemoveJobItem(id As %Integer) [ Private ]
 {
     $$$LOGINFO("[JobService.RemoveJobItem] Remove a Job Item, Job Id: "_id)
@@ -379,6 +430,9 @@ ClassMethod RemoveJobItem(id As %Integer) [ Private ]
     kill ^DataGen.Job("item",id)
 }
 
+/// Teminerate the job
+/// [Input parameter]
+/// id: Job Id
 ClassMethod TerminateJobItem(id As %Integer) [ Private ]
 {
     set status = ^DataGen.Job("item",id, "status")
@@ -395,9 +449,16 @@ ClassMethod TerminateJobItem(id As %Integer) [ Private ]
     $$$LOGINFO("[JobService.TerminateJobItem] After Job termination, Job Id: "_id_", Job status: "_^DataGen.Job("item",id, "status"))
 }
 
-/// sortBy: 0 indicate acsending 1 indicates descending
-/// isForward : 0 indicates descending move , 1 indicates ascending move
+/// Get the job info list with pagination
+/// [Input parameter]
+/// count: the number of record to be retrieved
+/// idPtr: a pointer which points to the job id
 /// isForwardDisplay : 0 indicates descending display, 1 indicates ascending display
+/// isForward : 0 indicates descending move , 1 indicates ascending move
+/// sortBy: 0 indicate acsending 1 indicates descending
+/// endpointUrl: used to compose previous page url and next page url
+/// [Return value]
+/// GetJobsForDisplayVo: contains the job info for display
 ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", isForwardDisplay As %Integer = 1, isForward As %Integer = 1, sortBy As %Integer = 1, endpointUrl As %String) As CDUI.Web.Vo.GetJobsForDisplayVo
 {
     $$$LOGINFO("[JobService.GetJobsForDisplay] Start getting the jobs, count: "_count_", idPtr: "_idPtr_", isForward: "_isForward)
@@ -504,6 +565,7 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
     return getJobsForDisplayVo
 }
 
+/// To reverse the list order
 ClassMethod reverseListOrder(ByRef list As %ListOfObjects) [ Private ]
 {
     set tmp = ##class(%ListOfObjects).%New()

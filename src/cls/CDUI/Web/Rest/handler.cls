@@ -3,10 +3,13 @@ Import (CDUI.Web.Service, CDUI.DataGen.Common)
 Class CDUI.Web.Rest.handler Extends %CSP.REST [ ProcedureBlock ]
 {
 
+/// The status which is indicated in response JSON.
 Parameter SUCCESS = "Success";
 
+/// The status which is indicated in response JSON.
 Parameter ERROR = "Error";
 
+/// Get the latest Job info List for the display in the Web UI
 ClassMethod GetJobs() As %Status
 {
 	set count = $Get(%request.Data("count", 1))
@@ -41,6 +44,7 @@ ClassMethod GetJobs() As %Status
 	Quit $$$OK
 }
 
+/// Ceate a Job record and create a new process to handle the job
 ClassMethod AddJob() As %Status
 {
 	set isReqBody = $order(%request.Data("")) '= ""
@@ -84,6 +88,9 @@ ClassMethod AddJob() As %Status
 	Quit $$$OK
 }
 
+/// Terminate a Job and delete a job record
+/// [Input parameter]
+/// id: Job id
 ClassMethod DeleteJob(id As %Integer) As %Status
 {
 	Try {
@@ -103,6 +110,9 @@ ClassMethod DeleteJob(id As %Integer) As %Status
 	Quit $$$OK
 }
 
+/// Stop a job process
+/// [Input parameter]
+/// id: Job id
 ClassMethod TerminateJob(id As %Integer) As %Status
 {
 	Try {
@@ -122,6 +132,7 @@ ClassMethod TerminateJob(id As %Integer) As %Status
 	Quit $$$OK
 }
 
+/// For control and configuration purpose inclduing clear cache, log, api log file and reset all setting
 ClassMethod SetConfig() As %Status
 {
 	set isReqBody = %request.Content '= ""
