@@ -566,6 +566,8 @@ ClassMethod GetJobsForDisplay(count As %Integer = 10, idPtr As %Integer = "", is
 }
 
 /// To reverse the list order
+/// [Input parameter]
+/// list: the list to be reversed
 ClassMethod reverseListOrder(ByRef list As %ListOfObjects) [ Private ]
 {
     set tmp = ##class(%ListOfObjects).%New()
