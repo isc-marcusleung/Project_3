@@ -29,7 +29,6 @@ Method NewOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer 
 
 Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As CDUI.DataGen.vo.EpisodeVo, jobId As %Integer, ByRef OrderVoObjList As %ListOfObjects, ByRef NumOfSuccess As %Integer) [ Private ]
 {
-    // TO DO CN - Any better way? 
     set EpisodeId = EpisodeItem.ID
     set EpisodeAdmDate = EpisodeItem.PAADMAdmDate
     set EpisodeAdmTime = EpisodeItem.PAADMAdmTime
@@ -41,7 +40,7 @@ Method NewOrderPerEpisode(NumOfOrderPerEpisode As %Integer = 1, EpisodeItem As C
     $$$LOGINFO("[OrderService.NewOrder] Create new order")
 
     // Run the method to initialise the request body
-    do ..InitOrderRequestByRandom(OrderVoObjList, NumOfOrderPerEpisode, EpisodeId, EpisodeAdmDate, EpisodeAdmTime, PatientID, jobId, .orderInput,)
+    do ..InitOrderRequestByRandom(OrderVoObjList, NumOfOrderPerEpisode, EpisodeId, EpisodeAdmDate, EpisodeAdmTime, PatientID, jobId, .orderInput, .orderIndexList)
 
     set orderOutput = ##class(CDUI.DataGen.DataGenService.Custom.OrderOutput).%New()
 
@@ -201,7 +200,6 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
 
         if isSuccess '= 1 {
             do failedOrderRequestObjList.Insert(request)
-            #; $$$LOGINFO("[OrderService.Run] Request in failedOrderRequestObjList:  "_request.SerialisedGet())
             set numOfFailed = numOfFailed + 1
         }
     }
@@ -254,17 +252,12 @@ Method Run(orderInput As CDUI.DataGen.DataGenService.Base.Input, orderOutput As 
 
 Method RemoveItemsInverseFromList(sourceList, ByRef removalIndexArray) [ Private ]
 {
-    #; $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] Before removal of item - sourceList Size: "_sourceList.Count())
-    
     set key = $Order(removalIndexArray(""), -1) // Inverse order, delete the items in inverse order
     
-
     while (key '= "") {
         do sourceList.RemoveAt(key)
-        set key = $Order(removalIndexArray(key), -1)
-        #; $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] Remove index in reverse order: "_key)
+        set key = $Order(removalIndexArray(key), -1)   
     }
-    #; $$$LOGINFO("[OrderService.RemoveItemsInverseFromList] After removal of item - sourceList Size: "_sourceList.Count())
 }
 
 // Initialise the request for orders
@@ -363,7 +356,6 @@ Method AssignOrderItem(orderObjList As %ListOfObjects, request As CDUI.DataGen.R
         set request.Item = orderCatVo.ID
         $$$LOGINFO("[OrderService.AssignOrderItem] New order for new request: "_request.Item)
         do orderIndexList.Insert(randorderVoObjListListIndex)
-        #; set $list(orderIndexList, * + 1) = randorderVoObjListListIndex
     }
 }
 
