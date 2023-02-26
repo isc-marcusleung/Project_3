@@ -11,105 +11,67 @@ Parameter ExposeServerExceptions = 0;
 ///     _count, Number of records<br/>
 ///     category, Order category for filter<br/>
 /// WARNING: This method's signature has changed.
+/// 
+/// ClassMethod GetOrders(RowCount As %Integer = "", category As %String = "") As %DynamicObject
+/// 
 ClassMethod GetOrders(RowCount As %Integer = "", category As %String = "") As %DynamicObject
 {
-	set numRow = RowCount
+	// If RowCount is not specified, return 65 records
+	if (RowCount = "") {
+		set RowCount = 65
+	}
+
 	set ret={}
 	set dynArray=[]
 	set count = 0
 
-	#; If no category or RowCount, return 50 records 
-	if ((RowCount = "") && (category = ""))
-	{
-		&SQL(DECLARE OrdCursor CURSOR FOR 
-			SELECT Top 50
-			ARCIM_ItemCat_DR->ARCIC_OrdCat_DR->ORCAT_Desc, ARCIM_RowId, ARCIM_EffDate
-			into :ORCATDesc, :ID, :ARCIMEffDate
-			FROM SQLUser.ARC_ItmMast
+	&SQL(DECLARE OrdCursor CURSOR FOR 
+
+		SELECT Top :RowCount
+		ORCAT_Desc, ARCIM_RowId, ARCIM_EffDate
+		into :ORCATDesc, :ID, :ARCIMEffDate
+		FROM (
+			SELECT ORCAT_Desc, ARCIM_RowId, ARCIM_EffDate 
+
+			FROM SQLUser.ARC_LabTestSet 	-- get test set
+			RIGHT JOIN SQLUser.ARC_ItmMast  -- order item
+			ON ARCIM_RowId = ARCTS_ParRef  
+
+			INNER JOIN SQLUser.ARC_ItemCat   -- order subcategory
+			ON ARCIM_ItemCat_DR =  ARCIC_RowId
+
+			INNER JOIN SQLUser.OEC_OrderCategory  -- order category
+			ON ORCAT_RowId = ARCIC_OrdCat_DR
+
+			WHERE ( 
+				(ARCIM_EffDateTo IS NULL )  -- active orders only 
+				AND (ARCIM_OrderOnItsOwn LIKE '%Y%') -- OrderOnItsOwn box ticked
+				AND (ARCTS_DateTo IS NULL) -- active test sets only
+				AND ( (ORCAT_Desc IN  ('Consultation', 'Radiology') AND (ARCTS_TestSet_DR IS NULL) ) OR ((ORCAT_Desc ='Laboratory') AND (ARCTS_TestSet_DR IS NOT NULL)) ) -- select lab orders that have a test set only
+				AND (ORCAT_Desc = :category) OR (:category IS NULL) -- category is specified or category is not specified
+			
+			)
 		)
+	)
 
-		&sql(OPEN OrdCursor)
-			QUIT:(SQLCODE'=0)
+	&sql(OPEN OrdCursor)
+		QUIT:(SQLCODE'=0)
 
-		for {
-			&sql(FETCH OrdCursor)
-			QUIT:SQLCODE
-				do ret.%Set("ORCATDesc", ORCATDesc)
-				do ret.%Set("ID", ID)
-				do ret.%Set("ARCIMEffDate", ARCIMEffDate)
-				#; do dynArray.%Set(%ROWCOUNT - 1, ret)
-				do dynArray.%Set(count, ret)
-				set ret={}
-				set count = count + 1
-			}
-		
-		&sql(CLOSE OrdCursor)
-		
-		set results = {}.%Set("results",dynArray)
-		set results."count" = count
-		quit results
-	}
-
-	#; If category is specified, return 50 records only for that category
-	elseif ((category '= "") && (RowCount = "")) 
-	{
-		&SQL(DECLARE OrdCursor1 CURSOR FOR 
-			SELECT Top 50
-			ARCIM_ItemCat_DR->ARCIC_OrdCat_DR->ORCAT_Desc, ARCIM_RowId, ARCIM_EffDate
-			into :ORCATDesc, :ID, :ARCIMEffDate
-			FROM SQLUser.ARC_ItmMast where ARCIM_ItemCat_DR->ARCIC_OrdCat_DR->ORCAT_Desc = :category
-		)
-
-		&sql(OPEN OrdCursor1)
-			QUIT:(SQLCODE'=0)
-
-		for {
-			&sql(FETCH OrdCursor1)
-			QUIT:SQLCODE
-				do ret.%Set("ORCATDesc", ORCATDesc)
-				do ret.%Set("ID", ID)
-				do ret.%Set("ARCIMEffDate", ARCIMEffDate)
-				#; do dynArray.%Set(%ROWCOUNT - 1, ret)
-				do dynArray.%Set(count, ret)
-				set ret={}
-				set count = count + 1
-			}
-		&sql(CLOSE OrdCursor1)
-		
-		set results = {}.%Set("results",dynArray)
-		set results."count" = count
-		quit results
-	}
-
-	elseif ((category '= "") && (RowCount '= "")) 
-	{
-		&SQL(DECLARE OrdCursor2 CURSOR FOR 
-			SELECT Top :RowCount
-			ARCIM_ItemCat_DR->ARCIC_OrdCat_DR->ORCAT_Desc, ARCIM_RowId, ARCIM_EffDate
-			into :ORCATDesc, :ID, :ARCIMEffDate
-			FROM SQLUser.ARC_ItmMast where ARCIM_ItemCat_DR->ARCIC_OrdCat_DR->ORCAT_Desc = :category
-		)
-
-		&sql(OPEN OrdCursor2)
-			QUIT:(SQLCODE'=0)
-
-		for {
-			&sql(FETCH OrdCursor2)
-			QUIT:SQLCODE
-				do ret.%Set("ORCATDesc", ORCATDesc)
-				do ret.%Set("ID", ID)
-				do ret.%Set("ARCIMEffDate", ARCIMEffDate)
-				#; do dynArray.%Set(%ROWCOUNT - 1, ret)
-				do dynArray.%Set(count, ret)
-				set ret={}
-				set count = count + 1
-			}
-		&sql(CLOSE OrdCursor2)
-		
-		set results = {}.%Set("results",dynArray)
-		set results."count" = count
-		quit results
-	}
+	for {
+		&sql(FETCH OrdCursor)
+		QUIT:SQLCODE
+			do ret.%Set("ORCATDesc", ORCATDesc)
+			do ret.%Set("ID", ID)
+			do ret.%Set("ARCIMEffDate", ARCIMEffDate)
+			do dynArray.%Set(count, ret)
+			set ret={}
+			set count = count + 1
+		}
+	&sql(CLOSE OrdCursor)
+	
+	set results = {}.%Set("results",dynArray)
+	set results."count" = count
+	quit results
 }
 
 /// Get ...

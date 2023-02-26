@@ -47,6 +47,22 @@ XData OpenAPI [ MimeType = application/json ]
               }
             }
           }
+        },
+        "/cdu/GetCareProviders":{
+          "get":{
+            "x-ISC_CORS":true,
+            "summary":"Get Care Providers",
+            "description":"Get ...",
+            "operationId":"GetCareProviders",
+            "produces":[
+              "application/json"
+            ],
+            "responses":{
+              "200":{
+                "description":"OK"
+              }
+            }
+          }
         }
       }
   }
