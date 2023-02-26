@@ -122,7 +122,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         do episodeService.NewEpisodeByRange(req.MinNumOfEpisodePerPatient, req.MaxNumOfEpisodePerPatient, PatientVoObjList, jobId, .failedByIdArr)
         set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
-        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished episode creatio by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
+        set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished episode creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
     //record the number of failed case 
     do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedEpisode",)
