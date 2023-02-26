@@ -101,8 +101,6 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 		&sql(SELECT {fn TIMESTAMPDIFF(SQL_TSI_FRAC_SECOND,:t1,:t2)} into :ResponseTime )
 		set APILog.responseTime = ResponseTime
 
-		
-		if $$$ISERR(sc) return sc
 		if $isobject(HttpResponse)
 		{
 			set body = {}.%FromJSON(HttpResponse.Data)
@@ -113,19 +111,26 @@ Method httpPut(Request As Ens.Request, Output Response As CDUI.DataGen.DataGenSe
 				set value = value_HttpResponse.Data.Read(..#DataReadBuffer)
 			}
 
-			//Log API info
-			set APILog.responseBody = value
 			set APILog.HTTPResponseStatusCode = HttpResponse.StatusCode
 			set APILog.HTTPResponseStatusLine = HttpResponse.StatusLine
-			do APILog.concatenateProp(.info)
+			
+			if $$$ISERR(sc) {
+				do APILog.concatenateProp(.info)
+				set ^DataGen.APILog("info",jobId,$i(^DataGen.APILog("info",jobId))) = info
+				return sc
+			}
+			//TODO Need to cater the response body when sc is error. 
+			//After that, assign the value to responseBody even though sc is error so the response body can be shown in API Log CSV 
+			//Due to not enough time to implement, set the response only when sc is success. 
+			set APILog.responseBody = value 
 
 			// Update the properties in the response object
 			set Response = ##class(CDUI.DataGen.DataGenService.Custom.StringResponse).%New()
 			set Response.StringValue = value
 			set Response.ResponseTime = ResponseTime
 		}
-		set counter = $i(^DataGen.APILog("info",jobId))
-		set ^DataGen.APILog("info",jobId,counter) = info
+		do APILog.concatenateProp(.info)
+		set ^DataGen.APILog("info",jobId,$i(^DataGen.APILog("info",jobId))) = info
 	} 
 	catch ex 
 	{
