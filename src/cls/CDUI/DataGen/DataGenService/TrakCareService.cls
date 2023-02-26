@@ -382,4 +382,36 @@ ClassMethod GetEpisodeById(id As %Integer = "", ByRef epRecordList) As %Status
 	quit sc
 }
 
+ClassMethod GetObsBymradm(mradm As %Integer = "", ByRef obsRecordList) As %Status
+{
+	set request = ##class(CDUI.DataGen.Request.GetObsBymradm).%New()
+
+	if mradm'=""
+	{
+		set request.mradm = mradm
+	}
+	// Send the request
+	set sc = ##class(Ens.Director).CreateBusinessService("CDUI.DataGen.Service.Adaptorless",.svc)
+	set sc = $$$ADDSC(sc,svc.ProcessInput(request,.response))
+
+	// Store the ObsID in a ListOfDataTypes
+	set obsRecordList = ##class(%ListOfDataTypes).%New()
+
+	if $$$ISOK(sc)
+	{		
+		set json = {}.%FromJSON(response.StringValue)
+		if (json.ERROR = ""){
+			set iterator = json.results.%GetIterator()
+			while iterator.%GetNext(.key,.value)
+			{	
+				do obsRecordList.Insert(value.OBSRowId)
+			}
+		} else {
+			$$$LOGERROR("[TrakCareService.GetEpisodeById] Failed to get EpisodeById. Error(JSON): "_json.ERROR)
+			Throw ##class(%Exception.General).%New("Exception",,"CDUI.DataGen.DataGenService.TrakCareService",json.ERROR)
+		}
+	}
+	quit sc
+}
+
 }
