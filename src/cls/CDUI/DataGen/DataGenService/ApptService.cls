@@ -41,7 +41,7 @@ Method NewApptByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1
         }
     }
 
-    do ..PrintResult(failedByPatientIdArr, totalSuccess, totalFailure)
+    do ..PrintResult(.failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
 Method NewApptPerPatient(NumOfApptPerPatient As %Integer = 1, PatientVo As CDUI.DataGen.vo.PatientVo, jobId As %Integer, ByRef servIdList, Output totalSuccessPerPatient As %Integer) [ Private ]
@@ -127,7 +127,6 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
         set totalSuccess = totalSuccess + totalSuccessPerPatient
         set numOfFailure = NumOfApptPerPatient - totalSuccessPerPatient
         set totalFailure = totalFailure + numOfFailure
-        #; set failedByPatientIdArr = []
 
         if (numOfFailure > 0) {
             set failedByPatientIdArr(patientVo.PatientId) = numOfFailure
@@ -271,12 +270,9 @@ Method Run(apptInput As CDUI.DataGen.DataGenService.Base.Input, apptOutput As CD
         }
     }
 
-    if (apptOutput.ApptIdList '= "") {     
-        #; $$$LOGINFO("[ApptService.Run] Count of ApptIdList before new appt insertion: "_apptOutput.ApptIdList.Count())   
+    if (apptOutput.ApptIdList '= "") {       
 		for cnt=1:1:apptIdList.Count(){
-            #; $$$LOGINFO("[ApptService.Run] Insertion: "_apptIdList.GetAt(cnt))
 			do apptOutput.ApptIdList.Insert(apptIdList.GetAt(cnt))
-            #; $$$LOGINFO("[ApptService.Run] Count after insertion: "_apptOutput.ApptIdList.Count())
 		}
 	} else { 
         $$$LOGINFO("[ApptService.Run] Reset: "_apptIdList)
@@ -418,7 +414,6 @@ Method InitApptRequestPerPatientByRandom(servIdList, patientVo As CDUI.DataGen.v
 
 ClassMethod AssignSlot(slotsObjList As %ListOfObjects, exApptOutput As CDUI.DataGen.DataGenService.Custom.ApptOutput, Output slotFinal, Output randslotIndex) As %Integer
 {
-    // Put in retry logic here to try 8 times to get new slot that doesn't clash with existing appointments
     $$$LOGINFO("[ApptService.AssignSlot] Begin AssignSlot...")
     set isSuccess = 0
     
@@ -467,9 +462,7 @@ ClassMethod AssignSlot(slotsObjList As %ListOfObjects, exApptOutput As CDUI.Data
                 {
                     //Remove slot from list 
                     $$$LOGINFO("[ApptService.AssignSlot] Overlapped, so remove slot index: "_randslotIndex)
-                    #; $$$LOGINFO("[ApptService.AssignSlot] Count before removal: "_slotsObjList.Count())
                     do slotsObjList.RemoveAt(randslotIndex)
-                    #; $$$LOGINFO("[ApptService.AssignSlot] Count after removal: "_slotsObjList.Count())
                     set isFail = 1   
                 }
                 #; Elseif same date, no overlap 
@@ -576,8 +569,7 @@ Method ResetForFailedRequest(Output slotsIndexList As %ListOfDataTypes, Output s
 
 Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %ListOfObjects, Output servId As %Integer) [ Private ]
 {
-    #; $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Check 2 - count of servIdList after removal: "_servIdList.Count())
-    
+   
     if servIdList.Count() > 0 {
         set ranNum = ##class(PUtil).Random(servIdList.Count()) + 1
         // Get a random serviceId
@@ -594,8 +586,6 @@ Method SetApptRequest(Output request As CDUI.DataGen.Request.NewAppointment, job
 {
     
     do slotsIndexList.Insert(randslotIndex)
-    #; $$$LOGINFO("[ApptService.SetApptRequest] slotObjList Count: "_slotsObjList.Count())
-    #; $$$LOGINFO("[ApptService.SetApptRequest] Try slot index: "_randslotIndex)
 
     // Set up the appointment request 
     $$$LOGINFO("[ApptService.SetApptRequest] Set up request...")
@@ -606,7 +596,6 @@ Method SetApptRequest(Output request As CDUI.DataGen.Request.NewAppointment, job
     $$$LOGINFO("[ApptService.SetApptRequest] PatientId: "_request.PatientID)
     $$$LOGINFO("[ApptService.SetApptRequest] Slot details: USRN: "_slot.USRN_", Date: "_slot.Date_", StartTime: "_slot.SessStartTime_", EndTime: "_slot.SessEndTime)
 
-    // TODO CN Can use set usrn = $replace(slot.USRN," ","")
     // Remove empty string in the beginning of USRN 
     if ($find(slot.USRN," ")'=0){
         set usrn = $piece(slot.USRN," ", 2)
