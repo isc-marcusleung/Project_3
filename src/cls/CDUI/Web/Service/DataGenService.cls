@@ -3,13 +3,19 @@ Import (CDUI.DataGen.Utils, CDUI.DataGen.DataGenService)
 Class CDUI.Web.Service.DataGenService Extends Ens.Util.IOLogger [ ProcedureBlock ]
 {
 
+/// To handle the request from users
+/// [Input parameter]
+/// requestParamValues: it is a request from users. It is converted to a string so it can be passed into the function via "Job" command.
+/// jobId: Job Id
 ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
 {
     //update process id and status to ^DataGen
     try{
+        //convert the requestParamValues back to CreateJobRequest
         set request = ##class(CDUI.Web.Request.CreateJobRequest).newInstanceFromStringParamValues(requestParamValues)
         set pid = $SYSTEM.SYS.ProcessID()
         set status = ##class(JobService).#StatusInProgress
+        //update the job status from create to in progess
         do ##class(JobService).UpdateJob(jobId, pid, status,,)
 
         //Handle the request
@@ -23,7 +29,7 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
             $$$LOGERROR("[DataGenService.prcoessRequest] Setting is incorrect. isProcessByBatch: "_isProcessByBatch_", noOfPatientPerBatch: "_noOfPatientPerBatch )
         }
         if (isProcessByBatch && isValidNoOfPatientPerBatch && (noOfPatient > noOfPatientPerBatch)){
-            //Do it by batches
+            //Do it by batches so after each batch, clear the patientVoObjList to free up resources
             set noOfBatch = ##class(%SYSTEM.SQL.Functions).CEILING(noOfPatient / noOfPatientPerBatch) 
             //TODO marcus to implement it
         } else {
@@ -61,12 +67,24 @@ ClassMethod processRequest(requestParamValues As %String, jobId As %Integer)
     }
 }
 
+/// To validate the result of the record creation to see if any failed case occurs.
+/// [Input parameter]
+/// FailedCaseArr: the return value from record creation function. It contains the failed cases.
+/// [Return Value]
+/// 0: indicates there is at least one failed case.
+/// 1: indicates there is no failed case.
 ClassMethod validateResult(ByRef FailedCaseArr) As %Boolean [ Private ]
 {
    // If there is any recrod in the array, it indicates there is at least one failed case.
     return $Data(FailedCaseArr) = 0
 }
 
+/// To call the coresponding record creation function according to the request
+/// [Input parameter]
+/// noOfPatient: The number of patient to be created.
+/// req: the request from users
+/// jobId: job Id
+/// PatientVoObjList: it is the output of this function.
 ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJobRequest, jobId As %Integer, Output PatientVoObjList As %ListOfObjects, Output FailedCaseArr) [ Private ]
 {
     kill FailedCaseArr
@@ -75,6 +93,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
 
     set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start patient creation"
     set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
+    // Patient record creation
 	do patientService.NewPatient(noOfPatient, jobId, .PatientVoObjList)
     set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
     do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
@@ -87,6 +106,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set FailedCaseArr("TotalNumOfFailedPaitent") = noOfFailedPatient
     }
 
+    // episode record creation
     if (req.isEpisode){
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start episode creation"
         set episodeService = ##class(EpisodeService).%New()
@@ -109,6 +129,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
 
     kill failedByIdArr
 
+    // appointment record creation
     if (req.isAppointment){
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start appointment creation"
         set apptService = ##class(ApptService).%New()
@@ -131,6 +152,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     do ..recordFailedCase(.failedByIdArr, .FailedCaseArr, "NumOfFailedAppt",)
     
     kill failedByIdArr
+    // order record creation
     if (req.isOrder){
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start order creation"
         set orderService = ##class(OrderService).%New()
@@ -160,6 +182,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
     }
 
     kill failedByIdArr
+    // observation record creation
     if (req.isObservation){
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start observation creation"
         set obsService = ##class(ObsService).%New()
@@ -188,25 +211,32 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished observation creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
     }
 
+    // save the result to ^DataGen.Log
     set log = ""
 	for cnt = 1:1:PatientVoObjList.Count(){
-		set log = log_PatientVoObjList.GetAt(cnt).SerialisedGet()
+		set log = PatientVoObjList.GetAt(cnt).SerialisedGet()
         set ^DataGen.Log(jobId,"result", $i(^DataGen.Log(jobId,"result"))) = log
 	}
+    // save the failed case to ^DataGen.Log
     do ..writeFailedCaseToLog(jobId, .FailedCaseArr)
 }
 
+/// construct the failed cases in FailedCaseArr so it can be used in structural form.
+/// [Input Parameter]
+/// failedByIdArr: the failed cases array which is returned from record creation function.
+/// FailedCaseArr: it is the output after the process in this function
+/// type: construct the FailedCaseArr accroding to the type
+/// patientId: construct the FailedCaseArr accroding to the patient id
 ClassMethod recordFailedCase(ByRef failedByIdArr, Output FailedCaseArr, type As %String, patientId As %String) [ Private ]
 {
-
-    /**
+    /** 
     "p" indicates failed patient record
-FailedCaseByPatientArr("TotalNumOfFailedPaitent")
-FailedCaseByPatientArr("p", patientId,"NumOfFailedEpisode")
-FailedCaseByPatient("p", patientId,"NumOfFailedAppt")
-FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedOrder")
-FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
-*/
+    FailedCaseByPatientArr("TotalNumOfFailedPaitent")
+    FailedCaseByPatientArr("p", patientId,"NumOfFailedEpisode")
+    FailedCaseByPatient("p", patientId,"NumOfFailedAppt")
+    FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedOrder")
+    FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
+    */
     //record the number of failed case 
     if ($DATA(failedByIdArr) > 0) {
         set key = $Order(failedByIdArr(""))
@@ -225,6 +255,10 @@ FailedCaseByPatient("p", patientId,episodeId,"NumOfFailedObs")
     }
 }
 
+/// write the failed cases to ^DataGen.Log
+/// [Input parmeter]
+/// jobId: Job Id
+/// FailedCaseArr: the return value from record creation function. It contains the failed cases.
 ClassMethod writeFailedCaseToLog(jobId As %Integer, ByRef FailedCaseArr) [ Private ]
 {
         if ($DATA(FailedCaseArr) > 0) {
