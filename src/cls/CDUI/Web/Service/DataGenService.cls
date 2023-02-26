@@ -142,7 +142,7 @@ ClassMethod doProcess(noOfPatient As %Integer, req As CDUI.Web.Request.CreateJob
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Start appointment creation by random range"
         set apptService = ##class(ApptService).%New()
         set startTime = $zdatetime($ZTIMESTAMP,3,1,3)
-        do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, jobId, PatientVoObjList, .failedByIdArr)
+        do apptService.NewApptByRange(req.MinNumOfAppointmentPerPatient, req.MaxNumOfAppointmentPerPatient, PatientVoObjList, jobId, .failedByIdArr)
         set endTime = $zdatetime($ZTIMESTAMP,3,1,3)
         do ##class(CommonUtil).GetTimeDiff(startTime,endTime, .sec, .min,.hr,.day)
         set ^DataGen.Log(jobId,$i(^DataGen.Log(jobId))) = "Finished appointment creation by random range, duration: "_day_" day "_hr_" hr "_min_" min "_sec_" sec"
