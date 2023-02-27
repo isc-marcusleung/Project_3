@@ -135,3 +135,17 @@ There are 4 types of alert message.
 
 
 
+## Job Mechanism
+### Six Job Statuses 
+| Status      | Description |
+| ----------- | ----------- |
+| Create  | A job is created but a new process has not yet started to handle the request. |
+| In Progress   | A new process has started to handle the request.|
+| Terminated  | When the previous status is in "Create" or "In Progress" and a user manually terminates the process.|
+| Completed With Error  | When the process can complete but some exceptions occur during the process.|
+| Completed  | When the process can complete successfully.|
+| Error   | When the process cannot be run properly.|
+
+### Job Status Flow
+
+<img src="https://github.com/isc-marcusleung/Project_3/blob/main/blob/job_status_flow.png" alt="drawing" width="500"/>
