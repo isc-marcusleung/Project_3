@@ -70,7 +70,7 @@ ClassMethod AddJob() As %Status
 		set ^DataGen.Log(jobId,"request") = request.SerialisedGet()
 		// compose the parameter values to form a string so it can be passed to a function using "job"
 		set paramValue = request.generateStringParamValues()
-		set ^DataGen.Log(jobId, "reqStr") = paramValue
+	//	set ^DataGen.Log(jobId, "reqStr") = paramValue
 		// create a new process to handle the request
 		job ##class(DataGenService).processRequest(paramValue, jobId)
 

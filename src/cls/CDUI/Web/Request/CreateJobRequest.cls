@@ -102,7 +102,7 @@ ClassMethod isRequestValid(request As CDUI.Web.Request.CreateJobRequest) As %Int
   
     $$$LOGINFO("[CreateJobRequest.validateRequest] isAllValid: "_isAllValid)
     $$$LOGINFO("[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid_", isOrderCatValid: "_isOrderCatValid)
-    set ^DataGen.Log($i(^DataGen.Log),"validate") = "[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid
+    //set ^DataGen.Log($i(^DataGen.Log),"validate") = "[CreateJobRequest.validateRequest] isPatientValid: "_isPatientValid_", isEpisodeValid: "_isEpisodeValid_", isOrderValid: "_isOrderValid_", isAppointmentValid: "_isAppointmentValid_", isObservationValid: "_isObservationValid_", isEpisodeRangeValid: "_isEpisodeRangeValid_", isOrderRangeValid: "_isOrderRangeValid_", isAppointmentRangeValid: "_isAppointmentRangeValid_", isObservationRangeValid: "_isObservationRangeValid
     return isAllValid
 }
 
