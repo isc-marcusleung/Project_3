@@ -137,9 +137,9 @@ Method NewAppt(NumOfApptPerPatient As %Integer = 1, PatientVoObjList As %ListOfO
     do ..PrintResult(.failedByPatientIdArr, totalSuccess, totalFailure)
 }
 
-Method GetSlotList(ServId As %Integer, Rows As %Integer, Output SlotsObjList As %ListOfObjects)
+Method GetSlotList(ServId As %Integer, Rows As %Integer, MultiSelect As %Integer, Output SlotsObjList As %ListOfObjects)
 {
-    set sc = ##class(TrakCareService).GetSlots(,ServId,,Rows,.SlotsObjList)
+    set sc = ##class(TrakCareService).GetSlots(,ServId,,Rows, MultiSelect, .SlotsObjList)
     if $$$ISERR(sc)
     {
         $$$LOGERROR("[ApptService.GetSlotList] Failed to get slots")
@@ -575,8 +575,9 @@ Method GetNewServIdAndSlotsList(servIdList As %List, Output slotsObjList As %Lis
         // Get a random serviceId
         set servId = servIdList.GetAt(ranNum)
         set Rows = 20
+        set MultiSelect = 1
         // Retrieve the slots list
-        do ..GetSlotList(servId, Rows,.slotsObjList)
+        do ..GetSlotList(servId, Rows, MultiSelect, .slotsObjList)
         $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Service Id used: "_servId) 
         $$$LOGINFO("[ApptService.GetNewServIdAndSlotsList] Count of new slotsObjList: "_slotsObjList.Count())
     }

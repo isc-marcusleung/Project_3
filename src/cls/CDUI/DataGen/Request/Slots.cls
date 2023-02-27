@@ -11,6 +11,8 @@ Property ServId As %Integer;
 
 Property Rows As %Integer;
 
+Property MultiSelect As %Integer [ InitialExpression = 1 ];
+
 // Property Serialised As %RawString(%JSONINCLUDE = "NONE") [ Transient ];
 
 Method SerialisedGet() As %RawString
