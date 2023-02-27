@@ -23,13 +23,27 @@ ClassMethod WriteAPILog(jobId As %Integer) As %String
     $$$LOGINFO("cnt: "_cnt)
     for i = 1:1:cnt{
         set info = ^DataGen.APILog("info",jobId,i)
-        Do logFile.WriteLine(info)
+        do ..FixInfo(info,.fixedInfo)
+        Do logFile.WriteLine(fixedInfo)
     }
     do logFile.Close()
     return logFileName
 }
 
-// Add a row of info in api_log file  
+// Fix the response string before inserting it to the csv file 
+
+ClassMethod FixInfo(info As %String, Output fixedInfo As %String)
+{
+    set searchStr = """"
+    set replaceStr = """"""
+    set fixedInfo =  $REPLACE(info, searchStr, replaceStr)
+    set searchStr2 = "{"
+    set replaceStr2 = """{"
+    set fixedInfo = $REPLACE(fixedInfo, searchStr2, replaceStr2)
+    set searchStr3 = "}"
+    set replaceStr3 = "}"""
+    set fixedInfo = $REPLACE(fixedInfo, searchStr3, replaceStr3)
+}
 
 ClassMethod InitializeDebugLog()
 {
