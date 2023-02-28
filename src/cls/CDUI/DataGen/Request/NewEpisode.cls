@@ -17,6 +17,8 @@ Property PAADMDischgDate As %String;
 
 Property PAADMDischgTime As %String;
 
+Property TOVERRIDE As %Boolean;
+
 Property jobId As %Integer(%JSONINCLUDE = "INPUTONLY");
 
 Method SerialisedGet() As %RawString
@@ -55,6 +57,9 @@ Storage Default
 </Value>
 <Value name="9">
 <Value>jobId</Value>
+</Value>
+<Value name="10">
+<Value>TOVERRIDE</Value>
 </Value>
 </Data>
 <DefaultData>NewEpisodeDefaultData</DefaultData>
