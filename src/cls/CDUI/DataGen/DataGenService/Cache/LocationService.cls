@@ -126,7 +126,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
 {
     $$$LOGINFO("[LocationService.RemoveItem] index: "_index)
 
-    if ($Order(^DataGen.Cache("Location","r", index)) = "") {
+    if ($Get(^DataGen.Cache("Location","r", index)) = "") {
         $$$LOGINFO("[LocationService.RemoveItem] The Location cache is empty.")
         return -1
     }

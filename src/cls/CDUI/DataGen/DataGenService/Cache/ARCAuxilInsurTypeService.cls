@@ -123,7 +123,7 @@ ClassMethod RemoveItem(index As %Integer) As %Integer
 {
     $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] index: "_index)
 
-    if ($Order(^DataGen.Cache("InsurType","r", index)) = "") {
+    if ($Get(^DataGen.Cache("InsurType","r", index)) = "") {
         $$$LOGINFO("[ARCAuxilInsurTypeService.RemoveItem] The insurType cache is empty.")
         return -1
     }
