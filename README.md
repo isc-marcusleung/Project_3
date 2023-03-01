@@ -1,4 +1,4 @@
-# Data Generation Tool for TrakCare System
+# TrakCare Data Generator
 
 This project is to implement a tool to help generate a large amount of realistic patient data for TrakCare System. The tool is implemented as a web application which is deployed in Iris system. In addition, the application is integrated with TrakCare System using TrakCare REST APIs.
 
