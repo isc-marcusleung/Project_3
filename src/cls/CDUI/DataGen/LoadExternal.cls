@@ -5,8 +5,7 @@ Include %syPrompt
 Class CDUI.DataGen.LoadExternal Extends Ens.Util.IOLogger
 {
 
-/** The class methods are commented out as they are only used once when loading and restructuring external datasets.
-
+/*
 // Create an array containing required keys, values are all empty
 
 // Use info array to extract all required keys 
@@ -104,13 +103,6 @@ ClassMethod ConvertF(TempF As %Decimal)
     return TempC
 }
 
-// Purpose: Update the height column with same icustayid when a new height value is found
-
-ClassMethod UpdateHeight(height As %Integer, icuStayId As %Integer)
-{
-    &sql(UPDATE CDUI_DataGen_MIMIC.Observations SET Height = :height WHERE IcuStayId = :icuStayId)
-}
-
 // create a dictionary containing column info(header name and datatype) of different modes
 
 // Unachieved design: read from list of modeoptions, dynamically find the right parameters and construct a column dictionary
@@ -169,7 +161,7 @@ ClassMethod NewPClass(ColumnInfo As %ArrayOfDataTypes, TableName As %String = "C
     set clsDef = ##class(%Dictionary.ClassDefinition).%New()
     set clsDef.Name = ClassName
     set clsDef.Super = "%Persistent"
-    $$$LOGINFO("[NewPClass] New persistent class created with "_TableName)
+    $$$LOGINFO("[NewPClass] New persistent class created with name: "_ClassName)
 
     //define property name and property data type from ColumnInfo
     set key = ""
@@ -180,7 +172,7 @@ ClassMethod NewPClass(ColumnInfo As %ArrayOfDataTypes, TableName As %String = "C
         set propDef.Name = key
         set propDef.Type = val
         do clsDef.Properties.Insert(propDef)
-        $$$LOGINFO("[NewPClass] New Property "_ key_" is created with datatype "_val)
+        $$$LOGINFO("[NewPClass] New Property "_key_" is created with datatype "_val)
     }
 
     //save and compile the persistent class
@@ -195,7 +187,8 @@ ClassMethod NewPClass(ColumnInfo As %ArrayOfDataTypes, TableName As %String = "C
 ClassMethod CheckItemId(Instance, ItemIdArray As %ArrayOfDataTypes, Output isNeeded As %Boolean, Output ItemName As %String, Output ItemValue)
 {
     set itemId = Instance.ItemId
-    set ItemValue = Instance.Value
+    set ItemValue = +Instance.Value
+    #; $$$LOGINFO("ItemValue: "_ItemValue_" Instance.Value: "_Instance.Value)
     set isNeeded = 0
     set ItemName = "Not needed item"
 
@@ -239,6 +232,7 @@ ClassMethod CheckSession(Instance, Array As %ArrayOfDataTypes, Output IsCurrentS
         }
     }
 }
+
 // Mode: "FBC" or "Obs"
 
 // Check whether the instance should be loaded into the submission array
@@ -292,6 +286,7 @@ ClassMethod SubmitArray(Mode As %String, ByRef CArray As %ArrayOfDataTypes, ByRe
         set NewSet.MCHC = CArray.GetAt("MCHC")
         set NewSet.RDW = CArray.GetAt("RDW")
         set NewSet.PLT = CArray.GetAt("PLT")
+        #; w !,NewSet.WBC
     }
     elseif Mode = "Obs"{
         set NewSet = ##class(CDUI.DataGen.MIMIC.Observations).%New()
@@ -362,6 +357,10 @@ ClassMethod LoadExternal(Mode As %String)
         do ..extractDH(Instance.Charttime, .date, .time)
         set hour = $EXTRACT(time,1,2)
         if ((AddToArray = 1) && (IsNewArray = 0)){
+            #; do CArray.SetAt(subjectId,"SubjectId")
+            #; do CArray.SetAt(subjectId,"SubjectId")
+            #; do CArray.SetAt(subjectId,"SubjectId")
+            #; do CArray.SetAt(subjectId,"SubjectId")
             do ..SaveToArray("SubjectId", subjectId, .CArray)
             do ..SaveToArray("Date", date, .CArray)
             do ..SaveToArray("Hour", hour, .CArray)
@@ -381,24 +380,13 @@ ClassMethod LoadExternal(Mode As %String)
             set ArraySubmitted = ArraySubmitted + 1 
             do ..SubmitArray(Mode,.CArray, .PArray)
         } 
-        #;  $$$LOGINFO("[LoadExternal] Total Count: "_numOfRecord_". Current count: "_Cnt)
     }
     $$$LOGINFO("[LoadExternal] Successfully loaded "_Mode_" data, "_ArraySubmitted_" entries created.")
 }
 
-ClassMethod ConvertTemp()
-{
-    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.TriageNew)
-    for i = 1:1:numOfRecord {
-        set ObsObj = ##class(CDUI.DataGen.MIMIC.TriageNew).%OpenId(i)
-        if ObsObj.Temp '= ""{
-            set ObsObj.Temp = ..ConvertF(ObsObj.Temp)
-        }
-        do ObsObj.%Save()
-    }
-}
+// Create a new Triage table for vital sign observations, only load rows with observation values from the triage original table
 
-ClassMethod RemoveEmptyTriage()
+ClassMethod CreateTriageNew()
 {
     &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.TriageOriginal)
     for i = 1:1:numOfRecord {
@@ -414,7 +402,12 @@ ClassMethod RemoveEmptyTriage()
 ClassMethod InsertToTriageNew(Instance)
 {
     set newInstance =  ##class(CDUI.DataGen.MIMIC.TriageNew).%New()
-    set newInstance.Temp = Instance.Temp
+    if Instance.Temp '= ""{
+        set newInstance.Temp = ..ConvertF(Instance.Temp)
+    }
+    else{
+        set newInstance.Temp = Instance.Temp
+    }
     set newInstance.HeartRate = Instance.HeartRate
     set newInstance.Respirations = Instance.Respirations
     set newInstance.O2Sat = Instance.O2Sat
@@ -423,23 +416,56 @@ ClassMethod InsertToTriageNew(Instance)
     do newInstance.%Save()
 }
 
-ClassMethod InsertToLABNew(Instance)
+// Create a new FBC result table for full blood count lab results, only load rows with FBC values from the FBC original table
+
+ClassMethod CreateFBCnew()
 {
-    set newInstance =  ##class(CDUI.DataGen.MIMIC.LABEVENTSfull).%New()
-    set newInstance.Temp = Instance.Temp
-    set newInstance.HeartRate = Instance.HeartRate
-    set newInstance.Respirations = Instance.Respirations
-    set newInstance.O2Sat = Instance.O2Sat
-    set newInstance.SBP = Instance.SBP
-    set newInstance.DBP = Instance.DBP
+    &sql(SELECT COUNT(*) INTO :numOfRecord FROM CDUI_DataGen_MIMIC.FBCresult)
+    for i = 1:1:numOfRecord {
+        set Instance = ##class(CDUI.DataGen.MIMIC.FBCresult).%OpenId(i)
+        if ((Instance.WBC = "")&&(Instance.RBC = "")&&((Instance.HB = "")||(Instance.HB = 0))&&(Instance.HCT = "")&&(Instance.MCV = "")&&(Instance.MCH = "")&&((Instance.MCHC = "")||(Instance.MCHC = 0)) ){
+        }
+        else{
+            do ..InsertToFBCnew(Instance)
+        }
+    }
+}
+
+// HB in MIMIC IV has g/dl as unit, in TC, the unit is g/l
+
+// MCHC in MIMIC IV has g/dl as unit, in TC, the unit is g/l
+
+// This method insert a row of FBC data from CDUI_DataGen_MIMIC.FBCresult to CDUI_DataGen_MIMIC.FBCnew
+
+ClassMethod InsertToFBCnew(Instance)
+{
+    set newInstance =  ##class(CDUI.DataGen.MIMIC.FBCnew).%New()
+    set newInstance.Date = Instance.Date
+    set newInstance.Hour = Instance.Hour
+    set newInstance.SubjectId = Instance.SubjectId
+    set newInstance.WBC = Instance.WBC
+    set newInstance.RBC = Instance.RBC
+
+    set newInstance.HB = Instance.HB
+    set newInstance.HB = newInstance.HB*10
+
+    set newInstance.HCT = Instance.HCT
+    set newInstance.MCV = Instance.MCV
+    set newInstance.MCH = Instance.MCH
+
+    set newInstance.MCHC = Instance.MCHC*10
+    set newInstance.MCHC = newInstance.MCHC*10
+
+    set newInstance.RDW = Instance.RDW
+    set newInstance.PLT = Instance.PLT
     do newInstance.%Save()
 }
+
 // extract date and time from stamptime, add missing zeros
 
 // so that they can be read properly when restructiong a new table
 
 // orignially stamptime is stored in a form of "5/08/2180 0:20"
-
 
 ClassMethod extractDH(stamptime As %String, Output dateDnew As %String, Output timeDnew As %String)
 {
@@ -463,6 +489,10 @@ ClassMethod dropTable(Name As %String = "CDUI_DataGen_MIMIC.FBCresult")
     set sc =  $SYSTEM.SQL.Schema.DropTable(Name,1)
 }
 
+ClassMethod test()
+{
+    set instance = ##class(CDUI.DataGen.MIMIC.FBCresult).%OpenId("10")
+    w ! ,instance.WBC
 }
 */
 }
