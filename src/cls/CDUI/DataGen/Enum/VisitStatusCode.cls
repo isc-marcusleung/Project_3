@@ -18,4 +18,9 @@ ClassMethod GeVisitStatusCodeString(delimiter As %String = ",") As %String
     Return ..#Cancel_delimiter_..#Current_delimiter_..#DidNotAttend_delimiter_..#Discharge_delimiter_..#PreAdmission
 }
 
+ClassMethod GeVisitStatusCodeStringForEmergency(delimiter As %String = ",") As %String
+{
+    Return ..#Current_delimiter_..#Discharge
+}
+
 }
