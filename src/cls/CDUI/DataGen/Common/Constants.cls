@@ -17,13 +17,13 @@ Parameter debugLogFileName As STRING = "/cduinterns/irissys/csp/user/datagen/log
 
 Parameter obsHeader As STRING [ Final ] = "SubjectId,Date,Hour,SBP,DBP,HeartRate,Respirations,Temp,Height,Weight";
 
-Parameter obsHeaderType As STRING [ Final ] = "%String,%String,%String,%Integer,%Integer,%Integer,%Integer,%Decimal,%Integer,%Decimal";
+Parameter obsHeaderType As STRING [ Final ] = "%String,%String,%String,%String,%String,%String,%String,%String,%String,%String";
 
 // Used to create FBC results table and submission array
 
 Parameter FBCHeader As String [ Final ] = "SubjectId,Date,Hour,WBC,RBC,HB,HCT,MCV,MCH,MCHC,RDW,PLT";
 
-Parameter FBCHeaderType As String [ Final ] = "%String,%String,%String,%Decimal,%Decimal,%Decimal,%Decimal,%Decimal,%Decimal,%Decimal,%Decimal,%Decimal";
+Parameter FBCHeaderType As String [ Final ] = "%String,%String,%String,%String,%String,%String,%String,%String,%String,%String,%String,%String";
 
 // Available mode options,Used to create ItemIdDic 
 
