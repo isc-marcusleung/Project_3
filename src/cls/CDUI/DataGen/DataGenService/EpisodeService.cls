@@ -148,11 +148,15 @@ Method Run(episodeInput As CDUI.DataGen.DataGenService.Base.Input, episodeOutput
                         #; set idxOfRemoveLocationObjListArr(locationIndexList.GetAt(cnt)) = ""
                         #; set idxOfRemoveLocationIndexListArr(cnt) = ""
                     }
+                    set ^DataGen.Log(request.jobId, "err",$i(^DataGen.Log(request.jobId, "err"))) = json.ERROR
                 }
             } else {
                     $$$LOGERROR("[EpisodeService.Run] Failed to create an episode. Error(SC): "_$System.Status.DisplayError(sc))
+           			set ^DataGen.Log(request.jobId, "sc_err",$i(^DataGen.Log(request.jobId, "sc_err"))) = $System.Status.GetErrorCodes(sc)
             }
         } catch ex {	
+            set ^DataGen.Log(request.jobId, "ex",$i(^DataGen.Log(request.jobId, "ex"))) = ex.DisplayString()
+
             do LOG^%ETN
             $$$LOGERROR("[EpisodeService.Run] Failed to create an episode. Error(Ex): "_ex.DisplayString())
         }
@@ -200,6 +204,7 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodeP
     set episodeInput = ##class(CDUI.DataGen.DataGenService.Custom.EpisodeInput).%New()
     set admTypeList = $LISTFROMSTRING(##class(AdmTypeCode).GetAdmTypeCodeString(),",",0)
     set visitStatusList = $LISTFROMSTRING(##class(VisitStatusCode).GeVisitStatusCodeString(),",",0)
+    set visitStatusForEmergencyList = $LISTFROMSTRING(##class(VisitStatusCode).GeVisitStatusCodeStringForEmergency(),",",0)
     set inPatientWithCurrentAdmDate = ""
     set episodeTmpList = ##class(%ListOfObjects).%New()
     set locationIndexList = ##class(%ListOfDataTypes).%New()
@@ -230,7 +235,14 @@ Method InitEpisodeRequestPerPatientByRandom(minAdmDate As %String, numOfEpisodeP
         set request = ##class(CDUI.DataGen.Request.NewEpisode).%New()
         set request.jobId = jobId //insert jobId into every single request
         set request.PAADMType = $List(admTypeList, $$$PRand($listlength(admTypeList))+1)
-        set request.PAADMVisitStatus = $List(visitStatusList, $$$PRand($listlength(visitStatusList))+1)
+        set request.TOVERRIDE = 1
+        set isEmergency = request.PAADMType = ##class(AdmTypeCode).#Emergency
+        
+        if isEmergency {
+            set request.PAADMVisitStatus = $List(visitStatusForEmergencyList, $$$PRand($listlength(visitStatusForEmergencyList))+1)
+        } else {
+            set request.PAADMVisitStatus = $List(visitStatusList, $$$PRand($listlength(visitStatusList))+1)
+        }
 
         while(isInpatientWithCurrent = 1 && request.PAADMType = inPatient &&  request.PAADMVisitStatus = statusCurrent) {
             set request.PAADMVisitStatus = $List(visitStatusList, $$$PRand($listlength(visitStatusList))+1)
