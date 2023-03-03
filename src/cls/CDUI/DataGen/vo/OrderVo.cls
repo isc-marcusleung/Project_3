@@ -11,6 +11,8 @@ Property OEORISttDat As %String;
 
 Property OEORISttTim As %String;
 
+Property RadResultList As %ListOfObjects;
+
 ClassMethod newInstance(NewOrderReq, OrderID) As CDUI.DataGen.vo.OrderVo
 {
     set obj = ..%New()
