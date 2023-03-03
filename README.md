@@ -5,7 +5,7 @@ This project is to implement a tool to help generate a large amount of realistic
 
 ## Scope
 
- 1. Implement functions to generate Patient, Episode (Inpatient, Outpatient and Emergency), Order (Radiology, Consultation, Laboratory) and Observation records by using TrackCare APIs 
+ 1. Implement functions to generate Patient, Episode (Inpatient, Outpatient and Emergency), Order (Radiology, Consultation, Laboratory) and Observation, Radiology Results records by using TrackCare APIs 
  2. Import external data sets to create realistic clinical data
  3. Build a web page for user operation
 
