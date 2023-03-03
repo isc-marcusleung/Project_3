@@ -903,4 +903,26 @@ ClassMethod mCreateObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integ
 	$$$LOGINFO("================================ [End] ================================")
 }
 
+ClassMethod mCreateRadResult(ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
+{
+	set resultService = ##class(CDUI.DataGen.DataGenService.RadResultService).%New()
+
+	for i=1:1:PatientVoObjList.Count(){
+		set patientId = PatientVoObjList.GetAt(i).PatientId
+		set EpisodeVoObjList = PatientVoObjList.GetAt(i).EpisodeObjList
+
+		do resultService.NewRadResult(patientId, EpisodeVoObjList, jobId)
+		
+	}
+
+	w !!!!
+	for cnt = 1:1:PatientVoObjList.Count(){
+		if (cnt = 1) {
+			$$$LOGINFO("================================ [Start] ================================")
+		}
+		$$$LOGINFO(PatientVoObjList.GetAt(cnt).SerialisedGet())
+	}
+	$$$LOGINFO("================================ [End] ================================")
+}
+
 }
