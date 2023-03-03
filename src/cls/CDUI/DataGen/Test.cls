@@ -312,6 +312,10 @@ ClassMethod CreateObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Intege
 	$$$LOGINFO("================================ [End] ================================")
 }
 
+// Create results for Radiology orders, Radiology orders must be created first by calling CreateOrder() or CreateOrderByRange(), passing in "Radiology" as the category 
+
+// Number of result per order is not needed as it will be default to 1 result per order
+
 ClassMethod CreateRadResult(ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set resultService = ##class(CDUI.DataGen.DataGenService.RadResultService).%New()
