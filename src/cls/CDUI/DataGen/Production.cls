@@ -113,6 +113,12 @@ XData ProductionDefinition
     <Setting Target="Adapter" Name="HTTPServer"></Setting>  <!-- Please config it -->
     <Setting Target="Adapter" Name="URL">/auxxmisc-test/api/MRObservations</Setting>  <!-- Please config it -->
   </Item>
+  <Item Name="CDUI.DataGen.Operation.REST.RadResult" Category="" ClassName="CDUI.DataGen.Operation.REST.RadResult" PoolSize="1" Enabled="true" Foreground="false" Comment="" LogTraceEvents="false" Schedule="">
+    <Setting Target="Adapter" Name="Credentials"></Setting>  <!-- Please config it -->
+    <Setting Target="Adapter" Name="HTTPPort"></Setting>  <!-- Please config it -->
+    <Setting Target="Adapter" Name="HTTPServer"></Setting>  <!-- Please config it -->
+    <Setting Target="Adapter" Name="URL">/auxxmisc-test/api/OETextResult</Setting>  <!-- Please config it -->
+  </Item>  
 </Production>
 }
 
