@@ -165,7 +165,7 @@ ClassMethod ListARCAuxilInsurTypes(PageSize As %Integer = 100, ByRef Page As %In
 		}
 }
 
-ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, jobId As %Integer, ByRef PatientVoObjList)
+ClassMethod CreatePatient(NumOfPatient As %Integer = 1, ByRef PatientVoObjList, jobId As %Integer)
 {
 	w !,$$$CurrentClass
 	w !,$$$CurrentMethod
@@ -182,7 +182,7 @@ ClassMethod mCreatePatient(NumOfPatient As %Integer = 1, jobId As %Integer, ByRe
 	$$$LOGINFO("================================ [End] Patient Id ================================")
 }
 
-ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
 	do episodeService.NewEpisode(NumOfEpisodePerPatient, PatientVoObjList, jobId)
@@ -196,7 +196,7 @@ ClassMethod mCreateEpisode(NumOfEpisodePerPatient As %Integer = 1, PatientVoObjL
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpisode As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set episodeService = ##class(CDUI.DataGen.DataGenService.EpisodeService).%New()
 
@@ -212,7 +212,7 @@ ClassMethod mCreateEpisodeByRange(MinNumOfEpisode As %Integer = 1, MaxNumOfEpiso
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
 	set OrderCat = OrderCat
@@ -230,7 +230,7 @@ ClassMethod mCreateOrder(NumOfOrderPerEpisode As %Integer = 1, OrderCat As %Stri
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateOrderByRange(MinNumOfOrder As %Integer = 1, MaxNumOfOrder As %Integer = 1, OrderCat As %String, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set orderService = ##class(CDUI.DataGen.DataGenService.OrderService).%New()
 	set OrderCat = OrderCat
@@ -262,7 +262,7 @@ ClassMethod CreateAppointment(NumOfApptPerPatient As %Integer = 1, ByRef Patient
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateAppointmentByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateAppointmentByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt As %Integer = 1, PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set apptService = ##class(CDUI.DataGen.DataGenService.ApptService).%New()
 
@@ -278,7 +278,7 @@ ClassMethod mCreateAppointmentByRange(MinNumOfAppt As %Integer = 1, MaxNumOfAppt
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateObs(NumOfObsPerEpisode As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateObs(NumOfObsPerEpisode As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
     set obsService = ##class(CDUI.DataGen.DataGenService.ObsService).%New()
 	for i=1:1:PatientVoObjList.Count(){
@@ -295,7 +295,7 @@ ClassMethod mCreateObs(NumOfObsPerEpisode As %Integer = 1, ByRef PatientVoObjLis
     $$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integer = 1, ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
     set obsService = ##class(CDUI.DataGen.DataGenService.ObsService).%New()
 	for i=1:1:PatientVoObjList.Count(){
@@ -312,7 +312,7 @@ ClassMethod mCreateObsByRange(MinNumOfObs As %Integer = 1, MaxNumOfObs As %Integ
 	$$$LOGINFO("================================ [End] ================================")
 }
 
-ClassMethod mCreateRadResult(ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
+ClassMethod CreateRadResult(ByRef PatientVoObjList As %ListOfObjects, jobId As %Integer)
 {
 	set resultService = ##class(CDUI.DataGen.DataGenService.RadResultService).%New()
 
